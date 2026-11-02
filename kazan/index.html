@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#131010">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Гопник — Казань 1998 · сюжетная версия v0.8</title>
+  <title>Гопник — Казань 1998 · сюжетная версия v0.9</title>
   <style>
     :root{font-family:ui-monospace,Menlo,Consolas,'Courier New',monospace;color:#e5e5dc;background:#0d0f11;font-size:15px;color-scheme:dark}
     *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 0,#1d261d,#0d0f11 55%);}
@@ -292,16 +292,69 @@ body{position:fixed;inset:0}
  .scene-panel > .panel-body:not(.battle-body){max-height:34%}
 }
 </style>
+
+<style id="compact-no-scroll-v09">
+.scene-panel{--scene-hero-height:clamp(62px,13dvh,116px)}
+.scene-panel>.scene-visual{flex:0 0 var(--scene-hero-height);height:var(--scene-hero-height);min-height:var(--scene-hero-height);max-height:var(--scene-hero-height)}
+.scene-panel>.panel-body{max-height:26%;padding:6px 9px;flex:0 1 auto}
+.scene-title{font-size:12px;margin:0 0 3px}
+.story{line-height:1.31;font-size:12px;margin:0}
+.scene-panel>.panel-body.battle-body{max-height:min(33dvh,174px);overflow-y:auto}
+.scene-panel>.action-grid{flex:0 0 auto;max-height:none;overflow:visible;padding:6px;gap:5px}
+.scene-panel>.action-grid .action{font-size:clamp(10px,2.9vw,12px);min-height:41px;line-height:1.13;padding:6px 4px}
+.scene-panel>.action-grid button[hidden]{display:none!important}
+.action-pager{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:4px;height:28px;color:#edbf83;font:700 11px system-ui}
+.action-pager button{background:#282420;border:1px solid #876744;color:#ffdaa0;border-radius:6px;padding:3px 7px;min-height:26px;font:700 11px system-ui}
+.action-pager button:disabled{opacity:.3}
+.scene-panel>.scene-events{flex:1 1 0px;min-height:94px;margin:3px 6px 0}
+.scene-events-heading{padding:4px 8px;font-size:10px;letter-spacing:0}
+.history-open{background:#383023;color:#f5d095;border:1px solid #80613b;border-radius:5px;padding:3px 6px;font:700 10px system-ui}
+.scene-panel .scene-events-list{padding:4px 7px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;max-height:100%;height:auto;flex:1 1 0px}
+.scene-events-list .log-line{font-size:11px;line-height:1.2;padding:3px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;border-bottom:1px solid #302b28}
+.scene-events-list .log-line:last-child{border:0}
+.log-overlay{z-index:99}
+.log-dialog .log{padding:8px 10px;overflow-y:auto;overscroll-behavior:contain}
+.log-dialog .log-line{padding:6px 2px;line-height:1.4}
+@media(max-height:700px){
+ .scene-panel{--scene-hero-height:clamp(53px,11dvh,79px)}
+ .scene-panel>.scene-events{min-height:96px}
+ .scene-panel>.panel-body:not(.battle-body){max-height:25%}
+ .scene-panel>.panel-body.battle-body{max-height:31dvh}
+ .scene-panel>.scene-events .log-line{font-size:10.5px}
+ .scene-panel>.action-grid .action{min-height:39px}
+ .scene-panel>.scene-visual .scene-info{padding:3px 8px}
+ .scene-panel>.scene-visual .scene-headline{font-size:19px}
+ .scene-panel>.scene-visual .scene-kicker{font-size:8px}
+ .scene-panel>.scene-visual .battle-badge{padding:2px 6px;font-size:9px;margin-top:3px}
+}
+@media(max-height:590px){
+ .scene-panel{--scene-hero-height:49px}
+ .scene-panel>.panel-body.battle-body{max-height:29dvh}
+ .scene-panel>.scene-events{min-height:90px}
+ .scene-panel .scene-events-list .log-line{font-size:10px;padding:2px 0}
+ .scene-panel>.scene-visual .scene-kicker{display:none}
+}
+</style>
+
+<style id="hero-compact-v09">
+.scene-panel .score{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 9px;font-size:12px;line-height:1.28}
+.scene-panel .score>div{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scene-panel .score span{font-weight:900;color:#ffd18c}
+.scene-panel .chapter-place{margin:5px 0 0;font-size:11px;line-height:1.3}
+@media(max-height:590px){.scene-panel .score{font-size:11px;gap:2px 7px}}
+</style>
+<style id="hero-no-scroll-fix-v09">.scene-panel .score{padding:0;gap:1px 6px;line-height:1.15}</style>
 </head>
 <body><div id="app" aria-live="polite"></div>
 <script>
 (()=>{'use strict';
 const KEY='gopnik-kazan-1998-v03';
  const REGION=['Учебный квартал','Портовые дворы','Речной посёлок','Северная окраина','Старый учебный корпус'];
- const REQUIRED_WINS=[2,3,4,4];
- const REQUIRED_REP=[5,13,25,40];
+ const REQUIRED_WINS=[8,12,18,24];
+ const REQUIRED_LEVEL=[3,5,7,9];
+ const REQUIRED_REP=[18,35,60,90];
  const CHAPTERS=[
-  {title:'ГЛАВА 1 · САМОЕ ДНО',place:'Вымышленный городской институт · Казань, 1998',text:'Тебя только что отчислили. Начальник учебного корпуса унизил тебя при всех. Ответить нечем: на улице тебя никто не знает. Начни с обычных дворов — набирайся сил, ищи знакомых и докажи, что ты чего-то стоишь.',choices:[
+  {title:'ГЛАВА 1 · САМОЕ ДНО',place:'Городской институт · Казань, 1998',text:'Тебя только что отчислили. Начальник учебного корпуса унизил тебя при всех. Ответить нечем: на улице тебя никто не знает. Начни с обычных дворов — набирайся сил, ищи знакомых и докажи, что ты чего-то стоишь.',choices:[
    {text:'🚶 Выйти на улицу и начать всё с нуля',xp:3,rep:1,reply:'Ты вышел за ворота. Впереди много районов и нелёгкий путь наверх.'},
    {text:'🧢 Сначала осмотреться у корпуса',xp:5,reply:'Пока ты никто, но это можно изменить. Ищи события на улице.'}]},
   {title:'ГЛАВА 2 · ЧУЖОЙ ДВОР',place:'Портовые дворы · вымышленный район',text:'За несколько остановок от знакомого двора жизнь другая: новые компании и гораздо более крепкие противники. На этот раз прошлые заслуги ничего не значат. Заработай уважение здесь.',choices:[
@@ -313,7 +366,7 @@ const KEY='gopnik-kazan-1998-v03';
   {title:'ГЛАВА 4 · КРУТЫЕ РАЙОНЫ',place:'Северная окраина · вымышленный район',text:'Сюда приезжают самые уверенные в себе. Мелких задир почти не осталось, а каждая победа даётся труднее. Подготовься к возвращению туда, откуда тебя выгнали.',choices:[
    {text:'💪 Тренироваться и искать сильных соперников',xp:12,reply:'Теперь важно не только побеждать, но и уметь выжить.'},
    {text:'🤝 Заручиться поддержкой местных',rep:4,xp:5,reply:'Полезные знакомства помогут, когда дело дойдёт до финала.'}]},
-  {title:'ФИНАЛ · ВОЗВРАЩЕНИЕ',place:'Старый учебный корпус · вымышленное заведение',text:'Ты снова стоишь у корпуса. Когда-то тебя выставили отсюда как никого. Теперь на твоей стороне опыт и репутация. За закрытой дверью ждёт тот, с кого всё началось.',choices:[
+  {title:'ФИНАЛ · ВОЗВРАЩЕНИЕ',place:'Старый учебный корпус · учебный корпус',text:'Ты снова стоишь у корпуса. Когда-то тебя выставили отсюда как никого. Теперь на твоей стороне опыт и репутация. За закрытой дверью ждёт тот, с кого всё началось.',choices:[
    {text:'🥊 Войти и бросить вызов начальнику',boss:true,reply:'Тебя ждёт последняя проверка. Теперь назад дороги нет.'}]}
  ];
  const CLASSES=[
@@ -331,12 +384,14 @@ function rng(lo,hi){return Math.floor(Math.random()*(hi-lo+1))+lo}
 function clamp(n,min,max){return Math.min(max,Math.max(min,n))}
 function esc(s){return String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]))}
 
-function initial(){return {version:1,screen:'select',name:'',classId:'gop',player:null,region:0,view:'street',log:[],fight:null,winCounts:[0,0,0,0,0],unlocked:{gym:false,trader:false,club:false,hangout:false},turns:0,storyDone:[false,false,false,false,false],storyChoices:[],ending:null,wanted:0,crew:0,rescueUses:0,injuries:{leg:false,jaw:false},junk:0,girlfriend:false,bossPhase:0,discussed:false,crewMission:null,completedMissions:0,rareSeen:[]}}
+function initial(){return {version:1,screen:'select',name:'',classId:'gop',player:null,region:0,view:'street',log:[],fight:null,winCounts:[0,0,0,0,0],unlocked:{gym:false,trader:false,club:false,hangout:false},turns:0,storyDone:[false,false,false,false,false],storyChoices:[],ending:null,wanted:0,crew:0,rescueUses:0,injuries:{leg:false,jaw:false},junk:0,girlfriend:false,bossPhase:0,discussed:false,crewMission:null,completedMissions:0,rareSeen:[],romance:{met:false,trust:0,tries:0}}}
 let game=safeRead()||initial();
 function normalizeGame(){
  const def=initial();
  game={...def,...game,unlocked:{...def.unlocked,...(game.unlocked||{})},injuries:{...def.injuries,...(game.injuries||{})}};
  game.rareSeen=Array.isArray(game.rareSeen)?game.rareSeen:[];
+ game.romance={met:false,trust:0,tries:0,...(game.romance||{})};
+ if(game.girlfriend){game.romance.met=true;game.romance.trust=Math.max(4,game.romance.trust)}
  game.completedMissions=Math.max(0,Number(game.completedMissions)||0);
  game.crewMission=game.crewMission&&MISSIONS.some(x=>x.id===game.crewMission.id)?game.crewMission:null;
  game.winCounts=Array.from({length:5},(_,i)=>game.winCounts?.[i]||0);
@@ -348,7 +403,7 @@ function normalizeGame(){
    p.shoes=Math.max(0,Number(p.shoes)||0);p.weapon=Math.max(0,Number(p.weapon)||0);p.armor=Math.max(0,Number(p.armor)||0);
    p.ammo=Math.max(0,Math.floor(p.ammo));p.bandage=Math.max(0,Math.floor(p.bandage));
    game.crew??=game.classId==='gop'?3:0;
-   if(game.classId==='pac')game.girlfriend=true;
+   if(game.classId==='pac'){game.girlfriend=true;game.romance.met=true;game.romance.trust=Math.max(4,game.romance.trust)}
    if(game.classId==='gop'){game.crew=Math.max(3,game.crew);game.unlocked.hangout=true}
    if(game.classId==='thief')game.unlocked.trader=true;
    if(game.classId==='pac')game.unlocked.club=true;
@@ -365,11 +420,11 @@ function newGame(){
  const nick=($('#nick')?.value||'').trim().slice(0,22)||'Безымянный';
  game={...initial(),screen:'game',name:nick,classId:cfg.id,
  player:{s:cfg.s,a:cfg.a,v:cfg.v,l:cfg.l,rep:cfg.rep,level:1,exp:0,points:0,hp:10+cfg.v*5+cfg.s,money:18,beer:0,hotdog:0,weapon:0,armor:0,shoes:0,wins:0,junk:0,phone:false,bandage:0,ammo:0,airgun:false,charm:false},
- girlfriend:cfg.id==='pac',crew:cfg.id==='gop'?3:0};
+ girlfriend:cfg.id==='pac',romance:{met:cfg.id==='pac',trust:cfg.id==='pac'?4:0,tries:0},crew:cfg.id==='gop'?3:0};
  if(cfg.id==='pac')game.unlocked.club=true;
  if(cfg.id==='gop')game.unlocked.hangout=true;
  if(cfg.id==='thief')game.unlocked.trader=true;
- note('Казань, 1998 год. Тебя выгнали из вымышленного института и публично унизили. Теперь ты начинаешь с самого низа.','loot');
+ note('Казань, 1998 год. Тебя выгнали из института и публично унизили. Теперь ты начинаешь с самого низа.','loot');
  note('Специализация: '+cfg.name+'. '+cfg.desc,'good');
  saveRender();
 }
@@ -542,7 +597,7 @@ function flee(){
  saveRender();
 }
 function canMove(){
- return game.region<4&&game.winCounts[game.region]>=REQUIRED_WINS[game.region]&&game.player.rep>=REQUIRED_REP[game.region];
+ return game.region<4&&game.winCounts[game.region]>=REQUIRED_WINS[game.region]&&game.player.rep>=REQUIRED_REP[game.region]&&game.player.level>=REQUIRED_LEVEL[game.region];
 }
 function travel(){
  if(!canMove())return;
@@ -573,11 +628,17 @@ function wander(){
    game.unlocked[found]=true;
    note(({gym:'Нашёл качалку. Теперь можно тренироваться!',trader:'Выяснил, где торгуют барыги.',club:'Заметил местный клуб — можно сыграть в карты.',hangout:'Нашёл притон, где собираются местные пацаны.'})[found],'loot');
   } else {const money=rng(3,9)+p.l;p.money+=money;note('На дороге нашлось '+money+' ₽.','loot')}
- }else if(roll<=30&&!game.girlfriend){
-  game.girlfriend=true;note('Познакомился с девушкой. Теперь есть куда зайти отдохнуть.','good');
- }else if(roll<=41){
+ }else if(roll<=39&&!game.girlfriend){
+  if(!game.romance.met){
+   const firstChance={frost:.43,gop:.70,thief:.27,pac:1}[game.classId]||.35;
+   if(Math.random()<firstChance){
+    game.romance.met=true;
+    note('Познакомился с девушкой. Теперь можно попробовать заслужить её доверие во дворе — но отношения не начинаются сразу.','good');
+   }else note('Попытался познакомиться, но разговор не завязался.','info');
+  }else note('Встретил знакомую во дворе. Возможно, стоит поговорить с ней.','info');
+ }else if(roll<=48){
   const coins=rng(3,10)+p.l;p.money+=coins;note('Нашёл '+coins+' ₽.','loot');
- }else if(roll<=53){
+ }else if(roll<=58){
   note('Пустая улица, старые дворы и прохожие. Пока тихо.','info');
  }else{spawn(false)}
  saveRender();
@@ -659,6 +720,25 @@ function cards(){
  if(rng(1,5)===1){p.l++;note('Практика дала результат: удача +1.','good')}
  saveRender();
 }
+function court(){
+ if(game.fight||game.girlfriend||!game.romance.met)return;
+ const p=game.player;
+ const cost=4;
+ if(p.money<cost){note('Для встречи нужно хотя бы 4 ₽.','combat');return saveRender()}
+ p.money-=cost;game.romance.tries++;
+ const required={frost:3,gop:2,thief:4,pac:1}[game.classId]||3;
+ const base={frost:32,gop:55,thief:23,pac:70}[game.classId]||30;
+ const odds=clamp(base+p.l*3+Math.floor(p.rep/10),15,88);
+ if(rng(1,100)<=odds){
+   game.romance.trust++;
+   note('Хороший разговор. Доверие знакомой: '+game.romance.trust+'/'+required+'.','good');
+   if(game.romance.trust>=required){
+     game.girlfriend=true;game.unlocked.club=true;
+     note('Вы стали парой. Теперь можно ходить в гости и в клуб.','loot');
+   }
+ }else note('Встреча прошла прохладно. Попробуй ещё, когда станешь увереннее в себе.','info');
+ saveRender();
+}
 function visitGirl(){
  if(!game.girlfriend){note('Пока тебе не к кому идти.','info');return saveRender()}
  heal(game.player,Math.floor(maxHp(game.player)*.6));
@@ -695,8 +775,9 @@ function setView(v){
  game.view=v;saveRender();
 }
 function button(label,action,cls='',disabled=false){return `<button class="action ${cls}" data-action="${esc(action)}" ${disabled?'disabled':''}>${label}</button>`}
-function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.8</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из вымышленного института. Впереди четыре района, базар, качалка, клуб, притон, случайные встречи и финальный противник.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
-function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.8<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
+function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.9</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из института. Впереди четыре района, базар, качалка, клуб, притон, случайные встречи и финальный противник.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
+function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.9<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
+let heroPanel=0;
 function contentForView(){
  const p=game.player,v=game.view;
  let title='',body='',actions='';
@@ -720,8 +801,8 @@ function contentForView(){
      body=game.bossPhase===1?'Перед тобой оказался только заместитель. Теперь предстоит настоящий финальный бой.':'Финальная часть истории. Приготовься к последнему противнику.';
      actions+=button('🚪 ВОЙТИ В КАБИНЕТ','wander','primary wide');
    }else{
-     const wins=game.winCounts[game.region],need=REQUIRED_WINS[game.region],rep=REQUIRED_REP[game.region];
-     body=`Здесь тебе нужно набрать опыт, силы и уважение. Победы: <b>${wins}/${need}</b>. Авторитет: <b>${p.rep}/${rep}</b>.<div class="chapter-place">Открывай места прогулками: качалку, притон, клуб и барыг.</div>`;
+     const wins=game.winCounts[game.region],need=REQUIRED_WINS[game.region],rep=REQUIRED_REP[game.region],level=REQUIRED_LEVEL[game.region];
+     body=`Здесь тебе нужно набрать опыт, силы и уважение. Победы: <b>${wins}/${need}</b> · Авторитет: <b>${p.rep}/${rep}</b> · Уровень: <b>${p.level}/${level}</b>.<div class="chapter-place">Открывай места прогулками: качалку, притон, клуб и барыг.</div>`;
      actions+=button('🚶 ИСКАТЬ ПРИКЛЮЧЕНИЯ','wander','primary wide');
      if(canMove())actions+=button('🚌 В СЛЕДУЮЩИЙ РАЙОН','travel','primary wide');
      actions+=button('🤝 ПОГОВОРИТЬ С МЕСТНЫМИ','discuss','wide');
@@ -763,48 +844,89 @@ function contentForView(){
      actions+=game.crewMission?button('📦 СДАТЬ ПОРУЧЕНИЕ','claim','wide',missionProgress(game.crewMission)<MISSIONS.find(x=>x.id===game.crewMission.id).goal):button('📋 ВЗЯТЬ ПОРУЧЕНИЕ','mission','wide');
    }
    actions+=button('🎲 В КЛУБ','view:club','',!game.unlocked.club);
-   actions+=button('💛 К ПОДРУГЕ','view:girl','',!game.girlfriend);
+   actions+=button(game.girlfriend?'💛 К ПОДРУГЕ':'💬 К ЗНАКОМОЙ','view:girl','',!game.romance.met&&!game.girlfriend);
    actions+=button('🩺 В МЕДПУНКТ','view:clinic','wide');
  }else if(v==='club'){
    title='КЛУБ';body=game.unlocked.club?'Музыка, карты, танцы и разговоры. Можно рискнуть небольшой ставкой и потренировать удачу.':'Ты пока не нашёл местный клуб.';
    if(game.unlocked.club)actions+=button('🃏 СЫГРАТЬ В КАРТЫ · 5 ₽','cards','wide');
    actions+=button('↩️ ВО ДВОР','view:hangout','wide');
  }else if(v==='girl'){
-   title='ПОДРУГА';body=game.girlfriend?'Здесь можно отдохнуть от разборок и восстановиться.':'Пока ты не завёл близкого знакомства.';
-   if(game.girlfriend)actions+=button('💛 ПРОВЕСТИ ВЕЧЕР','girl','wide');
+   title=game.girlfriend?'ПОДРУГА':'ЗНАКОМСТВО';
+   if(game.girlfriend){
+     body='Вы уже встречаетесь. Здесь можно отдохнуть от разборок и восстановиться.';
+     actions+=button('💛 ПРОВЕСТИ ВЕЧЕР','girl','wide');
+   }else if(game.romance.met){
+     const needed={frost:3,gop:2,thief:4,pac:1}[game.classId]||3;
+     body='Она согласна иногда поговорить. Но до отношений ещё далеко. Доверие: '+game.romance.trust+'/'+needed+'. Каждая встреча стоит 4 ₽, успех зависит от характера, удачи и авторитета.';
+     actions+=button('💬 ПРИГЛАСИТЬ НА ВСТРЕЧУ · 4 ₽','court','wide',p.money<4);
+   }else body='Пока ни с кем не познакомился. Попробуй гулять по району.';
    actions+=button('↩️ ВО ДВОР','view:hangout','wide');
  }else if(v==='clinic'){
    title='МЕДПУНКТ';body=`Здоровье: ${p.hp}/${maxHp(p)}. ${game.injuries.leg?'Травмирована нога. ':''}${game.injuries.jaw?'Травмирована челюсть. ':''}Медик может вылечить раны и травмы.`;
    actions+=button(`🩺 ЛЕЧИТЬСЯ · ${PRICE.heal} ₽`,'treat','primary wide');
    actions+=button('↩️ ВО ДВОР','view:hangout','wide');
  }else if(v==='hero'){
-   title='ТВОЙ ГЕРОЙ';
-   body=`<div class="score"><div>Сила: <span>${p.s}</span></div><div>Ловкость: <span>${p.a}</span></div><div>Живучесть: <span>${p.v}</span></div><div>Удача: <span>${p.l}</span></div><div>Броня: <span>${p.armor}</span></div><div>Оружие: <span>+${p.weapon+p.shoes}</span></div><div>Пневматика: <span>${p.airgun?'есть':'нет'}</span></div><div>Пули: <span>${p.ammo}</span></div><div>Повязки: <span>${p.bandage}</span></div><div>Медальон: <span>${p.charm?'есть':'нет'}</span></div><div>Поручения: <span>${game.completedMissions}</span></div><div>Пиво: <span>${p.beer}</span></div><div>Еда: <span>${p.hotdog}</span></div><div>Хлам: <span>${p.junk||0}</span></div><div>Братва: <span>${game.crew}</span></div><div>Розыск: <span>${game.wanted}/3</span></div><div>Подруга: <span>${game.girlfriend?'есть':'нет'}</span></div></div><div class="yellow">Специализация: ${esc(CLASSES.find(c=>c.id===game.classId).name)}. Навыки растут при получении уровней по склонностям класса.</div>`;
+   const klass=CLASSES.find(c=>c.id===game.classId).name;
+   if(heroPanel===0){
+     title='ТВОЙ ГЕРОЙ · НАВЫКИ';
+     body=`<div class="score"><div>Сила: <span>${p.s}</span></div><div>Ловкость: <span>${p.a}</span></div><div>Живучесть: <span>${p.v}</span></div><div>Удача: <span>${p.l}</span></div><div>Уровень: <span>${p.level}</span></div><div>Опыт: <span>${p.exp}/${needXp(p)}</span></div><div>Победы: <span>${p.wins}</span></div><div>Репутация: <span>${p.rep}</span></div></div>`;
+     actions+=button('🎒 СНАРЯЖЕНИЕ','hero:equip')+button('🤝 СВЯЗИ','hero:social');
+     if(p.points){actions+=button('Сила +1','up:s')+button('Ловкость +1','up:a')+button('Живучесть +1','up:v')+button('Удача +1','up:l')}
+   }else if(heroPanel===1){
+     title='ГЕРОЙ · СНАРЯЖЕНИЕ';
+     body=`<div class="score"><div>Броня: <span>${p.armor}</span></div><div>Оружие: <span>+${p.weapon+p.shoes}</span></div><div>Пневматика: <span>${p.airgun?'есть':'нет'}</span></div><div>Пули: <span>${p.ammo}</span></div><div>Повязки: <span>${p.bandage}</span></div><div>Медальон: <span>${p.charm?'есть':'нет'}</span></div><div>Еда: <span>${p.hotdog}</span></div><div>Пиво: <span>${p.beer}</span></div></div>`;
+     actions+=button('👤 НАВЫКИ','hero:skills')+button('🤝 СВЯЗИ','hero:social');
+     actions+=button(`🍺 Пиво (${p.beer})`,'use:beer','',p.beer<1)+button(`🌭 Поесть (${p.hotdog})`,'use:hotdog','',p.hotdog<1);
+     actions+=button(`🩹 Повязка (${p.bandage})`,'use:bandage','wide',p.bandage<1);
+   }else{
+     title='ГЕРОЙ · СВЯЗИ';
+     body=`<div class="score"><div>Братва: <span>${game.crew}</span></div><div>Розыск: <span>${game.wanted}/3</span></div><div>Подруга: <span>${game.girlfriend?'есть':'нет'}</span></div><div>Знакомство: <span>${game.romance.met?'есть':'нет'}</span></div><div>Поручения: <span>${game.completedMissions}</span></div><div>Хлам: <span>${p.junk||0}</span></div><div>Телефон: <span>${p.phone?'есть':'нет'}</span></div><div>Район: <span>${game.region+1}</span></div></div>`;
+     actions+=button('👤 НАВЫКИ','hero:skills')+button('🎒 СНАРЯЖЕНИЕ','hero:equip');
+   }
    if(game.injuries.leg||game.injuries.jaw)body+='<div class="red">🩹 Есть травмы — нужен медпункт.</div>';
-   actions+=button(`🍺 Выпить пиво (${p.beer})`,'use:beer','',p.beer<1)+button(`🌭 Поесть (${p.hotdog})`,'use:hotdog','',p.hotdog<1);
-   if(p.points){actions+=button('Сила +1','up:s')+button('Ловкость +1','up:a')+button('Живучесть +1','up:v')+button('Удача +1','up:l')}
-   actions+=button('🩹 Повязка ('+p.bandage+')','use:bandage','wide',p.bandage<1);
    actions+=button('💾 СОХРАНИТЬ','save')+button('↻ НОВАЯ ИГРА','reset','warn');
  }
  const labels={street:'КАЗАНЬ · 1998',market:'БАЗАР',gym:'КАЧАЛКА',hangout:'МЕСТНЫЕ ДЕЛА',hero:'ПЕРСОНАЖ',trader:'БАРЫГИ',club:'КЛУБ',girl:'ПОДРУГА',clinic:'МЕДИК'};
  const headline=v==='street'?(game.fight?'РАЗБОРКА':REGION[game.region]):({market:'Базар',gym:'Качалка',hangout:'Двор',hero:'Твой герой',trader:'Барыги',club:'Клуб',girl:'Подруга',clinic:'Медпункт'})[v];
  const art=v==='street'?'street':({trader:'market',club:'hangout',girl:'hangout',clinic:'hangout'})[v]||v;
  const fightBadge=game.fight&&v==='street'?'<div class="battle-badge">⚔️ БОЙ НАЧАЛСЯ</div>':'';
- return `<section class="panel scene-panel"><div class="scene-visual art-${art}"><span class="scene-number">${game.region===4?'ФИНАЛ':'РАЙОН '+(game.region+1)}</span><div class="scene-info"><span class="scene-kicker">${labels[v]}</span><div class="scene-headline">${esc(headline)}</div>${fightBadge}</div></div><div class="panel-body ${game.fight?'battle-body':''}"><div class="scene-title">${title}</div><div class="story">${body}</div></div><section class="scene-events" aria-label="История событий"><div class="scene-events-heading">📜 ИСТОРИЯ СОБЫТИЙ <span>${game.log.length}</span></div><div class="scene-events-list" role="log" aria-live="polite">${game.log.map(l=>`<div class="log-line ${esc(l.type)}">${esc(l.text)}</div>`).join('')}</div></section><div class="action-grid">${actions}</div></section>`;
+ return `<section class="panel scene-panel"><div class="scene-visual art-${art}"><span class="scene-number">${game.region===4?'ФИНАЛ':'РАЙОН '+(game.region+1)}</span><div class="scene-info"><span class="scene-kicker">${labels[v]}</span><div class="scene-headline">${esc(headline)}</div>${fightBadge}</div></div><div class="panel-body ${game.fight?'battle-body':''}"><div class="scene-title">${title}</div><div class="story">${body}</div></div><section class="scene-events" aria-label="История событий"><div class="scene-events-heading"><span>📜 СОБЫТИЯ · ${game.log.length}</span><button class="history-open" data-action="history">Вся история</button></div><div class="scene-events-list" role="log" aria-live="polite">${game.log.slice(-(window.innerHeight<=700?4:window.innerHeight<=860?8:10)).map(l=>`<div class="log-line ${esc(l.type)}">${esc(l.text)}</div>`).join('')}</div></section><div class="action-grid">${actions}</div></section>`;
 }
+let actionPage=0,actionContext='',historyOpen=false;
 function renderGame(){
  const labels=[['street','🚶','Улица'],['market','🛒','Базар'],['gym','💪','Качалка'],['hangout','🏠','Двор'],['hero','👤','Герой']];
- app.innerHTML=`${renderHeader()}<main class="game-main">${contentForView()}</main><nav class="tabs" aria-label="Разделы игры">${labels.map(([id,ico,label])=>`<button class="tab ${game.view===id?'active':''}" data-view="${id}" ${game.fight&&id!=='street'?'disabled':''}><span class="tab-ico">${ico}</span>${label}</button>`).join('')}</nav>`;
- const journal=app.querySelector('.scene-events-list');
- if(journal)journal.scrollTop=journal.scrollHeight;
+ const context=[game.screen,game.view,game.region,!!game.fight,!!game.storyDone?.[game.region],!!game.crewMission,game.bossPhase].join(':');
+ if(context!==actionContext){actionPage=0;actionContext=context}
+ const logs=game.log.map(l=>`<div class="log-line ${esc(l.type)}">${esc(l.text)}</div>`).join('');
+ app.innerHTML=`${renderHeader()}<main class="game-main">${contentForView()}</main><nav class="tabs" aria-label="Разделы игры">${labels.map(([id,ico,label])=>`<button class="tab ${game.view===id?'active':''}" data-view="${id}" ${game.fight&&id!=='street'?'disabled':''}><span class="tab-ico">${ico}</span>${label}</button>`).join('')}</nav>${historyOpen?`<div class="log-overlay" role="dialog" aria-modal="true" aria-label="Полная история событий"><div class="log-dialog"><div class="log-header">ВСЯ ИСТОРИЯ · ${game.log.length}<button class="smallbtn" data-action="history">Закрыть ✕</button></div><div class="log" role="log">${logs}</div></div></div>`:''}`;
+ paginateActions();
+}
+function paginateActions(){
+ const grid=app.querySelector('.scene-panel>.action-grid');
+ if(!grid)return;
+ const buttons=Array.from(grid.querySelectorAll('button.action'));
+ const perPage=window.innerHeight<=700?2:4;
+ const count=Math.max(1,Math.ceil(buttons.length/perPage));
+ actionPage=Math.min(actionPage,count-1);
+ buttons.forEach((button,i)=>{button.hidden=i<actionPage*perPage||i>=(actionPage+1)*perPage});
+ if(count>1){
+  const nav=document.createElement('div');
+  nav.className='action-pager';
+  nav.innerHTML=`<button data-action="actions-prev" ${actionPage===0?'disabled':''} aria-label="Предыдущие действия">◀ Назад</button><span>Действия ${actionPage+1}/${count}</span><button data-action="actions-next" ${actionPage===count-1?'disabled':''} aria-label="Следующие действия">Далее ▶</button>`;
+  grid.appendChild(nav);
+ }
 }
 function renderEnd(){let won=game.screen==='won';app.innerHTML=`${renderHeader()}<main class="panel"><div class="scene-visual art-street"><div class="scene-info"><span class="scene-kicker">${won?'ГЛАВА ПРОЙДЕНА':'УЛИЧНАЯ ИСТОРИЯ'}</span><div class="scene-headline">${won?'ТЫ НА ВЕРШИНЕ':'КОНЕЦ ИГРЫ'}</div></div></div><div class="panel-body"><div class="intro-logo" style="font-size:32px">${won?'ПОБЕДА!':'ТЫ СДОХ'}</div><p class="story" style="text-align:center">${won?(game.ending==='peace'?'Ты прошёл свой путь. Казань помнит разные способы завоевать уважение.':'Ты прошёл четыре района, победил в финальной схватке и доказал, что сумел подняться с самого низа.'):'Твоё путешествие по Казани закончилось слишком рано. Но историю можно начать заново.'}</p><p class="story yellow" style="text-align:center">Побед: ${game.player.wins} · Уровень: ${game.player.level}</p><div class="action-grid">${button('↻ НАЧАТЬ ЗАНОВО','reset','primary wide')}</div></div></main>`}
 function render(){if(game.screen==='select')renderStart();else if(game.screen==='game')renderGame();else renderEnd()}
 app.addEventListener('click',ev=>{const el=ev.target.closest('button');if(!el||el.disabled)return;
  if(el.dataset.class){game.classId=el.dataset.class;game.name=$('#nick')?.value||game.name;saveRender();return}
- if(el.dataset.view){setView(el.dataset.view);return}
+ if(el.dataset.view){historyOpen=false;if(el.dataset.view==='hero')heroPanel=0;setView(el.dataset.view);return}
  const action=el.dataset.action;if(!action)return;
- switch(action){case 'new':newGame();return;case 'wander':wander();return;case 'mission':acceptMission();return;case 'claim':claimMission();return;case 'fire':fireAirgun();return;case 'bandage':combatBandage();return;case 'attack':attack();return;case 'flee':flee();return;case 'travel':travel();return;case 'discuss':discuss();return;case 'pub':pub();return;case 'treat':treat();return;case 'steal':steal();return;case 'sell':sellJunk();return;case 'cards':cards();return;case 'girl':visitGirl();return;case 'save':note('Прогресс сохранён в браузере.','good');saveRender();return;case 'reset':if(confirm('Начать новую игру? Текущий прогресс будет удалён.')){game=initial();saveRender()}return;default:if(action.startsWith('story:'))chooseStory(Number(action.slice(6)));else if(action.startsWith('buy:'))buy(action.slice(4));else if(action.startsWith('use:'))use(action.slice(4));else if(action.startsWith('up:'))upgrade(action.slice(3));else if(action.startsWith('view:'))setView(action.slice(5));}
+ if(action==='history'){historyOpen=!historyOpen;render();return}
+ if(action.startsWith('hero:')){heroPanel=({skills:0,equip:1,social:2})[action.slice(5)]??0;actionPage=0;render();return}
+ if(action==='actions-prev'){actionPage=Math.max(0,actionPage-1);render();return}
+ if(action==='actions-next'){actionPage++;render();return}
+ switch(action){case 'new':newGame();return;case 'wander':wander();return;case 'mission':acceptMission();return;case 'claim':claimMission();return;case 'fire':fireAirgun();return;case 'bandage':combatBandage();return;case 'attack':attack();return;case 'flee':flee();return;case 'travel':travel();return;case 'discuss':discuss();return;case 'pub':pub();return;case 'treat':treat();return;case 'steal':steal();return;case 'sell':sellJunk();return;case 'cards':cards();return;case 'girl':visitGirl();return;case 'court':court();return;case 'save':note('Прогресс сохранён в браузере.','good');saveRender();return;case 'reset':if(confirm('Начать новую игру? Текущий прогресс будет удалён.')){game=initial();saveRender()}return;default:if(action.startsWith('story:'))chooseStory(Number(action.slice(6)));else if(action.startsWith('buy:'))buy(action.slice(4));else if(action.startsWith('use:'))use(action.slice(4));else if(action.startsWith('up:'))upgrade(action.slice(3));else if(action.startsWith('view:'))setView(action.slice(5));}
 });
 window.addEventListener('pagehide',safeWrite);render();
 })();
