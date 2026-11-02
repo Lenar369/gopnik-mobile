@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#131010">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Гопник — Казань 1998 · сюжетная версия v0.5</title>
+  <title>Гопник — Казань 1998 · сюжетная версия v0.6</title>
   <style>
     :root{font-family:ui-monospace,Menlo,Consolas,'Courier New',monospace;color:#e5e5dc;background:#0d0f11;font-size:15px;color-scheme:dark}
     *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 0,#1d261d,#0d0f11 55%);}
@@ -245,6 +245,46 @@ body{position:fixed;inset:0}
 }
 .scene-panel>.panel-body.battle-body{flex:0 0 auto;max-height:none;overflow:visible;}
 </style>
+
+<style id="journal-fixed-layout-v06">
+/* Keep the illustrated hero scene independent of log length. */
+.scene-panel { --scene-hero-height: clamp(92px, 21dvh, 175px); }
+.scene-panel > .scene-visual {
+  height:var(--scene-hero-height);
+  min-height:var(--scene-hero-height);
+  max-height:var(--scene-hero-height);
+  flex:0 0 var(--scene-hero-height);
+}
+.scene-panel > .scene-events {
+  flex:1 1 0px;
+  min-height:0;
+  max-height:none;
+  overflow:hidden;
+  contain:layout;
+}
+.scene-panel .scene-events-list {
+  flex:1 1 0px;
+  min-height:0;
+  height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  overflow-anchor:none;
+}
+.scene-panel > .panel-body.battle-body {
+  flex:0 0 auto;
+  max-height:min(32dvh,210px);
+  min-height:0;
+  overflow-y:auto;
+}
+@media(max-height:680px) {
+ .scene-panel{--scene-hero-height:clamp(82px,17dvh,124px)}
+}
+@media(max-height:580px) {
+ .scene-panel{--scene-hero-height:70px}
+ .scene-panel > .panel-body.battle-body{max-height:min(30dvh,155px)}
+}
+</style>
 </head>
 <body><div id="app" aria-live="polite"></div>
 <script>
@@ -330,8 +370,8 @@ function pub(){const p=game.player;if(p.beer<1){note('Чтобы угостит�
 function upgrade(stat){const p=game.player;if(!p.points || !['s','a','v','l'].includes(stat))return;p.points--;p[stat]++;if(stat==='s')p.hp++;if(stat==='v')p.hp+=5;note(`Прокачка: ${({s:'сила',a:'ловкость',v:'живучесть',l:'удача'})[stat]} +1.`, 'good');saveRender()}
 function setView(v){if(game.fight&&v!=='street'){note('Сначала закончи драку!','combat');saveRender();return}game.view=v;saveRender()}
 function button(label,action,cls='',disabled=false){return `<button class="action ${cls}" data-action="${esc(action)}" ${disabled?'disabled':''}>${label}</button>`}
-function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.5</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из института. Впереди пять сюжетных глав, старые улицы, новые знакомства и выбор, как вернуть своё имя.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
-function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.5<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
+function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.6</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из института. Впереди пять сюжетных глав, старые улицы, новые знакомства и выбор, как вернуть своё имя.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
+function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.6<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
 function contentForView(){let p=game.player,v=game.view,title='',body='',actions='';
  if(v==='street'){
  title=game.region===4?'институт — РАЗВЯЗКА':`ГЛАВА ${game.region+1}: ${REGION[game.region].toUpperCase()}`;
