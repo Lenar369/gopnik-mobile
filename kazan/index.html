@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#131010">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Гопник — Казань 1998 · сюжетная версия v0.4</title>
+  <title>Гопник — Казань 1998 · сюжетная версия v0.5</title>
   <style>
     :root{font-family:ui-monospace,Menlo,Consolas,'Courier New',monospace;color:#e5e5dc;background:#0d0f11;font-size:15px;color-scheme:dark}
     *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 0,#1d261d,#0d0f11 55%);}
@@ -203,6 +203,48 @@ body{position:fixed;inset:0}
  .start-cover{height:100px}
 }
 </style>
+
+<style id="in-scene-events-v05">
+.scene-panel>.panel-body{
+ flex:0 1 auto;max-height:49%;min-height:0;
+ overflow-y:auto;overflow-x:hidden;
+}
+.scene-events{
+ display:flex;flex-direction:column;
+ flex:1 1 auto;min-height:0;
+ margin:4px 7px 0;
+ border:1px solid #66533e;border-radius:9px;
+ background:linear-gradient(165deg,#141413,#0c0d0e 85%);
+ overflow:hidden;
+}
+.scene-events-heading{
+ flex:0 0 auto;padding:7px 10px;
+ color:#e9bf7a;border-bottom:1px solid #4a3f33;
+ font-size:11px;font-weight:850;letter-spacing:.55px;
+ display:flex;justify-content:space-between;
+}
+.scene-events-heading span{color:#b6ab97}
+.scene-events-list{
+ flex:1 1 auto;min-height:0;
+ overflow-y:auto;overscroll-behavior:contain;
+ padding:5px 9px 8px;
+ scrollbar-color:#7b5b3d #141313;
+ -webkit-overflow-scrolling:touch;
+ font-size:12px;line-height:1.4;
+}
+.scene-events-list .log-line{padding:5px 0;border-bottom:1px solid #312c2a}
+.scene-events-list .log-line:last-child{border:0}
+.scene-events-list .log-line.combat{color:#ffa5a0}
+.scene-events-list .log-line.loot{color:#f3d18a}
+.scene-events-list .log-line.good{color:#8be8a6}
+.scene-events-list .log-line.info{color:#cbc1b6}
+@media(max-height:590px){
+ .scene-events-heading{padding:5px 8px;font-size:10px}
+ .scene-events-list{font-size:11px;padding:3px 7px}
+ .scene-panel>.panel-body{max-height:46%}
+}
+.scene-panel>.panel-body.battle-body{flex:0 0 auto;max-height:none;overflow:visible;}
+</style>
 </head>
 <body><div id="app" aria-live="polite"></div>
 <script>
@@ -288,8 +330,8 @@ function pub(){const p=game.player;if(p.beer<1){note('Чтобы угостит�
 function upgrade(stat){const p=game.player;if(!p.points || !['s','a','v','l'].includes(stat))return;p.points--;p[stat]++;if(stat==='s')p.hp++;if(stat==='v')p.hp+=5;note(`Прокачка: ${({s:'сила',a:'ловкость',v:'живучесть',l:'удача'})[stat]} +1.`, 'good');saveRender()}
 function setView(v){if(game.fight&&v!=='street'){note('Сначала закончи драку!','combat');saveRender();return}game.view=v;saveRender()}
 function button(label,action,cls='',disabled=false){return `<button class="action ${cls}" data-action="${esc(action)}" ${disabled?'disabled':''}>${label}</button>`}
-function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.4</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из института. Впереди пять сюжетных глав, старые улицы, новые знакомства и выбор, как вернуть своё имя.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
-function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.4<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
+function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.5</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из института. Впереди пять сюжетных глав, старые улицы, новые знакомства и выбор, как вернуть своё имя.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
+function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.5<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
 function contentForView(){let p=game.player,v=game.view,title='',body='',actions='';
  if(v==='street'){
  title=game.region===4?'институт — РАЗВЯЗКА':`ГЛАВА ${game.region+1}: ${REGION[game.region].toUpperCase()}`;
@@ -316,22 +358,21 @@ function contentForView(){let p=game.player,v=game.view,title='',body='',actions
  const headline=v==='street'?(game.fight?'РАЗБОРКА':REGION[game.region]):({market:'Рынок',gym:'Качалка',hangout:'Двор',hero:'Твой герой'})[v];
  const art=v==='street'?'street':v;
  const fightBadge=game.fight&&v==='street'?'<div class="battle-badge">⚔️ БОЙ НАЧАЛСЯ</div>':'';
- return `<section class="panel scene-panel"><div class="scene-visual art-${art}"><span class="scene-number">${game.region===4?'ФИНАЛ':'РАЙОН '+(game.region+1)}</span><div class="scene-info"><span class="scene-kicker">${labels[v]}</span><div class="scene-headline">${esc(headline)}</div>${fightBadge}</div></div><div class="panel-body"><div class="scene-title">${title}</div><div class="story">${body}</div></div><div class="action-grid">${actions}</div></section>`;
+ return `<section class="panel scene-panel"><div class="scene-visual art-${art}"><span class="scene-number">${game.region===4?'ФИНАЛ':'РАЙОН '+(game.region+1)}</span><div class="scene-info"><span class="scene-kicker">${labels[v]}</span><div class="scene-headline">${esc(headline)}</div>${fightBadge}</div></div><div class="panel-body ${game.fight?'battle-body':''}"><div class="scene-title">${title}</div><div class="story">${body}</div></div><section class="scene-events" aria-label="История событий"><div class="scene-events-heading">📜 ИСТОРИЯ СОБЫТИЙ <span>${game.log.length}</span></div><div class="scene-events-list" role="log" aria-live="polite">${game.log.map(l=>`<div class="log-line ${esc(l.type)}">${esc(l.text)}</div>`).join('')}</div></section><div class="action-grid">${actions}</div></section>`;
 }
-let showEvents=false;
 function renderGame(){
- const logs=game.log.slice(-30).map(l=>`<div class="log-line ${esc(l.type)}">${esc(l.text)}</div>`).join('');
  const labels=[['street','🚶','Улица'],['market','🛒','Базар'],['gym','💪','Качалка'],['hangout','🏠','Двор'],['hero','👤','Герой']];
- const last=game.log[game.log.length-1];
- app.innerHTML=`${renderHeader()}<main class="game-main">${contentForView()}<button class="event-ticker" data-action="logs" aria-label="Открыть журнал событий"><span>📜 ${last?esc(last.text):'История событий'}</span><b>☰</b></button></main><nav class="tabs" aria-label="Разделы игры">${labels.map(([id,ico,label])=>`<button class="tab ${game.view===id?'active':''}" data-view="${id}" ${game.fight&&id!=='street'?'disabled':''}><span class="tab-ico">${ico}</span>${label}</button>`).join('')}</nav>${showEvents?`<div class="log-overlay" role="dialog" aria-modal="true" aria-label="История событий"><div class="log-dialog"><div class="log-header">ИСТОРИЯ СОБЫТИЙ · ${game.log.length}<button class="smallbtn" data-action="logs">Закрыть ✕</button></div><div class="log" role="log">${logs}</div></div></div>`:''}`;
+ app.innerHTML=`${renderHeader()}<main class="game-main">${contentForView()}</main><nav class="tabs" aria-label="Разделы игры">${labels.map(([id,ico,label])=>`<button class="tab ${game.view===id?'active':''}" data-view="${id}" ${game.fight&&id!=='street'?'disabled':''}><span class="tab-ico">${ico}</span>${label}</button>`).join('')}</nav>`;
+ const journal=app.querySelector('.scene-events-list');
+ if(journal)journal.scrollTop=journal.scrollHeight;
 }
-function renderEnd(){let won=game.screen==='won';app.innerHTML=`${renderHeader()}<main class="panel"><div class="scene-visual art-street"><div class="scene-info"><span class="scene-kicker">${won?'ГЛАВА ПРОЙДЕНА':'УЛИЧНАЯ ИСТОРИЯ'}</span><div class="scene-headline">${won?'ТЫ НА ВЕРШИНЕ':'КОНЕЦ ИГРЫ'}</div></div></div><div class="panel-body"><div class="intro-logo" style="font-size:32px">${won?'ПОБЕДА!':'ТЫ СДОХ'}</div><p class="story" style="text-align:center">${won?(game.ending==='peace'?'Ты отстоял своё имя и добился справедливого решения. Казань помнит разные пути к уважению.':'Ты дошёл до институт и выиграл финальный поединок. Это конец первой сюжетной кампании.'):'Твоё путешествие по Казани закончилось слишком рано. Но историю можно начать заново.'}</p><p class="story yellow" style="text-align:center">Побед: ${game.player.wins} · Уровень: ${game.player.level}</p><div class="action-grid">${button('↻ НАЧАТЬ ЗАНОВО','reset','primary wide')}</div></div></main>`}
+function renderEnd(){let won=game.screen==='won';app.innerHTML=`${renderHeader()}<main class="panel"><div class="scene-visual art-street"><div class="scene-info"><span class="scene-kicker">${won?'ГЛАВА ПРОЙДЕНА':'УЛИЧНАЯ ИСТОРИЯ'}</span><div class="scene-headline">${won?'ТЫ НА ВЕРШИНЕ':'КОНЕЦ ИГРЫ'}</div></div></div><div class="panel-body"><div class="intro-logo" style="font-size:32px">${won?'ПОБЕДА!':'ТЫ СДОХ'}</div><p class="story" style="text-align:center">${won?(game.ending==='peace'?'Ты отстоял своё имя и добился справедливого решения. Казань помнит разные пути к уважению.':'Ты дошёл до института и выиграл финальный поединок. Это конец первой сюжетной кампании.'):'Твоё путешествие по Казани закончилось слишком рано. Но историю можно начать заново.'}</p><p class="story yellow" style="text-align:center">Побед: ${game.player.wins} · Уровень: ${game.player.level}</p><div class="action-grid">${button('↻ НАЧАТЬ ЗАНОВО','reset','primary wide')}</div></div></main>`}
 function render(){if(game.screen==='select')renderStart();else if(game.screen==='game')renderGame();else renderEnd()}
 app.addEventListener('click',ev=>{const el=ev.target.closest('button');if(!el||el.disabled)return;
  if(el.dataset.class){game.classId=el.dataset.class;game.name=$('#nick')?.value||game.name;saveRender();return}
- if(el.dataset.view){showEvents=false;setView(el.dataset.view);return}
+ if(el.dataset.view){setView(el.dataset.view);return}
  const action=el.dataset.action;if(!action)return;
- switch(action){case 'logs':showEvents=!showEvents;render();return;case 'new':newGame();return;case 'wander':wander();return;case 'attack':attack();return;case 'flee':flee();return;case 'travel':travel();return;case 'discuss':discuss();return;case 'pub':pub();return;case 'treat':treat();return;case 'save':note('Прогресс сохранён в браузере.','good');saveRender();return;case 'reset':if(confirm('Начать новую игру? Текущий прогресс будет удалён.')){game=initial();saveRender()}return;default:if(action.startsWith('story:'))chooseStory(Number(action.slice(6)));else if(action.startsWith('buy:'))buy(action.slice(4));else if(action.startsWith('use:'))use(action.slice(4));else if(action.startsWith('up:'))upgrade(action.slice(3));}
+ switch(action){case 'new':newGame();return;case 'wander':wander();return;case 'attack':attack();return;case 'flee':flee();return;case 'travel':travel();return;case 'discuss':discuss();return;case 'pub':pub();return;case 'treat':treat();return;case 'save':note('Прогресс сохранён в браузере.','good');saveRender();return;case 'reset':if(confirm('Начать новую игру? Текущий прогресс будет удалён.')){game=initial();saveRender()}return;default:if(action.startsWith('story:'))chooseStory(Number(action.slice(6)));else if(action.startsWith('buy:'))buy(action.slice(4));else if(action.startsWith('use:'))use(action.slice(4));else if(action.startsWith('up:'))upgrade(action.slice(3));}
 });
 window.addEventListener('pagehide',safeWrite);render();
 })();
