@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#131010">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Гопник — Казань 1998 · сюжетная версия v0.6</title>
+  <title>Гопник — Казань 1998 · сюжетная версия v0.7</title>
   <style>
     :root{font-family:ui-monospace,Menlo,Consolas,'Courier New',monospace;color:#e5e5dc;background:#0d0f11;font-size:15px;color-scheme:dark}
     *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 0,#1d261d,#0d0f11 55%);}
@@ -290,58 +290,210 @@ body{position:fixed;inset:0}
 <script>
 (()=>{'use strict';
 const KEY='gopnik-kazan-1998-v03';
-const REGION=['Старый учебный корпус','Торговая улица','Большой базар','Северные дворы','Возвращение в корпус'];
-const REQUIRED_WINS=[1,1,2,2];
-const CHAPTERS=[
- {title:'ГЛАВА 1 · ПОСЛЕДНЯЯ ПАРА',place:'Городской институт · осень 1998',text:'Последний день учёбы обернулся отчислением. У главного корпуса шумит город, в кармане — несколько рублей. Твой приятель Марат просит помочь с одной старой аудиокассетой. Он ждёт ответа у ворот.',choices:[
-  {text:'🤝 Выслушать Марата и забрать кассету',rep:3,xp:5,reply:'Марат доверил тебе кассету и попросил найти Лёху у видеосалона на Торговой улице.'},
-  {text:'💵 Сначала взять подработку у знакомого',money:12,xp:3,reply:'Разгрузил пару ящиков у ларька, заработал немного наличных. Марат всё равно ждёт тебя на Торговой улице.'}]},
- {title:'ГЛАВА 2 · КАССЕТА С ТОРГОВОЙ УЛИЦЫ',place:'Торговая улица · видеосалон',text:'На Торговой улице шумно: палатки, музыка из магнитофонов, прохожие торопятся по своим делам. Лёха из видеосалона знает, что за запись передал Марат. Но вокруг неё уже ходят странные слухи.',choices:[
-  {text:'📼 Передать кассету и расспросить Лёху',xp:12,rep:2,reply:'Лёха рассказал: запись помогает восстановить несправедливую историю с отчислением. След ведёт к знакомому торговцу на Колхозном рынке.'},
-  {text:'🧠 Сначала проверить, что на записи',xp:15,reply:'На записи слышен важный разговор. Теперь у тебя есть зацепка — и ты сам решаешь, кому доверять.'}]},
- {title:'ГЛАВА 3 · БАЗАРНЫЙ ДЕНЬ',place:'Большой базар',text:'Между прилавками спорят о цене, тянутся очереди, торговцы перекликаются. Здесь тебе предстоит найти человека по прозвищу Филя — он видел того, кто запустил историю с твоим отчислением.',choices:[
-  {text:'📦 Помочь Филе с товаром и поговорить',money:18,rep:2,xp:6,reply:'Филя оценил помощь, поделился слухами и посоветовал съездить в Северные дворы.'},
-  {text:'🔎 Разузнать подробности без лишнего шума',xp:17,reply:'Удалось выяснить, кто подделал ведомость. Свидетель живёт в Северные дворых, но говорить он не спешит.'}]},
- {title:'ГЛАВА 4 · СЛОВО РАЙОНА',place:'Северные дворы · старые дворы',text:'Дома, лавочки у подъездов, друзья у турника. Здесь вырос твой однокурсник Рамиль — он может подтвердить правду. Осталось заслужить доверие и решить, как возвращаться в институт.',choices:[
-  {text:'🤝 Поговорить с Рамилем по-человечески',rep:7,xp:10,reply:'Рамиль согласился рассказать всё при свидетелях. Ты возвращаешься в институт не с пустыми руками.'},
-  {text:'💪 Доказать, что способен постоять за себя',rep:4,xp:14,reply:'Твою решительность заметили. Но Рамиль напомнил: последний разговор лучше вести с фактами.'}]},
- {title:'ФИНАЛ · РАЗГОВОР В УНИВЕРЕ',place:'Учебный квартал · институт',text:'Ты снова стоишь перед зданием института. Когда-то тебя выставили отсюда без объяснений. Теперь у тебя есть знакомые, опыт и ответы. Осталось решить, что важнее — правда или старая обида.',choices:[
-  {text:'📃 Разобраться с документами и доказать правду',xp:30,rep:18,end:'peace',reply:'Ты добился пересмотра решения. Оказалось, уважение можно заслужить не только кулаками.'},
-  {text:'🥊 Вызвать директора на шуточный поединок',rep:5,boss:true,reply:'Директор неожиданно принял вызов. Финальная схватка — в духе оригинальной игры!'}]}
-];
-const CLASSES=[
- {id:'pac',name:'Пацан',desc:'Ровный характер. Всё понемногу.',s:2,a:2,v:2,l:2,rep:2},
- {id:'frost',name:'Отморозок',desc:'Сильный, но не особо удачливый.',s:4,a:1,v:3,l:0,rep:0},
- {id:'gop',name:'Гопник',desc:'Уличный авторитет и сбалансированная сила.',s:3,a:2,v:2,l:1,rep:5},
- {id:'thief',name:'Вор',desc:'Ловкость, удача и больше случайных находок.',s:1,a:4,v:1,l:4,rep:0}
-];
-const PRICE={hotdog:6,beer:12,shoes:35,shirt:45,knuckle:45,heal:18,force:20,vital:20,agility:22,luck:22,armor:30};
+ const REGION=['Учебный квартал','Портовые дворы','Речной посёлок','Северная окраина','Старый учебный корпус'];
+ const REQUIRED_WINS=[2,3,4,4];
+ const REQUIRED_REP=[5,13,25,40];
+ const CHAPTERS=[
+  {title:'ГЛАВА 1 · САМОЕ ДНО',place:'Вымышленный городской институт · Казань, 1998',text:'Тебя только что отчислили. Начальник учебного корпуса унизил тебя при всех. Ответить нечем: на улице тебя никто не знает. Начни с обычных дворов — набирайся сил, ищи знакомых и докажи, что ты чего-то стоишь.',choices:[
+   {text:'🚶 Выйти на улицу и начать всё с нуля',xp:3,rep:1,reply:'Ты вышел за ворота. Впереди много районов и нелёгкий путь наверх.'},
+   {text:'🧢 Сначала осмотреться у корпуса',xp:5,reply:'Пока ты никто, но это можно изменить. Ищи события на улице.'}]},
+  {title:'ГЛАВА 2 · ЧУЖОЙ ДВОР',place:'Портовые дворы · вымышленный район',text:'За несколько остановок от знакомого двора жизнь другая: новые компании и гораздо более крепкие противники. На этот раз прошлые заслуги ничего не значат. Заработай уважение здесь.',choices:[
+   {text:'🤝 Узнать местные правила',xp:6,rep:2,reply:'Ты узнал, где собираются местные. Теперь можно искать новые знакомства.'},
+   {text:'🥊 Проверить себя на незнакомой улице',xp:8,reply:'Ты готов к серьёзным встречам. Дальше всё решат твои навыки.'}]},
+  {title:'ГЛАВА 3 · РЕЧНОЙ ПОСЁЛОК',place:'Речной посёлок · вымышленный район',text:'На новой территории часто встречаются опасные противники, но здесь же можно найти редкие вещи и подработки. Без удачи, снаряжения и знакомых продвинуться будет трудно.',choices:[
+   {text:'🛒 Осмотреть местный базар',xp:9,reply:'Торговцы знают много интересного. Можно заработать и купить снаряжение.'},
+   {text:'🏋️ Спросить о тренировках',xp:7,rep:3,reply:'Ты услышал про небольшую качалку. Самое время поднимать характеристики.'}]},
+  {title:'ГЛАВА 4 · КРУТЫЕ РАЙОНЫ',place:'Северная окраина · вымышленный район',text:'Сюда приезжают самые уверенные в себе. Мелких задир почти не осталось, а каждая победа даётся труднее. Подготовься к возвращению туда, откуда тебя выгнали.',choices:[
+   {text:'💪 Тренироваться и искать сильных соперников',xp:12,reply:'Теперь важно не только побеждать, но и уметь выжить.'},
+   {text:'🤝 Заручиться поддержкой местных',rep:4,xp:5,reply:'Полезные знакомства помогут, когда дело дойдёт до финала.'}]},
+  {title:'ФИНАЛ · ВОЗВРАЩЕНИЕ',place:'Старый учебный корпус · вымышленное заведение',text:'Ты снова стоишь у корпуса. Когда-то тебя выставили отсюда как никого. Теперь на твоей стороне опыт и репутация. За закрытой дверью ждёт тот, с кого всё началось.',choices:[
+   {text:'🥊 Войти и бросить вызов начальнику',boss:true,reply:'Тебя ждёт последняя проверка. Теперь назад дороги нет.'}]}
+ ];
+ const CLASSES=[
+  {id:'pac',name:'Пацан',desc:'Сразу есть подруга и открыт клуб.',s:3,a:3,v:3,l:3,rep:2},
+  {id:'frost',name:'Отморозок',desc:'Сам восстанавливает здоровье после прогулок.',s:5,a:2,v:4,l:1,rep:0},
+  {id:'gop',name:'Гопник',desc:'Знаком с братвой, сразу доступен притон.',s:4,a:3,v:3,l:2,rep:6},
+  {id:'thief',name:'Вор',desc:'Везуч в карманных делах; знает барыг.',s:2,a:4,v:2,l:4,rep:0}
+ ];
+const PRICE={hotdog:6,beer:12,shoes:35,shirt:45,knuckle:45,knife:95,phone:60,heal:18,force:20,vital:20,agility:22,luck:22,armor:30};
 const $=sel=>document.querySelector(sel),app=$('#app');
 function safeRead(){try{let s=JSON.parse(localStorage.getItem(KEY));return s&&s.version===1?s:null;}catch{return null}}
 function safeWrite(){try{localStorage.setItem(KEY,JSON.stringify(game))}catch{}}
 function rng(lo,hi){return Math.floor(Math.random()*(hi-lo+1))+lo}
 function clamp(n,min,max){return Math.min(max,Math.max(min,n))}
 function esc(s){return String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]))}
-function initial(){return {version:1,screen:'select',name:'',classId:'gop',player:null,region:0,view:'street',log:[],fight:null,winCounts:[0,0,0,0,0],unlocked:{gym:false,trader:false},turns:0,storyDone:[false,false,false,false,false],storyChoices:[],ending:null}}
+
+function initial(){return {version:1,screen:'select',name:'',classId:'gop',player:null,region:0,view:'street',log:[],fight:null,winCounts:[0,0,0,0,0],unlocked:{gym:false,trader:false,club:false,hangout:false},turns:0,storyDone:[false,false,false,false,false],storyChoices:[],ending:null,wanted:0,crew:0,rescueUses:0,injuries:{leg:false,jaw:false},junk:0,girlfriend:false,bossPhase:0,discussed:false}}
 let game=safeRead()||initial();
+function normalizeGame(){
+ const def=initial();
+ game={...def,...game,unlocked:{...def.unlocked,...(game.unlocked||{})},injuries:{...def.injuries,...(game.injuries||{})}};
+ game.winCounts=Array.from({length:5},(_,i)=>game.winCounts?.[i]||0);
+ game.storyDone=Array.from({length:5},(_,i)=>!!game.storyDone?.[i]);
+ if(game.player){
+   const p=game.player;
+   p.points??=0;p.junk??=0;p.phone??=false;p.girlfriend??=game.classId==='pac';
+   game.crew??=game.classId==='gop'?3:0;
+   if(game.classId==='pac')game.girlfriend=true;
+   if(game.classId==='gop'){game.crew=Math.max(3,game.crew);game.unlocked.hangout=true}
+   if(game.classId==='thief')game.unlocked.trader=true;
+   if(game.classId==='pac')game.unlocked.club=true;
+ }
+}
+normalizeGame();safeWrite();
 function note(text,type='info'){game.log.push({text,type});if(game.log.length>70)game.log.shift()}
 function saveRender(){safeWrite();render()}
 function needXp(p){return 12+p.level*12}
 function maxHp(p){return 10+p.v*5+p.s}
-function chance(p){return clamp(62+p.a*5,65,94)}
-function newGame(){const cfg=CLASSES.find(c=>c.id===game.classId)||CLASSES[2];const nick=($('#nick')?.value||'').trim().slice(0,22)||'Безымянный';game={...initial(),screen:'game',name:nick,classId:cfg.id,player:{s:cfg.s,a:cfg.a,v:cfg.v,l:cfg.l,rep:cfg.rep,level:1,exp:0,points:0,hp:10+cfg.v*5+cfg.s,money:18,beer:0,hotdog:0,weapon:0,armor:0,shoes:0,wins:0},view:'street'};note('Казань, осень 1998 года. После отчисления из института всё начинается заново.','loot');note('Ты — '+cfg.name.toLowerCase()+'. Выбери, куда направиться.','good');saveRender()}
+function chance(p){return clamp(55+p.a*5,60,94)}
+function newGame(){
+ const cfg=CLASSES.find(c=>c.id===game.classId)||CLASSES[2];
+ const nick=($('#nick')?.value||'').trim().slice(0,22)||'Безымянный';
+ game={...initial(),screen:'game',name:nick,classId:cfg.id,
+ player:{s:cfg.s,a:cfg.a,v:cfg.v,l:cfg.l,rep:cfg.rep,level:1,exp:0,points:0,hp:10+cfg.v*5+cfg.s,money:18,beer:0,hotdog:0,weapon:0,armor:0,shoes:0,wins:0,junk:0,phone:false},
+ girlfriend:cfg.id==='pac',crew:cfg.id==='gop'?3:0};
+ if(cfg.id==='pac')game.unlocked.club=true;
+ if(cfg.id==='gop')game.unlocked.hangout=true;
+ if(cfg.id==='thief')game.unlocked.trader=true;
+ note('Казань, 1998 год. Тебя выгнали из вымышленного института и публично унизили. Теперь ты начинаешь с самого низа.','loot');
+ note('Специализация: '+cfg.name+'. '+cfg.desc,'good');
+ saveRender();
+}
 function heal(p,n){p.hp=Math.min(maxHp(p),p.hp+n)}
-function level(p){while(p.exp>=needXp(p)){p.exp-=needXp(p);p.level++;p.points++;p.hp=maxHp(p);note('НОВЫЙ УРОВЕНЬ! +1 очко прокачки. Открой «Герой».','good')}}
+function level(p){
+ while(p.exp>=needXp(p)){
+  p.exp-=needXp(p);p.level++;
+  const weights=[p.s,p.a,p.v,p.l],total=weights.reduce((a,b)=>a+b,0);
+  let roll=rng(1,total),selected=0;
+  for(let i=0;i<4;i++){roll-=weights[i];if(roll<=0){selected=i;break}}
+  const stat=['s','a','v','l'][selected];
+  p[stat]++;p.hp=maxHp(p);
+  note('НОВЫЙ УРОВЕНЬ '+p.level+'! '+({s:'Сила',a:'Ловкость',v:'Живучесть',l:'Удача'})[stat]+' +1.','good');
+ }
+}
 function addExp(n){game.player.exp+=n;level(game.player)}
-function hurt(amount){const p=game.player;let dealt=Math.max(1,amount-p.armor);p.hp=Math.max(0,p.hp-dealt);note(`Тебе прилетело −${dealt} здоровья.`, 'combat');if(p.hp<=0){game.screen='dead';game.fight=null;note('Ты проиграл эту схватку.','combat')}}
-function spawn(boss=false){const p=game.player,d=game.region;const lvl=boss?Math.max(8,p.level+2):Math.max(1,p.level+rng(-1,1)+Math.floor(d/2));const types=['Дворовый задира','Наглый пацан','Отморозок','Местный авторитет','Беспредельщик'];const e={name:boss?'Директор':types[rng(0,types.length-1)],level:lvl,hp:boss?75:8+lvl*3+d*3,attack:boss?10:1+lvl+Math.floor(d/2),def:boss?2:Math.floor(lvl/3),boss};e.maxHp=e.hp;game.fight=e;game.view='street';note(`На тебя наехал ${e.name.toLowerCase()} (${e.level} ур.).`, 'combat');}
-function enemyTurn(){if(!game.fight)return;const p=game.player,e=game.fight;if(Math.random() < Math.min(.30,p.a*.025)){note('Ты увернулся от удара.','good');return}hurt(rng(1,e.attack))}
-function attack(){if(!game.fight)return;const p=game.player,e=game.fight;if(rng(1,100)>chance(p)){note('Ты промахнулся.','combat');enemyTurn();return saveRender()}
- const damage=Math.max(1,rng(Math.max(1,Math.floor(p.s/2)),Math.max(2,p.s+2))+p.weapon+p.shoes-e.def);e.hp-=damage;note(`Ты нанёс ${damage} урона.`, 'good');if(e.hp<=0){const prize=e.boss?80:rng(3,14)+game.region*4,experience=e.boss?100:10+e.level*4;game.fight=null;p.money+=prize;p.rep+=e.boss?35:2;p.wins++;game.winCounts[game.region]++;note(`Победа! +${prize} ₽, +${experience} опыта, +${e.boss?35:2} авторитета.`, 'loot');addExp(experience);if(e.boss){game.screen='won';note('Ты доказал директору, что тебя рано списали со счетов.','good')}else if(canMove()){note('Новый район открыт! Нажми «В следующий район».','loot')}}else{enemyTurn()}saveRender()}
-function flee(){if(!game.fight)return;if(rng(1,100)<=42+game.player.a*7){note('Удалось убежать от драки.','good');game.fight=null}else{note('Убежать не получилось.','combat');enemyTurn()}saveRender()}
-function canMove(){return game.region<4 && game.storyDone?.[game.region] && game.winCounts[game.region]>=REQUIRED_WINS[game.region]}
-function travel(){if(!canMove())return;game.region++;game.view='street';game.fight=null;game.unlocked={gym:false,trader:false};note('Новый район: '+REGION[game.region]+'.','loot');note('Новая глава: '+CHAPTERS[game.region].title+'. Сначала разберись в истории этого места.','info');saveRender()}
-function wander(){if(game.fight)return;if(game.region===4){if(!game.storyDone[4])return;spawn(true);return saveRender()}game.turns++;let r=rng(1,100);if(r<=12){let coins=rng(3,8)+game.player.l;game.player.money+=coins;note(`Нашёл на дороге ${coins} ₽.`,'loot')}else if(r<=30){note('Обошёл пару дворов. Пока тихо.','info')}else{spawn(false)}saveRender()}
+function hurt(amount){
+ const p=game.player;
+ const dealt=Math.max(1,amount-(p.armor||0));
+ p.hp=Math.max(0,p.hp-dealt);
+ note('Тебе прилетело −'+dealt+' здоровья.','combat');
+ if(p.hp<=0){
+  if(game.crew>=3 && (p.phone||game.classId==='gop') && game.rescueUses<2){
+   game.rescueUses++;
+   game.fight=null;
+   p.hp=Math.max(5,Math.floor(maxHp(p)*.45));
+   game.wanted=0;
+   note('Пацаны успели отвезти тебя к знакомому медику. Ты выжил!','good');
+  }else{
+   game.screen='dead';game.fight=null;
+   note('Сил не осталось. История закончилась.','combat');
+  }
+ }
+}
+function spawn(boss=false){
+ const p=game.player,d=game.region;
+ const lvl=boss?Math.max(6,p.level+1):Math.max(1,p.level+rng(-1,1)+Math.floor(d/2));
+ const types=['Дворовый задира','Наглый пацан','Отморозок','Местный авторитет','Беспредельщик','Милиционер'];
+ const name=boss?(game.bossPhase===0?'Заместитель начальника':'Начальник учебного корпуса'):types[rng(0,types.length-1)];
+ const hp=boss?(game.bossPhase===0?38:58):9+lvl*3+d*4;
+ game.fight={name,level:lvl,hp,maxHp:hp,attack:boss?7+game.bossPhase*2:1+lvl+Math.floor(d/2),def:boss?2:Math.floor(lvl/3),boss};
+ game.view='street';note('Противник: '+name+' ('+lvl+' ур.).','combat');
+}
+function enemyTurn(){
+ if(!game.fight)return;
+ const p=game.player,e=game.fight;
+ if(Math.random()<Math.min(.30,p.a*.025)){note('Ты увернулся от удара.','good');return}
+ hurt(rng(1,e.attack));
+ if(game.fight && Math.random()<(e.boss?.06:.035)){
+  const part=Math.random()<.5?'leg':'jaw';
+  if(!game.injuries[part]){game.injuries[part]=true;note(part==='leg'?'Травма ноги! Убежать теперь сложно.':'Травма челюсти! Еду и пиво пока не употребить.','combat')}
+ }
+}
+function winFight(){
+ const p=game.player,e=game.fight;
+ if(!e)return;
+ const prize=e.boss?55:rng(3,13)+game.region*4;
+ const experience=e.boss?50:10+e.level*4;
+ game.fight=null;p.money+=prize;p.rep+=e.boss?8:2;p.wins++;
+ game.winCounts[game.region]++;
+ note('Победа! +'+prize+' ₽, +'+experience+' опыта, +'+(e.boss?8:2)+' авторитета.','loot');
+ addExp(experience);
+ if(e.boss){
+  if(game.bossPhase===0){
+   game.bossPhase=1;
+   note('Оказалось, это заместитель! Настоящий начальник ещё впереди. Найди его на улице.','combat');
+  }else{
+   game.bossPhase=2;game.screen='won';game.ending='classic';
+   note('Ты победил настоящего начальника и доказал, как далеко смог подняться.','good');
+  }
+ }else {
+  if(Math.random()<.3){p.junk++;note('Подобрал полезный хлам — барыги могут его купить.','loot')}
+  if(canMove())note('Открыт следующий район! Нажми «В следующий район».','good');
+ }
+}
+function attack(){
+ if(!game.fight)return;
+ const p=game.player,e=game.fight;
+ const hits=chance(p)>90&&Math.random()<.3?2:1;
+ for(let h=0;h<hits&&game.fight;h++){
+  if(rng(1,100)>chance(p)){note('Ты промахнулся.','combat');break}
+  const damage=Math.max(1,rng(Math.max(1,Math.floor(p.s/2)),Math.max(2,p.s+2))+p.weapon+p.shoes-e.def);
+  e.hp-=damage;note('Ты нанёс '+damage+' урона'+(h===1?' вторым ударом.':'.'),'good');
+  if(e.hp<=0){winFight();break}
+ }
+ if(game.fight)enemyTurn();
+ saveRender();
+}
+function flee(){
+ if(!game.fight)return;
+ if(game.fight.boss){note('От финального противника уже не уйти!','combat');return saveRender()}
+ if(game.injuries.leg){note('Из-за травмы ноги не получается убежать.','combat');enemyTurn();return saveRender()}
+ if(rng(1,100)<=40+game.player.a*6){
+  game.fight=null;game.player.rep=Math.max(0,game.player.rep-1);
+  note('Убежал, но потерял 1 авторитета.','combat');
+ }else{note('Убежать не удалось.','combat');enemyTurn()}
+ saveRender();
+}
+function canMove(){
+ return game.region<4&&game.winCounts[game.region]>=REQUIRED_WINS[game.region]&&game.player.rep>=REQUIRED_REP[game.region];
+}
+function travel(){
+ if(!canMove())return;
+ game.region++;game.view='street';game.fight=null;game.discussed=false;
+ const cfg=CLASSES.find(c=>c.id===game.classId);
+ game.unlocked={gym:false,trader:game.classId==='thief',club:game.classId==='pac',hangout:game.classId==='gop'};
+ note('Новый район: '+REGION[game.region]+'.','loot');
+ note('Новая глава: '+CHAPTERS[game.region].title+'.','info');saveRender();
+}
+function wander(){
+ if(game.fight)return;
+ if(game.region===4){
+  if(!game.storyDone[4]){note('Сначала войди в корпус и прими вызов.','info');return saveRender()}
+  if(game.bossPhase<2){spawn(true);return saveRender()}
+  return;
+ }
+ game.turns++;
+ const p=game.player;
+ if(game.classId==='frost'&&p.hp<maxHp(p)){heal(p,2);note('Отморозок быстро оправился: +2 здоровья.','good')}
+ if(game.wanted>0 && game.turns%3===0){game.wanted=Math.max(0,game.wanted-1);note('Милиция постепенно теряет твой след.','info')}
+ const roll=rng(1,100);
+ if(roll<=14){
+  const spots=['gym','trader','club','hangout'];
+  const closed=spots.filter(k=>!game.unlocked[k]);
+  if(closed.length){
+   const found=closed[rng(0,closed.length-1)];
+   game.unlocked[found]=true;
+   note(({gym:'Нашёл качалку. Теперь можно тренироваться!',trader:'Выяснил, где торгуют барыги.',club:'Заметил местный клуб — можно сыграть в карты.',hangout:'Нашёл притон, где собираются местные пацаны.'})[found],'loot');
+  } else {const money=rng(3,9)+p.l;p.money+=money;note('На дороге нашлось '+money+' ₽.','loot')}
+ }else if(roll<=20&&!game.girlfriend){
+  game.girlfriend=true;note('Познакомился с девушкой. Теперь есть куда зайти отдохнуть.','good');
+ }else if(roll<=32){
+  const coins=rng(3,10)+p.l;p.money+=coins;note('Нашёл '+coins+' ₽.','loot');
+ }else if(roll<=43){
+  note('Пустая улица, старые дворы и прохожие. Пока тихо.','info');
+ }else{spawn(false)}
+ saveRender();
+}
 function chooseStory(index){
  if(game.screen!=='game'||game.fight||game.storyDone?.[game.region])return;
  const c=CHAPTERS[game.region]?.choices?.[index];if(!c)return;
@@ -349,54 +501,186 @@ function chooseStory(index){
  if(c.money)p.money+=c.money;
  if(c.rep)p.rep+=c.rep;
  if(c.xp)addExp(c.xp);
- game.storyDone[game.region]=true;
- game.storyChoices.push({chapter:game.region,option:index});
+ game.storyDone[game.region]=true;game.storyChoices.push({chapter:game.region,option:index});
  note(c.reply,'loot');
- if(c.money)note('За работу: +'+c.money+' ₽.','good');
- if(c.rep)note('Авторитет: +'+c.rep+'.','good');
- if(c.end==='peace'){game.ending='peace';game.screen='won';note('Сюжетная концовка: правду удалось восстановить.','good')}
- else if(c.boss)spawn(true);
- else note('Сюжетное задание выполнено. Продолжай исследовать район.','info');
+ if(c.boss){game.bossPhase=0;spawn(true)}
+ else note('Теперь исследуй район, тренируйся и повышай авторитет.','info');
  saveRender();
 }
-function discuss(){if(game.fight)return;const p=game.player;p.rep+=2;game.unlocked.gym=true;game.unlocked.trader=true;note('Поговорил с местными. Теперь знаешь, где качалка и барыги. +2 авторитета.','good');saveRender()}
-function buy(kind){if(game.fight)return;const p=game.player;const prices={...PRICE};if(!prices[kind])return;
+function discuss(){
+ if(game.fight)return;
+ if(!game.discussed){
+  game.discussed=true;game.player.rep++;
+  game.unlocked.gym=true;game.unlocked.trader=true;game.unlocked.hangout=true;
+  note('Поговорил с местными. Узнал, где притон, качалка и барыги. Авторитет +1.','good');
+ }else note('Местные обсуждают жизнь района. Новостей пока нет.','info');
+ saveRender();
+}
+function buy(kind){
+ if(game.fight)return;
+ const p=game.player,prices={...PRICE};
+ if(!prices[kind])return;
  if(p.money<prices[kind]){note('Не хватает денег.','combat');return saveRender()}
- if(kind==='shoes'&&p.shoes>=2 ||kind==='shirt'&&p.armor>=2 ||kind==='knuckle'&&p.weapon>=2){note('Такое у тебя уже есть.','info');return saveRender()}
- p.money-=prices[kind];const opts={hotdog:()=>{p.hotdog++;note('Купил хот-дог.','loot')},beer:()=>{p.beer++;note('Купил бутылку пива.','loot')},shoes:()=>{p.shoes=2;note('Новые бутсы: +2 к урону.','good')},shirt:()=>{p.armor+=2;note('Кожанка: +2 к защите.','good')},knuckle:()=>{p.weapon=2;note('Кастет: +2 к урону.','good')},heal:()=>{p.hp=maxHp(p);note('Ветеринар тебя подлатал.','good')},force:()=>{p.s++;p.hp+=1;note('Качалка: сила +1.','good')},vital:()=>{p.v++;p.hp+=5;note('Качалка: живучесть +1.','good')},agility:()=>{p.a++;note('Тренировка: ловкость +1.','good')},luck:()=>{p.l++;note('Тренировка: удача +1.','good')},armor:()=>{p.armor++;note('Тренировка: защита +1.','good')}};opts[kind]();saveRender()}
-function use(item){const p=game.player;if(game.fight){note('Во время боя это не получится.','combat');return saveRender()}if(item==='beer'&&p.beer>0){p.beer--;heal(p,10);note('Выпил пиво. Здоровье восстановилось.','good')}else if(item==='hotdog'&&p.hotdog>0){p.hotdog--;heal(p,6);note('Перекусил. +6 здоровья.','good')}else{note('Этого нет в инвентаре.','combat')}saveRender()}
-function treat(){if(game.player.hp===maxHp(game.player)){note('Ты и так полностью здоров.','info');saveRender();return}buy('heal')}
-function pub(){const p=game.player;if(p.beer<1){note('Чтобы угостить пацанов, сначала купи пиво на рынке.','combat');return saveRender()}p.beer--;p.rep+=5;note('Угостил пацанов: авторитет +5.','good');saveRender()}
-function upgrade(stat){const p=game.player;if(!p.points || !['s','a','v','l'].includes(stat))return;p.points--;p[stat]++;if(stat==='s')p.hp++;if(stat==='v')p.hp+=5;note(`Прокачка: ${({s:'сила',a:'ловкость',v:'живучесть',l:'удача'})[stat]} +1.`, 'good');saveRender()}
-function setView(v){if(game.fight&&v!=='street'){note('Сначала закончи драку!','combat');saveRender();return}game.view=v;saveRender()}
+ if(kind==='shoes'&&p.shoes>=2||kind==='shirt'&&p.armor>=2||kind==='knuckle'&&p.weapon>=2||kind==='knife'&&p.weapon>=6||kind==='phone'&&p.phone){note('Это уже куплено или есть вещь получше.','info');return saveRender()}
+ p.money-=prices[kind];
+ const opts={
+  hotdog:()=>{p.hotdog++;note('Купил еду.','loot')},
+  beer:()=>{p.beer++;note('Купил пиво.','loot')},
+  shoes:()=>{p.shoes=2;note('Бутсы: +2 к удару.','good')},
+  shirt:()=>{p.armor+=2;note('Кожанка: броня +2.','good')},
+  knuckle:()=>{p.weapon=2;note('Кастет: урон +2.','good')},
+  knife:()=>{p.weapon=6;note('Нашёл более сильное оружие (+6 к удару).','good')},
+  phone:()=>{p.phone=true;note('Теперь можешь связаться с пацанами при опасности.','good')},
+  heal:()=>{p.hp=maxHp(p);game.injuries={leg:false,jaw:false};note('В медпункте залечили травмы и восстановили здоровье.','good')},
+  force:()=>{p.s++;p.hp++;note('Качалка: сила +1.','good')},
+  vital:()=>{p.v++;p.hp+=5;note('Качалка: живучесть +1.','good')},
+  agility:()=>{p.a++;note('Тренировка: ловкость +1.','good')},
+  luck:()=>{p.l++;note('Тренировка: удача +1.','good')},
+  armor:()=>{p.armor++;note('Защита +1.','good')}
+ };
+ if(opts[kind])opts[kind]();
+ saveRender();
+}
+function steal(){
+ const p=game.player;
+ if(game.fight)return;
+ if(game.wanted>=3){note('Милиция ищет тебя. Лучше пока не возвращаться на базар.','combat');return saveRender()}
+ const odds=Math.min(90,38+p.l*7+(game.classId==='thief'?22:0));
+ if(rng(1,100)<=odds){const sum=rng(4,15)+p.l;p.money+=sum;addExp(5);note('Карманная удача: +'+sum+' ₽ и +5 опыта.','loot')}
+ else {game.wanted++;p.hp=Math.max(1,p.hp-3);note('Попался на рынке! Потерял 3 здоровья. Розыск: '+game.wanted+'/3.','combat')}
+ saveRender();
+}
+function sellJunk(){
+ if(game.fight)return;
+ const p=game.player;
+ if(!p.junk){note('Пока нечего продавать.','info');return saveRender()}
+ const amount=p.junk*8;p.money+=amount;
+ note('Продал хлам за '+amount+' ₽.','loot');p.junk=0;saveRender();
+}
+function cards(){
+ if(game.fight)return;
+ if(game.player.money<5){note('На игру в карты нужно хотя бы 5 ₽.','combat');return saveRender()}
+ const p=game.player;p.money-=5;
+ if(rng(1,100)<Math.min(80,30+p.l*6)){p.money+=12;note('Выиграл в карты! Чистый выигрыш +7 ₽.','loot')}
+ else note('Проиграл 5 ₽ в карты.','combat');
+ if(rng(1,5)===1){p.l++;note('Практика дала результат: удача +1.','good')}
+ saveRender();
+}
+function visitGirl(){
+ if(!game.girlfriend){note('Пока тебе не к кому идти.','info');return saveRender()}
+ heal(game.player,Math.floor(maxHp(game.player)*.6));
+ game.injuries.jaw=false;
+ note('Провёл вечер у подруги. Отдохнул и восстановил здоровье.','good');
+ saveRender();
+}
+function use(item){
+ const p=game.player;
+ if(game.fight){note('Во время боя этого делать нельзя.','combat');return saveRender()}
+ if(game.injuries.jaw){note('С травмой челюсти есть и пить нельзя — нужен медик.','combat');return saveRender()}
+ if(item==='beer'&&p.beer>0){p.beer--;heal(p,10);note('Отдохнул, здоровье +10.','good')}
+ else if(item==='hotdog'&&p.hotdog>0){p.hotdog--;heal(p,6);note('Поел, здоровье +6.','good')}
+ else note('Этого нет в инвентаре.','combat');
+ saveRender();
+}
+function treat(){if(game.player.hp===maxHp(game.player)&&!game.injuries.jaw&&!game.injuries.leg){note('Здоровье и так в порядке.','info');return saveRender()}buy('heal')}
+function pub(){
+ const p=game.player;
+ if(p.beer<1){note('Чтобы угостить пацанов, сначала купи пиво на рынке.','combat');return saveRender()}
+ p.beer--;p.rep+=5;game.crew+=1;
+ note('Угостил пацанов: авторитет +5, уважение братвы выросло.','good');saveRender();
+}
+function upgrade(stat){
+ const p=game.player;
+ if(!p.points||!['s','a','v','l'].includes(stat))return;
+ p.points--;p[stat]++;if(stat==='s')p.hp++;if(stat==='v')p.hp+=5;
+ note('Прокачка: '+({s:'сила',a:'ловкость',v:'живучесть',l:'удача'})[stat]+' +1.','good');
+ saveRender();
+}
+function setView(v){
+ if(game.fight&&v!=='street'){note('Сначала закончи драку!','combat');saveRender();return}
+ game.view=v;saveRender();
+}
 function button(label,action,cls='',disabled=false){return `<button class="action ${cls}" data-action="${esc(action)}" ${disabled?'disabled':''}>${label}</button>`}
-function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.6</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из института. Впереди пять сюжетных глав, старые улицы, новые знакомства и выбор, как вернуть своё имя.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
-function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.6<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
-function contentForView(){let p=game.player,v=game.view,title='',body='',actions='';
+function renderStart(){const classIcons={pac:'🧢',frost:'🥊',gop:'🔥',thief:'🎯'};app.innerHTML=`<main class="start"><div class="start-cover"><div class="start-cover-inner"><div class="intro-logo">ГОПНИК</div><div class="version">СЮЖЕТНАЯ RPG · КАЗАНЬ 1998 · v0.7</div></div></div><div class="panel"><div class="panel-body"><p class="start-intro"><b class="yellow">Казань. Осень 1998-го.</b> Тебя отчислили из вымышленного института. Впереди четыре района, базар, качалка, клуб, притон, случайные встречи и финальный противник.</p><label for="nick" class="start-label">Твоё погоняло</label><input id="nick" class="name" maxlength="22" autocomplete="nickname" placeholder="Как тебя зовут на районе?" value="${esc(game.name||'')}"><div class="start-label">Выбери персонажа</div><div class="classes">${CLASSES.map(c=>`<button class="class ${c.id===game.classId?'selected':''}" data-class="${c.id}"><span class="class-ico">${classIcons[c.id]}</span><strong>${esc(c.name)}</strong><small>${esc(c.desc)}</small></button>`).join('')}</div><div class="action-grid" style="padding:0">${button('НАЧАТЬ ИГРУ →','new','primary wide')}</div></div></div><div class="footer">Прогресс сохраняется автоматически. Это новая адаптация классической игры, а не оригинальный DOS-файл.</div></main>`}
+function renderHeader(){let p=game.player;return `<header><div class="heading"><div class="brand">ГОПНИК</div><div class="edition">КАЗАНЬ · v0.7<br>1998 ГОД</div></div><div class="divider"></div><div class="hero-sub"><span><strong>${esc(game.name)}</strong> · ${esc(CLASSES.find(c=>c.id===game.classId).name)} · ${p.level} ур.</span><span class="badge">📍 ${esc(REGION[game.region])}</span></div></header><section class="panel"><div class="stats-grid"><div class="stat"><b>${p.hp}/${maxHp(p)}</b><small>❤️ ЗДОРОВЬЕ</small></div><div class="stat"><b>${p.money} ₽</b><small>💵 ДЕНЬГИ</small></div><div class="stat"><b>${p.level}</b><small>⭐ УРОВЕНЬ</small></div><div class="stat"><b>${p.exp}/${needXp(p)}</b><small>⚡ ОПЫТ</small></div><div class="stat"><b>${p.rep}</b><small>🤝 АВТОРИТЕТ</small></div><div class="stat"><b>${p.wins}</b><small>🥊 ПОБЕДЫ</small></div></div><div class="hp-track"><div class="hp-bar" style="width:${p.hp/maxHp(p)*100}%"></div></div><div class="xp-track"><div class="xp-fill" style="width:${p.exp/needXp(p)*100}%"></div></div></section>`}
+function contentForView(){
+ const p=game.player,v=game.view;
+ let title='',body='',actions='';
  if(v==='street'){
- title=game.region===4?'институт — РАЗВЯЗКА':`ГЛАВА ${game.region+1}: ${REGION[game.region].toUpperCase()}`;
-  const chapter=CHAPTERS[game.region];
-  body=game.fight?'Ситуация накалилась. Прими решение в бою.':!game.storyDone?.[game.region]?`<div class="chapter-tag">${esc(chapter.title)}</div><div class="chapter-place">📍 ${esc(chapter.place)}</div>${esc(chapter.text)}`:game.region===4?'Разговор превратился в финальную схватку.':`Ты выполнил сюжетное задание в этой главе. Осталось ${Math.max(0,REQUIRED_WINS[game.region]-game.winCounts[game.region])} побед(ы) в уличных встречах, чтобы открыть следующий район.`;
- if(game.fight){let e=game.fight;body+=`<div class="enemy"><b>${esc(e.name)} · ${e.level} ур.</b><div>Здоровье: ${Math.max(0,e.hp)}/${e.maxHp}</div><div class="hp-track"><div class="hp-bar" style="width:${Math.max(0,e.hp)/e.maxHp*100}%"></div></div></div>`;actions+=button('👊 УДАРИТЬ','attack','primary')+button('🏃 УБЕЖАТЬ','flee','warn')}
-  else{if(!game.storyDone?.[game.region])actions+=chapter.choices.map((c,i)=>button(esc(c.text),'story:'+i,'wide'+(i===0?' primary':''))).join('');else if(game.region<4){actions+=button('🚶 ИСКАТЬ ПРИКЛЮЧЕНИЯ','wander','primary wide');if(canMove())actions+=button('➡️ СЛЕДУЮЩАЯ ГЛАВА','travel','wide primary');actions+=button('🤝 ПОГОВОРИТЬ С МЕСТНЫМИ','discuss','wide')}}
+   const ch=CHAPTERS[game.region];
+   title=game.region===4?'ФИНАЛ · СТАРЫЙ УЧЕБНЫЙ КОРПУС':'РАЙОН '+(game.region+1)+' · '+REGION[game.region].toUpperCase();
+   if(game.fight){
+     const e=game.fight;
+     body='Перед тобой '+esc(e.name.toLowerCase())+'. Решай: нападать или спасаться.';
+     body+=`<div class="enemy"><b>${esc(e.name)} · ${e.level} ур.</b><div>Здоровье: ${Math.max(0,e.hp)}/${e.maxHp}</div><div class="hp-track"><div class="hp-bar" style="width:${Math.max(0,e.hp)/e.maxHp*100}%"></div></div></div>`;
+     if(game.injuries.leg)body+='<div class="red">🩹 Травма ноги — побег недоступен.</div>';
+     if(game.injuries.jaw)body+='<div class="red">🩹 Травма челюсти.</div>';
+     actions+=button('👊 УДАРИТЬ','attack','primary')+button('🏃 УБЕЖАТЬ','flee','warn',!!e.boss);
+   }else if(!game.storyDone[game.region]){
+     body=`<div class="chapter-tag">${esc(ch.title)}</div><div class="chapter-place">📍 ${esc(ch.place)}</div>${esc(ch.text)}`;
+     actions+=ch.choices.map((c,i)=>button(esc(c.text),'story:'+i,'wide'+(i===0?' primary':''))).join('');
+     if(game.region<4)actions+=button('🚶 ПРОГУЛЯТЬСЯ ПО РАЙОНУ','wander','wide');
+   }else if(game.region===4){
+     body=game.bossPhase===1?'Перед тобой оказался только заместитель. Теперь предстоит настоящий финальный бой.':'Финальная часть истории. Приготовься к последнему противнику.';
+     actions+=button('🚪 ВОЙТИ В КАБИНЕТ','wander','primary wide');
+   }else{
+     const wins=game.winCounts[game.region],need=REQUIRED_WINS[game.region],rep=REQUIRED_REP[game.region];
+     body=`Здесь тебе нужно набрать опыт, силы и уважение. Победы: <b>${wins}/${need}</b>. Авторитет: <b>${p.rep}/${rep}</b>.<div class="chapter-place">Открывай места прогулками: качалку, притон, клуб и барыг.</div>`;
+     actions+=button('🚶 ИСКАТЬ ПРИКЛЮЧЕНИЯ','wander','primary wide');
+     if(canMove())actions+=button('🚌 В СЛЕДУЮЩИЙ РАЙОН','travel','primary wide');
+     actions+=button('🤝 ПОГОВОРИТЬ С МЕСТНЫМИ','discuss','wide');
+   }
  }else if(v==='market'){
- title='БОЛЬШОЙ БАЗАР';body='Конец 90-х. Торговые ряды, музыка из ларьков и множество случайных знакомств. Здесь можно купить еды и полезные вещи.';
- actions+=button(`🌭 Хот-дог · ${PRICE.hotdog} ₽`,'buy:hotdog')+button(`🍺 Пиво · ${PRICE.beer} ₽`,'buy:beer')+button(`👟 Бутсы +2 · ${PRICE.shoes} ₽`,'buy:shoes')+button(`🧥 Кожанка +2 · ${PRICE.shirt} ₽`,'buy:shirt')+button(`✊ Кастет +2 · ${PRICE.knuckle} ₽`,'buy:knuckle');
+   title='БОЛЬШОЙ БАЗАР';body='Еда, полезные вещи и случайные прохожие. Можно попробовать рискнуть, но за подозрительными делами следит милиция.';
+   if(game.wanted>=3)body+='<div class="red">🚓 Милиция ищет тебя. Пока лучше гулять в другом месте.</div>';
+   actions+=button(`🌭 Еда · ${PRICE.hotdog} ₽`,'buy:hotdog')+button(`🍺 Пиво · ${PRICE.beer} ₽`,'buy:beer')+button(`👟 Бутсы · ${PRICE.shoes} ₽`,'buy:shoes')+button(`🧥 Кожанка · ${PRICE.shirt} ₽`,'buy:shirt')+button(`✊ Кастет · ${PRICE.knuckle} ₽`,'buy:knuckle');
+   actions+=button('🎩 ПОПЫТАТЬ УДАЧУ','steal','wide',game.wanted>=3);
+   actions+=button('🧳 К БАРЫГАМ','view:trader','wide',!game.unlocked.trader);
+ }else if(v==='trader'){
+   title='БАРЫГИ';body=game.unlocked.trader?'Здесь скупают найденный хлам и предлагают редкие вещи.':'Ты пока не знаешь, где их искать.';
+   if(game.unlocked.trader){
+     actions+=button(`💰 Продать хлам (${p.junk||0} шт.)`,'sell','wide',!(p.junk||0));
+     actions+=button(`🔪 Оружие +6 · ${PRICE.knife} ₽`,'buy:knife');
+     actions+=button(`📱 Телефон · ${PRICE.phone} ₽`,'buy:phone');
+   }
+   actions+=button('↩️ К БАЗАРУ','view:market','wide');
  }else if(v==='gym'){
- title='КАЧАЛКА';body=game.unlocked.gym?'Тренируй навыки за деньги. Сила добавляет урон, живучесть — здоровье, ловкость — точность.':'Местные ещё не подсказали тебе дорогу. Сначала поговори с ними на улице.';
- if(game.unlocked.gym)actions+=button(`💪 Сила +1 · ${PRICE.force} ₽`,'buy:force')+button(`❤️ Живучесть +1 · ${PRICE.vital} ₽`,'buy:vital')+button(`⚡ Ловкость +1 · ${PRICE.agility} ₽`,'buy:agility')+button(`🍀 Удача +1 · ${PRICE.luck} ₽`,'buy:luck')+button(`🛡️ Защита +1 · ${PRICE.armor} ₽`,'buy:armor');
+   title='КАЧАЛКА';body=game.unlocked.gym?'Качалка помогает улучшать характеристики за деньги.':'Пока не знаешь, где находится качалка. Поищи по району или поговори с местными.';
+   if(game.unlocked.gym){
+    actions+=button(`💪 Сила +1 · ${PRICE.force} ₽`,'buy:force')+button(`❤️ Живучесть +1 · ${PRICE.vital} ₽`,'buy:vital');
+    actions+=button(`⚡ Ловкость +1 · ${PRICE.agility} ₽`,'buy:agility')+button(`🍀 Удача +1 · ${PRICE.luck} ₽`,'buy:luck');
+    actions+=button(`🛡️ Защита +1 · ${PRICE.armor} ₽`,'buy:armor','wide');
+   }
  }else if(v==='hangout'){
- title='ДВОР / МЕДПУНКТ';body='Во дворе обсуждают новости района. Неподалёку есть медпункт, где помогут прийти в себя.';
- actions+=button('🤝 Узнать новости','discuss')+button('🍺 Угостить пацанов','pub')+button(`🩺 Вылечиться · ${PRICE.heal} ₽`,'treat','wide');
+   title='ПРИТОН И ЗНАКОМСТВА';body='Во дворе собираются местные. Заводи знакомства, узнавай полезные адреса и укрепляй репутацию.';
+   actions+=button('🤝 УЗНАТЬ НОВОСТИ','discuss','wide');
+   actions+=button('🍺 УГОСТИТЬ ПАЦАНОВ','pub','wide',!game.unlocked.hangout);
+   actions+=button('🎲 В КЛУБ','view:club','',!game.unlocked.club);
+   actions+=button('💛 К ПОДРУГЕ','view:girl','',!game.girlfriend);
+   actions+=button('🩺 В МЕДПУНКТ','view:clinic','wide');
+ }else if(v==='club'){
+   title='КЛУБ';body=game.unlocked.club?'Музыка, карты, танцы и разговоры. Можно рискнуть небольшой ставкой и потренировать удачу.':'Ты пока не нашёл местный клуб.';
+   if(game.unlocked.club)actions+=button('🃏 СЫГРАТЬ В КАРТЫ · 5 ₽','cards','wide');
+   actions+=button('↩️ ВО ДВОР','view:hangout','wide');
+ }else if(v==='girl'){
+   title='ПОДРУГА';body=game.girlfriend?'Здесь можно отдохнуть от разборок и восстановиться.':'Пока ты не завёл близкого знакомства.';
+   if(game.girlfriend)actions+=button('💛 ПРОВЕСТИ ВЕЧЕР','girl','wide');
+   actions+=button('↩️ ВО ДВОР','view:hangout','wide');
+ }else if(v==='clinic'){
+   title='МЕДПУНКТ';body=`Здоровье: ${p.hp}/${maxHp(p)}. ${game.injuries.leg?'Травмирована нога. ':''}${game.injuries.jaw?'Травмирована челюсть. ':''}Медик может вылечить раны и травмы.`;
+   actions+=button(`🩺 ЛЕЧИТЬСЯ · ${PRICE.heal} ₽`,'treat','primary wide');
+   actions+=button('↩️ ВО ДВОР','view:hangout','wide');
  }else if(v==='hero'){
- title='ТВОЙ ГЕРОЙ';body=`<div class="score"><div>Сила: <span>${p.s}</span></div><div>Ловкость: <span>${p.a}</span></div><div>Живучесть: <span>${p.v}</span></div><div>Удача: <span>${p.l}</span></div><div>Броня: <span>${p.armor}</span></div><div>Оружие: <span>+${p.weapon+p.shoes}</span></div><div>Пиво: <span>${p.beer}</span></div><div>Хот-доги: <span>${p.hotdog}</span></div></div><div class="yellow">Свободные очки: ${p.points}</div>`;
- actions+=button(`🍺 Выпить пиво (${p.beer})`,'use:beer','',p.beer<1)+button(`🌭 Поесть (${p.hotdog})`,'use:hotdog','',p.hotdog<1);
- if(p.points){actions+=button('Сила +1','up:s')+button('Ловкость +1','up:a')+button('Живучесть +1','up:v')+button('Удача +1','up:l')}
- actions+=button('💾 СОХРАНИТЬ','save')+button('↻ НОВАЯ ИГРА','reset','warn');
+   title='ТВОЙ ГЕРОЙ';
+   body=`<div class="score"><div>Сила: <span>${p.s}</span></div><div>Ловкость: <span>${p.a}</span></div><div>Живучесть: <span>${p.v}</span></div><div>Удача: <span>${p.l}</span></div><div>Броня: <span>${p.armor}</span></div><div>Оружие: <span>+${p.weapon+p.shoes}</span></div><div>Пиво: <span>${p.beer}</span></div><div>Еда: <span>${p.hotdog}</span></div><div>Хлам: <span>${p.junk||0}</span></div><div>Братва: <span>${game.crew}</span></div><div>Розыск: <span>${game.wanted}/3</span></div><div>Подруга: <span>${game.girlfriend?'есть':'нет'}</span></div></div><div class="yellow">Специализация: ${esc(CLASSES.find(c=>c.id===game.classId).name)}. Навыки растут при получении уровней по склонностям класса.</div>`;
+   if(game.injuries.leg||game.injuries.jaw)body+='<div class="red">🩹 Есть травмы — нужен медпункт.</div>';
+   actions+=button(`🍺 Выпить пиво (${p.beer})`,'use:beer','',p.beer<1)+button(`🌭 Поесть (${p.hotdog})`,'use:hotdog','',p.hotdog<1);
+   if(p.points){actions+=button('Сила +1','up:s')+button('Ловкость +1','up:a')+button('Живучесть +1','up:v')+button('Удача +1','up:l')}
+   actions+=button('💾 СОХРАНИТЬ','save')+button('↻ НОВАЯ ИГРА','reset','warn');
  }
- const labels={street:game.region===4?'ФИНАЛЬНАЯ ГЛАВА':'КАЗАНЬ · 1998',market:'ТОРГОВЫЕ РЯДЫ',gym:'ТРЕНИРОВКИ',hangout:'МЕСТНЫЕ ДЕЛА',hero:'ПЕРСОНАЖ'};
- const headline=v==='street'?(game.fight?'РАЗБОРКА':REGION[game.region]):({market:'Рынок',gym:'Качалка',hangout:'Двор',hero:'Твой герой'})[v];
- const art=v==='street'?'street':v;
+ const labels={street:'КАЗАНЬ · 1998',market:'БАЗАР',gym:'КАЧАЛКА',hangout:'МЕСТНЫЕ ДЕЛА',hero:'ПЕРСОНАЖ',trader:'БАРЫГИ',club:'КЛУБ',girl:'ПОДРУГА',clinic:'МЕДИК'};
+ const headline=v==='street'?(game.fight?'РАЗБОРКА':REGION[game.region]):({market:'Базар',gym:'Качалка',hangout:'Двор',hero:'Твой герой',trader:'Барыги',club:'Клуб',girl:'Подруга',clinic:'Медпункт'})[v];
+ const art=v==='street'?'street':({trader:'market',club:'hangout',girl:'hangout',clinic:'hangout'})[v]||v;
  const fightBadge=game.fight&&v==='street'?'<div class="battle-badge">⚔️ БОЙ НАЧАЛСЯ</div>':'';
  return `<section class="panel scene-panel"><div class="scene-visual art-${art}"><span class="scene-number">${game.region===4?'ФИНАЛ':'РАЙОН '+(game.region+1)}</span><div class="scene-info"><span class="scene-kicker">${labels[v]}</span><div class="scene-headline">${esc(headline)}</div>${fightBadge}</div></div><div class="panel-body ${game.fight?'battle-body':''}"><div class="scene-title">${title}</div><div class="story">${body}</div></div><section class="scene-events" aria-label="История событий"><div class="scene-events-heading">📜 ИСТОРИЯ СОБЫТИЙ <span>${game.log.length}</span></div><div class="scene-events-list" role="log" aria-live="polite">${game.log.map(l=>`<div class="log-line ${esc(l.type)}">${esc(l.text)}</div>`).join('')}</div></section><div class="action-grid">${actions}</div></section>`;
 }
@@ -406,13 +690,13 @@ function renderGame(){
  const journal=app.querySelector('.scene-events-list');
  if(journal)journal.scrollTop=journal.scrollHeight;
 }
-function renderEnd(){let won=game.screen==='won';app.innerHTML=`${renderHeader()}<main class="panel"><div class="scene-visual art-street"><div class="scene-info"><span class="scene-kicker">${won?'ГЛАВА ПРОЙДЕНА':'УЛИЧНАЯ ИСТОРИЯ'}</span><div class="scene-headline">${won?'ТЫ НА ВЕРШИНЕ':'КОНЕЦ ИГРЫ'}</div></div></div><div class="panel-body"><div class="intro-logo" style="font-size:32px">${won?'ПОБЕДА!':'ТЫ СДОХ'}</div><p class="story" style="text-align:center">${won?(game.ending==='peace'?'Ты отстоял своё имя и добился справедливого решения. Казань помнит разные пути к уважению.':'Ты дошёл до института и выиграл финальный поединок. Это конец первой сюжетной кампании.'):'Твоё путешествие по Казани закончилось слишком рано. Но историю можно начать заново.'}</p><p class="story yellow" style="text-align:center">Побед: ${game.player.wins} · Уровень: ${game.player.level}</p><div class="action-grid">${button('↻ НАЧАТЬ ЗАНОВО','reset','primary wide')}</div></div></main>`}
+function renderEnd(){let won=game.screen==='won';app.innerHTML=`${renderHeader()}<main class="panel"><div class="scene-visual art-street"><div class="scene-info"><span class="scene-kicker">${won?'ГЛАВА ПРОЙДЕНА':'УЛИЧНАЯ ИСТОРИЯ'}</span><div class="scene-headline">${won?'ТЫ НА ВЕРШИНЕ':'КОНЕЦ ИГРЫ'}</div></div></div><div class="panel-body"><div class="intro-logo" style="font-size:32px">${won?'ПОБЕДА!':'ТЫ СДОХ'}</div><p class="story" style="text-align:center">${won?(game.ending==='peace'?'Ты прошёл свой путь. Казань помнит разные способы завоевать уважение.':'Ты прошёл четыре района, победил в финальной схватке и доказал, что сумел подняться с самого низа.'):'Твоё путешествие по Казани закончилось слишком рано. Но историю можно начать заново.'}</p><p class="story yellow" style="text-align:center">Побед: ${game.player.wins} · Уровень: ${game.player.level}</p><div class="action-grid">${button('↻ НАЧАТЬ ЗАНОВО','reset','primary wide')}</div></div></main>`}
 function render(){if(game.screen==='select')renderStart();else if(game.screen==='game')renderGame();else renderEnd()}
 app.addEventListener('click',ev=>{const el=ev.target.closest('button');if(!el||el.disabled)return;
  if(el.dataset.class){game.classId=el.dataset.class;game.name=$('#nick')?.value||game.name;saveRender();return}
  if(el.dataset.view){setView(el.dataset.view);return}
  const action=el.dataset.action;if(!action)return;
- switch(action){case 'new':newGame();return;case 'wander':wander();return;case 'attack':attack();return;case 'flee':flee();return;case 'travel':travel();return;case 'discuss':discuss();return;case 'pub':pub();return;case 'treat':treat();return;case 'save':note('Прогресс сохранён в браузере.','good');saveRender();return;case 'reset':if(confirm('Начать новую игру? Текущий прогресс будет удалён.')){game=initial();saveRender()}return;default:if(action.startsWith('story:'))chooseStory(Number(action.slice(6)));else if(action.startsWith('buy:'))buy(action.slice(4));else if(action.startsWith('use:'))use(action.slice(4));else if(action.startsWith('up:'))upgrade(action.slice(3));}
+ switch(action){case 'new':newGame();return;case 'wander':wander();return;case 'attack':attack();return;case 'flee':flee();return;case 'travel':travel();return;case 'discuss':discuss();return;case 'pub':pub();return;case 'treat':treat();return;case 'steal':steal();return;case 'sell':sellJunk();return;case 'cards':cards();return;case 'girl':visitGirl();return;case 'save':note('Прогресс сохранён в браузере.','good');saveRender();return;case 'reset':if(confirm('Начать новую игру? Текущий прогресс будет удалён.')){game=initial();saveRender()}return;default:if(action.startsWith('story:'))chooseStory(Number(action.slice(6)));else if(action.startsWith('buy:'))buy(action.slice(4));else if(action.startsWith('use:'))use(action.slice(4));else if(action.startsWith('up:'))upgrade(action.slice(3));else if(action.startsWith('view:'))setView(action.slice(5));}
 });
 window.addEventListener('pagehide',safeWrite);render();
 })();
