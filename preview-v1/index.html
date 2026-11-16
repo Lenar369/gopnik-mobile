@@ -40,7 +40,7 @@ footer{font-size:11px;color:#898d85;text-align:center;padding:13px;line-height:1
 (function(){
 'use strict';
 var SAVE='gopnik-chuzhie-dolgi-preview-2026-v1';
-var app=document.getElementById('app'),screen='scene',selected='ordinary',shop=null;
+var app=document.getElementById('app'),screen='scene',selected='ordinary',shop=null,draftName='Игрок';
 var CLASSES={
 ordinary:{name:'Парень со двора',s:2,a:2,i:5,r:1,home:'Квартира с семьёй',intro:'Мать оставила на кухне записку: «Купи хлеб, если будешь выходить». За стеной стучит соседка Зоя. Похоже, весь подъезд с утра обсуждает одно и то же.',start:'glasses'},
 gop:{name:'Гопник',s:3,a:2,i:2,r:3,home:'Квартира бабушки',intro:'Бабушка гремит чашками на кухне: «Вчера опять поздно пришёл». Старший брат оставил на столе номер телефона. За окном Санёк спорит с кем-то у лавочки.',start:'tracksuit'},
@@ -210,7 +210,7 @@ function heroBox(){var st=stats();return '<div class="stats"><div class="stat"><
 function tabNav(){var tabs=[['scene','🏘️','Место'],['map','🗺️','Карта'],['hero','🎒','Герой'],['journal','📖','Дела'],['log','🕘','Журнал']];return '<nav class="menu" aria-label="Меню игры">'+tabs.map(function(x){return '<button class="navbtn '+(screen===x[0]?'sel':'')+'" data-act="tab:'+x[0]+'"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('')+'</nav>'}
 function renderIntro(){
 var cards=Object.keys(CLASSES).map(function(id){var c=CLASSES[id];return '<button class="choice '+(selected===id?'active':'')+'" data-act="select:'+id+'"><strong>'+esc(c.name)+'</strong><small>'+esc(c.home)+'<br>С '+c.s+' · Л '+c.a+' · См '+c.i+' · А '+c.r+'</small></button>'}).join('');
-app.innerHTML='<header class="head"><div><div class="logo">КАЗАНЬ · 1998</div><h1>ГОПНИК</h1><div class="gold">Чужие долги · тест главы 1</div></div><div class="clock">ОСЕНЬ 1998</div></header><div class="hero home"><div class="hero-text"><div class="caps">Новая история</div><h2>Один город.<br>Четыре дороги.</h2><p>Исчез Дамир. Люди говорят разное. Кому верить — решать тебе.</p></div></div><div class="panel pad"><div class="caps">Выбери происхождение</div><p class="story">Все четыре пути ведут к общей истории, но отличаются жильём, диалогами и начальными характеристиками.</p><div class="choices" style="margin-top:14px">'+cards+'</div><div class="section-label">Имя или погоняло</div><input class="input" id="heroName" maxlength="24" placeholder="Как тебя называют?" value="Игрок"><div style="margin-top:10px">'+btn('НАЧАТЬ ИГРУ','start','Первый день · Пятый квартал','primary wide')+'</div></div><footer>Автосохранение только для этой тестовой версии. Старая игра и её прогресс не затрагиваются.</footer>';
+app.innerHTML='<header class="head"><div><div class="logo">КАЗАНЬ · 1998</div><h1>ГОПНИК</h1><div class="gold">Чужие долги · тест главы 1</div></div><div class="clock">ОСЕНЬ 1998</div></header><div class="hero home"><div class="hero-text"><div class="caps">Новая история</div><h2>Один город.<br>Четыре дороги.</h2><p>Исчез Дамир. Люди говорят разное. Кому верить — решать тебе.</p></div></div><div class="panel pad"><div class="caps">Выбери происхождение</div><p class="story">Все четыре пути ведут к общей истории, но отличаются жильём, диалогами и начальными характеристиками.</p><div class="choices" style="margin-top:14px">'+cards+'</div><div class="section-label">Имя или погоняло</div><input class="input" id="heroName" maxlength="24" placeholder="Как тебя называют?" value="'+esc(draftName)+'"><div style="margin-top:10px">'+btn('НАЧАТЬ ИГРУ','start','Первый день · Пятый квартал','primary wide')+'</div></div><footer>Автосохранение только для этой тестовой версии. Старая игра и её прогресс не затрагиваются.</footer>';
 }
 function render(){
 if(!g){renderIntro();return}
@@ -254,7 +254,7 @@ function renderCombat(){
 var c=g.combat;
 return '<div class="hero fight"><div class="hero-text"><div class="caps">Пошаговая схватка · без обязательной победы</div><h2>'+esc(c.name)+'</h2><p>Противник: '+c.hp+'/65 HP · намерение: '+(c.intent==='heavy'?'замахивается для сильного удара':c.intent==='quick'?'двигается резко':'пытается запутать')+'</p></div></div>'+
 '<div class="panel pad"><p class="story">Твои HP: '+g.hp+'/100 · Выносливость: '+g.stamina+'/100. Ударить, защищаться или уйти — решать тебе.</p><p class="boxhint">'+esc(g.last)+'</p></div>'+
-wrapActions([['Быстрый удар','hit:quick','90% · 6–10 урона · −8 выносливости'],['Обычный удар','hit:normal','70% · 10–14 урона · −12 выносливости'],['Сильный удар','hit:heavy','50% · 16–23 урона · −24 выносливости'],['Блок','def:block','Снижает урон, восстанавливает силы'],['Уклонение','def:dodge','Шанс зависит от ловкости'],['Убежать','run','Без потери прогресса'],['Договориться','talk-fight','Мирный исход с возможной ценой'],['Использовать бинт','fight-bandage','+20 HP, если есть бинт']])+(g.skills.includes('counter')?wrapActions([['Контратака','counter','Только после успешной защиты']]):'');
+wrapActions([['Быстрый удар','hit:quick','90% · 6–10 урона · −8 выносливости'],['Обычный удар','hit:normal','70% · 10–14 урона · −12 выносливости'],['Сильный удар','hit:heavy','50% · 16–23 урона · −24 выносливости'],['Блок','def:block','Снижает урон, восстанавливает силы'],['Уклонение','def:dodge','Шанс зависит от ловкости'],['Убежать','run','Без потери прогресса'],['Договориться','talk-fight','Мирный исход с возможной ценой'],['Использовать бинт','fight-bandage','+20 HP, если есть бинт']])+(g.skills.includes('counter')&&c.counterReady?wrapActions([['Контратака','counter','−12 выносливости · 70% попадание']]):'');
 }
 function renderTrade(){
 var d=shop;
@@ -263,7 +263,7 @@ var ob=GOODS[d.id],base=d.dir==='buy'?ob.price:Math.floor(ob.price*.45);
 var label=d.dir==='buy'?'Купить':'Продать';
 return '<div class="panel pad"><h2>'+label+': '+esc(ob.name)+'</h2><p class="story">'+esc(ob.desc)+'<br>Предлагаемая цена: <b class="gold">'+d.price+' ₽</b></p><div class="boxhint">Шанс торга зависит от смекалки, авторитета и отношений с Борисом. Одна попытка на этот предмет в день.</div></div>'+wrapActions([['Попробовать торг','haggle','Скидка / надбавка','primary',!!g.flags['haggled:'+g.day+':'+d.dir+':'+d.id]],['Заключить сделку','deal','Цена: '+d.price+' ₽','good'],['Отмена','cancel-trade','Вернуться к ассортименту']]);
 }
-var list=Object.keys(GOODS).map(function(id){var it=GOODS[id],buy=g.inventory.length<20&&g.money>=it.price,sell=g.inventory.includes(id);return '<div class="listitem"><b>'+esc(it.name)+' · '+it.price+' ₽</b><p>'+esc(it.desc)+'</p><div class="buttons" style="padding:10px 0 0">'+btn('Купить','offer:buy:'+id,'', '',!buy)+btn('Продать','offer:sell:'+id,'Выкуп ~'+Math.floor(it.price*.45)+' ₽','',!sell)+'</div></div>'}).join('');
+var list=Object.keys(GOODS).map(function(id){var it=GOODS[id],buy=g.inventory.length<20,sell=g.inventory.includes(id);return '<div class="listitem"><b>'+esc(it.name)+' · '+it.price+' ₽</b><p>'+esc(it.desc)+'</p><div class="buttons" style="padding:10px 0 0">'+btn('Купить','offer:buy:'+id,'', '',!buy)+btn('Продать','offer:sell:'+id,'Выкуп ~'+Math.floor(it.price*.45)+' ₽','',!sell)+'</div></div>'}).join('');
 return '<div class="panel pad"><h2>Киоск Бориса</h2><p class="story">Борис зарабатывает на разнице цен. При хорошем отношении охотнее уступает.</p><p class="small muted">Деньги: '+g.money+' ₽ · Рюкзак: '+g.inventory.length+'/20</p></div><div class="panel">'+list+'</div>'+wrapActions([['Выйти из магазина','cancel-trade','На улицу']]);
 }
 function renderCloset(){
@@ -282,10 +282,11 @@ if(!g.combat)return;
 var c=g.combat,st=stats(),hit=Math.random()<.78;
 var dmg=c.intent==='heavy'?rnd(12,20):c.intent==='quick'?rnd(7,11):rnd(5,9);
 if(mode==='block')dmg=Math.ceil(dmg*(c.intent==='heavy'?.7:.45));
-if(mode==='dodge'&&Math.random()<clamp((40+6*(st.a-3))/100,.15,.7))hit=false;
+var dodged=false;if(mode==='dodge'&&hit&&Math.random()<clamp((40+6*(st.a-3))/100,.15,.7)){hit=false;dodged=true;}
 if(hit){g.hp=Math.max(0,g.hp-dmg);log('Противник ударил: −'+dmg+' HP.'+(mode==='block'?' Часть урона заблокирована.':''))}
 else log('Атака противника не достигла цели.');
 g.stamina=clamp(g.stamina+6+(mode==='block'?14:0),0,100);
+c.counterReady=(mode==='block'&&hit||mode==='dodge'&&dodged)&&g.skills.includes('counter');
 c.turn++;c.intent=['quick','heavy','feint'][c.turn%3];
 if(g.hp<=0){g.combat=null;g.hp=30;g.stamina=35;g.flags.injured=true;advance(180);g.area='q5';g.loc='home';log('Ты очнулся дома с 30 HP и временной травмой. Задания и предметы не потеряны.');}
 }
@@ -293,7 +294,7 @@ function hit(kind){
 var c=g.combat,p=stats();if(!c)return;
 var conf={quick:[8,.90,6,10],normal:[12,.70,10,14],heavy:[24,.50,16,23]}[kind];
 if(g.stamina<conf[0]){log('Недостаточно выносливости. Используй блок, чтобы восстановиться.');save();render();return}
-g.stamina-=conf[0];
+g.stamina-=conf[0];c.counterReady=false;
 var pct=clamp(conf[1]+(p.a-3)*.02+accuracyPenalty()/100,.15,.98);
 if(Math.random()<pct){var dmg=rnd(conf[2],conf[3])+Math.max(0,p.s-2);c.hp=Math.max(0,c.hp-dmg);log('Попадание! Противнику нанесено '+dmg+' урона.');}
 else log('Удар прошёл мимо.');
@@ -301,12 +302,12 @@ if(c.hp<=0){winConflict('fight');return}
 enemyTurn('none');save();render();
 }
 function handle(id){
-if(!g){if(id.indexOf('select:')===0){selected=id.split(':')[1];render();return}if(id==='start'){var nm=document.getElementById('heroName');g=fresh(selected,(nm&&nm.value||'').trim().slice(0,24)||'Безымянный');g.equip[GOODS[CLASSES[selected].start].slot]=CLASSES[selected].start;g.inventory=['bandage'];screen='scene';save();render()}return}
+if(!g){if(id.indexOf('select:')===0){var nameInput=document.getElementById('heroName');if(nameInput)draftName=nameInput.value;selected=id.split(':')[1];render();return}if(id==='start'){var nm=document.getElementById('heroName');g=fresh(selected,(nm&&nm.value||'').trim().slice(0,24)||'Безымянный');g.equip[GOODS[CLASSES[selected].start].slot]=CLASSES[selected].start;g.inventory=['bandage'];screen='scene';save();render()}return}
 if(id.indexOf('tab:')===0){if(g.combat||g.scene){log('Сначала закончи текущую ситуацию.');save();render();return}openScene(id.split(':')[1]);return}
 if(id==='save'){save();log('Сохранение записано на этом устройстве.');render();return}
 if(id==='reset'){if(confirm('Начать игру заново? Удалится только прогресс тестовой версии.')){localStorage.removeItem(SAVE);g=null;screen='scene';shop=null;render()}return}
 if(id==='map'){openScene('map');return}
-if(id.indexOf('go:')===0){var target=id.slice(3);var m=target===g.loc?0:AREAS.some(function(x){return x.id===target})?30:target==='court'?10:12;changePlace(target,m);return}
+if(id.indexOf('go:')===0){var target=id.slice(3);if(target==='basement'&&g.quest.light===0){log('Подвал закрыт. Поговори со слесарем Валерой у гаражей.');save();render();return}var m=target===g.loc?0:AREAS.some(function(x){return x.id===target})?30:target==='court'?10:12;changePlace(target,m);return}
 if(id.indexOf('wait:')===0){var h=Number(id.split(':')[1]),now=totalMinutes(),t=(g.day-1)*1440+h*60;if(t<=now)t+=1440;advance(t-now);log('Время прошло. Сейчас '+clock()+'.');save();render();return}
 if(id==='home-look'){action('Ты нашёл старый снимок двора и коробочку с полезными мелочами. Дома всё ещё пахнет знакомой жизнью.',15,4);return}
 if(id==='home-talk'){advance(10);g.relations.zoya++;log('Домочадцы советуют прислушаться к соседке: по ночам у дома №12 стали появляться чужие люди.');screen='scene';save();render();return}
@@ -368,11 +369,11 @@ if(id==='finish'){if(!completed())return;story('Конец первой глав
 if(id.indexOf('reply:')===0){reply(id.slice(6));return}
 if(g.combat){
  if(id.indexOf('hit:')===0){hit(id.split(':')[1]);return}
- if(id==='def:block'||id==='def:dodge'){g.stamina=clamp(g.stamina+(id==='def:block'?14:0),0,100);enemyTurn(id==='def:block'?'block':'dodge');save();render();return}
+ if(id==='def:block'||id==='def:dodge'){g.combat.counterReady=false;enemyTurn(id==='def:block'?'block':'dodge');save();render();return}
  if(id==='run'){g.combat.escape=(g.combat.escape||0)+1;if(g.combat.escape>=3||Math.random()<.67){winConflict('escape')}else{log('Пока не удалось отступить.');enemyTurn('none');save();render()}return}
  if(id==='talk-fight'){winConflict('talk');return}
  if(id==='fight-bandage'){var i=g.inventory.indexOf('bandage');if(i<0){log('Нет бинта.');save();render();return}g.inventory.splice(i,1);g.hp=Math.min(100,g.hp+20);enemyTurn('none');save();render();return}
- if(id==='counter'){log('Контратака доступна после успешной защиты и при достаточной выносливости.');save();render();return}
+ if(id==='counter'){var cc=g.combat;if(!cc||!cc.counterReady||g.stamina<12){log('Для контратаки нужны удачная защита и 12 выносливости.');save();render();return}cc.counterReady=false;g.stamina-=12;if(Math.random()<.7){var cd=Math.round(rnd(10,14)*.7);cc.hp=Math.max(0,cc.hp-cd);log('Контратака: −'+cd+' HP противнику.');if(cc.hp<=0){winConflict('fight');return}}else log('Контратака не попала.');save();render();return}
 }
 }
 function reply(id){
