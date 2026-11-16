@@ -108,6 +108,12 @@
 .city-open:focus-visible,.area-card:focus-visible,.route-choice:focus-visible{outline:2px solid #f7dfa9}
 @media(max-width:390px){.regionpin .pintext{font-size:9px;max-width:91px}.route-choice{padding:7px}.area-card{padding:7px}.city-open{min-height:32px;padding:6px 9px}}
 @media(max-height:600px){.regionpin .pintext{top:40px}.maphost .map-hint{max-height:35px}.city-sketch{max-height:130px}}
+
+/* Painted scenery v5.1: quieter readable interactive markers over detailed maps. */
+.regionpin{background:#26261edb;border:2px solid #e6c58c;box-shadow:0 3px 12px #000b,0 0 0 2px #2a251c7c;min-width:42px;min-height:42px}
+.regionpin.selected-path{background:#71562f;color:#ffebbd;box-shadow:0 0 0 5px #d9ad5f88,0 3px 17px #000c}
+.regionpin .pintext{background:#171b1bf0;box-shadow:0 3px 11px #000a}
+.mapart{image-rendering:auto;object-fit:fill}
 </style></head><body><div id="root"></div><script>
 (()=>{'use strict';
 const root=document.getElementById('root'),KEY='gopnik-kazan-1998-open-city-v5',V4_KEY='gopnik-kazan-1998-chapter2-v4',LEGACY_KEY='gopnik-kazan-1998-chapter1-v3';
@@ -636,8 +642,10 @@ function regionPins(){
  const entries=DISTRICTS[g.region]?.spots||[];
  return entries.map(p=>'<button aria-label="Открыть '+esc(p.name)+'" data-name="'+esc(p.name)+'" class="pin regionpin '+(focus===p.id?'active':'')+' '+(worldMainTarget()===p.id?'selected-path':'')+'" data-pin="'+p.id+'" style="left:'+p.x+'px;top:'+p.y+'px">'+p.icon+'<span class="pintext">'+esc(p.name)+'</span></button>').join('');
 }
+const PAINTED_MAPS={1:'market.webp',2:'station.webp',3:'factory.webp',4:'garage.webp',5:'river.webp',6:'center.webp'};
+function districtArtSrc(id){return PAINTED_MAPS[id]?'./maps/'+PAINTED_MAPS[id]:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(regionSVG(id))}
 function localBackground(){return '<div class="maphost" id="maphost"><div class="world" id="world">'+
- '<img class="mapart" alt="Нарисованный район: '+esc(currentAreaName())+'" draggable="false" src="data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(regionSVG(g.region))+'">'+
+ '<img class="mapart" alt="Нарисованный район: '+esc(currentAreaName())+'" draggable="false" src="'+districtArtSrc(g.region)+'">'+
  lightingOverlay()+regionPins()+'</div>'+
  '<button class="city-open" data-do="city">🌍 Все районы</button>'+
  '<div class="map-hint">📍 '+esc(regionHint())+'</div>'+
@@ -734,7 +742,7 @@ function worldActions(id){
  if(spot.role==='shop')add('Посмотреть товары','shop','Одежда и полезные вещи');
  if(spot.role==='rest')add('Посидеть, выпить чаю','world:tea:'+id,'+12 сил · 5 ₽');
  if(spot.role==='heal'&&g.hp<100)add('Перевязать рану','world:heal','+35 здоровья · 25 ₽');
- if(spot.role==='travel')add('Маршруты по городу','city','Все 7 районов открыты',true);
+ if(spot.role==='travel')add('🌍 Все районы','city','Выбрать район и транспорт',true);
  const workSpot=spot.role==='work'||['s_luggage','f_gate','w_fish','c_shop'].includes(id);
  if(workSpot&&w.work[id]!==g.day)add('Подработка сегодня','world:work:'+id,'Заработок · 65–90 мин');
  const lodgePrice={hotel:30,f_dorm:15,w_cafe:20}[id];
@@ -1078,6 +1086,7 @@ function actionsFor(id){if(g.region!==0&&dspot(id))return worldActions(id);let a
  if(g.jobDay!==g.day)add('Разгрузить детали','work','+45 ₽ · раз в день');
  break;
  case 'stop':
+ add('🌍 Все районы','city','Выбрать район и транспорт',true);
  if(f.timeline&&!f.driver)add('Дежурный водитель','driver','Последний грузовик',true);
  add('Вокзальный · гостиница','travel-hotel','Ночлег вне квартала · 40 минут',true);
  if(!f.timetable)add('Расписание автобуса','timetable','Первые рейсы из квартала');
