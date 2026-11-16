@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17181a"><title>Гопник: Казань 1998 — Чужие долги · тест главы 1</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#ece8df;background:#101113;--bg:#101113;--panel:#1b1d1e;--edge:#383832;--ink:#f3ede0;--soft:#b7b5ab;--gold:#e9b968;--green:#8ac7a3;--red:#e39c90}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% -80px,#32362f 0,#151718 40%,#101113 80%);color:var(--ink)}
+button,input{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}button:disabled{opacity:.37;cursor:default}button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+#app{max-width:690px;margin:auto;min-height:100dvh;padding:14px 12px calc(90px + env(safe-area-inset-bottom))}
+h1,h2,h3,p{margin:0}h1{font-size:31px;line-height:1.05;letter-spacing:-1.4px}h2{font-size:21px;line-height:1.15}h3{font-size:16px}p{line-height:1.5}
+.head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;padding:5px 4px 15px}.logo{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:900}.clock{font-size:15px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}.sub{font-size:11px;color:var(--soft);line-height:1.4}.caps{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--gold);font-weight:800}
+.hero{border-radius:17px;overflow:hidden;position:relative;min-height:148px;background:linear-gradient(160deg,#283331bb,#1a1d20dd),radial-gradient(ellipse at 20% 10%,#8a533a77,transparent 65%);border:1px solid #505146;display:flex;align-items:flex-end;margin-bottom:11px}
+.hero:before{content:"";position:absolute;inset:0;opacity:.14;background:repeating-linear-gradient(90deg,transparent 0 39px,#d5d2c2 40px 43px,transparent 44px 90px);transform:translateY(45px)}
+.hero:after{content:"";position:absolute;bottom:0;left:0;right:0;height:70%;background:linear-gradient(0deg,#17191c 0,transparent 100%)}
+.hero.late{background:linear-gradient(160deg,#182437bb,#251921dd),radial-gradient(ellipse at 40% 20%,#805b8666,transparent 65%)}
+.hero.market{background:linear-gradient(150deg,#45341fb8,#1c2526dd)}.hero.home{background:linear-gradient(150deg,#3e322dce,#1f2223df)}.hero.fight{background:linear-gradient(145deg,#582b2bce,#252226f0)}
+.hero-text{position:relative;z-index:1;padding:20px 17px}.hero-text h2{font-size:27px;max-width:490px}.hero-text p{color:#ded8ce;font-size:12px;margin-top:7px}
+.panel{background:#1c1e20;border:1px solid #3b3d3c;border-radius:14px;margin:10px 0;overflow:hidden}
+.pad{padding:15px}.story{line-height:1.65;font-size:14px;color:#e6e0d5;margin-top:8px;white-space:pre-line}.muted{color:var(--soft)}.small{font-size:12px}.split{display:flex;justify-content:space-between;gap:12px;align-items:center}.split.wrap{flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:11px 0}.stat{background:#1c2020;border:1px solid #3c443e;border-radius:10px;text-align:center;padding:10px 4px}.stat b{font-size:16px;font-variant-numeric:tabular-nums}.stat span{display:block;font-size:10px;color:#b2b9ad;margin-top:4px}
+.bar{height:6px;border-radius:5px;background:#3a3332;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:#bf8c79}
+.bar.stam{background:#253b38}.bar.stam i{background:#74ab94}
+.buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:13px}
+.act{min-height:52px;padding:10px 9px;border:1px solid #5b5e54;border-radius:10px;background:#292c2b;color:#f3ece0;text-align:left;font-size:13px;font-weight:650;line-height:1.2}
+.act b{display:block}.act small{display:block;font-size:10px;margin-top:5px;font-weight:400;color:#bab9ae;line-height:1.3}
+.act.primary{background:#4e3b28;border-color:#ad8552}.act.good{background:#234135;border-color:#5c9271}.act.wide{grid-column:1/-1}
+.section-label{margin:16px 3px 4px;color:var(--gold);font-size:12px;font-weight:800;letter-spacing:1px}
+.listitem{border-bottom:1px solid #3b3d3b;padding:12px 14px}.listitem:last-child{border:0}.listitem p{font-size:12px;color:var(--soft);margin-top:5px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.tag{border:1px solid #6a6355;border-radius:30px;padding:5px 8px;font-size:11px;color:#e1cba7}
+.menu{position:fixed;z-index:9;bottom:0;left:50%;transform:translateX(-50%);width:min(690px,100%);display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:7px 8px calc(8px + env(safe-area-inset-bottom));background:#151717ed;border-top:1px solid #44433f;backdrop-filter:blur(12px)}
+.navbtn{border:0;border-radius:8px;background:transparent;color:#a9aba5;min-height:56px;padding:5px 1px;font-size:10px}.navbtn span{display:block;font-size:21px;margin-bottom:4px}.navbtn.sel{color:#f1c17d;background:#383028}
+.input{width:100%;background:#252829;border:1px solid #626052;border-radius:10px;color:white;padding:14px;font-size:16px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}.choice{padding:12px;border:1px solid #56584c;background:#242725;border-radius:13px;text-align:left;color:#ece9dc;min-height:113px}.choice.active{border:2px solid var(--gold);background:#393126;padding:11px}.choice strong{display:block;font-size:14px}.choice small{display:block;color:#c8beb1;line-height:1.5;margin-top:7px;font-size:11px}
+.boxhint{background:#282a25;border-left:3px solid var(--gold);padding:12px;border-radius:5px;color:#e3d7c0;font-size:12px;line-height:1.6;margin:10px 0}
+.map-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px}.place{border:1px solid #55564b;border-radius:10px;background:#292c2a;color:#ece8dd;padding:12px;text-align:left;min-height:75px}.place b{display:block;font-size:13px}.place small{display:block;font-size:10px;color:#b9b9ae;margin-top:6px;line-height:1.4}.place.here{border:2px solid var(--gold);padding:11px;background:#40362a}
+.ring{font-weight:800;color:#b9dcbf}.danger{color:#ffc1af}.gold{color:var(--gold)}
+footer{font-size:11px;color:#898d85;text-align:center;padding:13px;line-height:1.5}.logline{border-bottom:1px solid #353835;padding:9px 0;font-size:12px;line-height:1.6}.logline:last-child{border:0}
+@media(max-width:380px){#app{padding:10px 9px 95px}.stats{gap:4px}.stat b{font-size:14px}.act{font-size:12px;padding:9px 7px}.choice strong{font-size:13px}.head h1{font-size:25px}.hero-text h2{font-size:24px}}
+@media(min-width:630px){.hero{min-height:184px}.hero-text h2{font-size:32px}.buttons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head><body><div id="app"></div><script>
+(function(){
+'use strict';
+var SAVE='gopnik-chuzhie-dolgi-preview-2026-v1';
+var app=document.getElementById('app'),screen='scene',selected='ordinary',shop=null;
+var CLASSES={
+ordinary:{name:'Парень со двора',s:2,a:2,i:5,r:1,home:'Квартира с семьёй',intro:'Мать оставила на кухне записку: «Купи хлеб, если будешь выходить». За стеной стучит соседка Зоя. Похоже, весь подъезд с утра обсуждает одно и то же.',start:'glasses'},
+gop:{name:'Гопник',s:3,a:2,i:2,r:3,home:'Квартира бабушки',intro:'Бабушка гремит чашками на кухне: «Вчера опять поздно пришёл». Старший брат оставил на столе номер телефона. За окном Санёк спорит с кем-то у лавочки.',start:'tracksuit'},
+thief:{name:'Вор-одиночка',s:1,a:4,i:4,r:1,home:'Съёмная комната',intro:'В коридоре пахнет краской и жареным луком. Хозяйка шепчется с соседкой о чужом конверте. На двери странный меловой знак, которого вчера не было.',start:'sneakers'},
+frost:{name:'Отморозок',s:5,a:3,i:1,r:1,home:'Комната у родственника',intro:'Дядя предупредил: «Здесь разборки не устраивать». Из гаражного проезда слышатся крики. Кто-то опять ищет виноватого в событиях прошлой ночи.',start:'workjacket'}};
+var AREAS=[
+{id:'q5',name:'Пятый квартал',desc:'Дом, подъезды, двор, жители',loc:'court'},
+{id:'market',name:'Старый рынок',desc:'Лавки и торговцы',loc:'market'},
+{id:'station',name:'Вокзальный',desc:'Вокзал, приезжие',loc:'station'},
+{id:'factory',name:'Заводской',desc:'Проходная и рабочие',loc:'factory'},
+{id:'garagearea',name:'Гаражный',desc:'Мастерские и стоянки',loc:'garagearea'},
+{id:'river',name:'Речной',desc:'Набережная и причал',loc:'river'},
+{id:'center',name:'Центр города',desc:'Большие магазины и учреждения',loc:'center'}];
+var PLACES=[
+{id:'home',name:'Дом героя',desc:'Безопасное место, сон и шкаф',hint:'Своя комната'},
+{id:'court',name:'Главный двор',desc:'Лавочки, соседи и знакомые',hint:'Сердце квартала'},
+{id:'house12',name:'Дом № 12',desc:'Подъезд и неизвестная история',hint:'Слухи и документы'},
+{id:'kiosk',name:'Киоск',desc:'Борис, торговля и разговоры',hint:'Открыт днём'},
+{id:'playground',name:'Спортплощадка',desc:'Спор, тренировка, конфликт',hint:'Сражения не обязательны'},
+{id:'backcourt',name:'Дальний двор',desc:'Наблюдения и тайные встречи',hint:'Опаснее ночью'},
+{id:'basement',name:'Подвал и теплопункт',desc:'Технические помещения',hint:'Нужен доступ'},
+{id:'garages',name:'Гаражный проезд',desc:'Слесарь Валера и подработка',hint:'Дневная работа'},
+{id:'stop',name:'Остановка',desc:'Пути в остальные районы',hint:'Город доступен сразу'}];
+var GOODS={
+glasses:{name:'Обычные очки',slot:'head',bonus:{i:1},price:45,desc:'+1 смекалка'},
+cap:{name:'Кепка',slot:'head',bonus:{r:1},price:55,desc:'+1 авторитет'},
+tracksuit:{name:'Спортивный костюм',slot:'top',bonus:{s:1},price:130,desc:'+1 сила'},
+jacket:{name:'Кожаная куртка',slot:'top',bonus:{r:1},price:200,desc:'+1 авторитет'},
+workjacket:{name:'Рабочая куртка',slot:'top',bonus:{s:1},price:80,desc:'+1 сила'},
+sneakers:{name:'Кроссовки',slot:'shoes',bonus:{a:1},price:90,desc:'+1 ловкость'},
+boots:{name:'Тяжёлые ботинки',slot:'shoes',bonus:{s:1},accuracy:-10,price:100,desc:'+1 сила, −10 п.п. к точности'},
+watch:{name:'Наручные часы',slot:'accessory',bonus:{i:1},price:100,desc:'+1 смекалка'},
+wrench:{name:'Гаечный ключ',slot:'tool',bonus:{},price:50,desc:'Помогает слесарю и в расследовании'},
+bandage:{name:'Бинт',use:true,price:20,desc:'Восстанавливает 20 HP'}
+};
+var SLOTNAMES={head:'Голова',top:'Верх',shoes:'Обувь',accessory:'Аксессуар',tool:'Инструмент'};
+function fresh(origin,name){
+var c=CLASSES[origin];
+return {v:2,name:name||'Безымянный',origin:origin,area:'q5',loc:'home',day:1,minute:540,level:1,xp:0,statPoints:0,skillPoints:0,stats:{s:c.s,a:c.a,i:c.i,r:c.r},hp:100,stamina:100,money:90,inventory:[],closet:[],equip:{head:null,top:null,shoes:null,accessory:null,tool:null},skills:[],flags:{},relations:{zoya:0,sanya:0,boris:0,valera:0,gena:0},quest:{bag:0,light:0},jobDays:{},evidence:{},combat:null,scene:null,chapterFinished:false,endingChoice:'',log:['Сентябрь 1998 года. '+c.intro],last:'Утро. Можно осмотреть дом или сразу выйти в город.'};
+}
+function load(){try{var p=JSON.parse(localStorage.getItem(SAVE));if(p&&p.v===2&&p.stats&&p.flags&&p.equip)return p;}catch(e){}return null}
+var g=load();
+function save(){try{if(g)localStorage.setItem(SAVE,JSON.stringify(g))}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&#39;':"'" }[c]||'&#39;'})}
+function clamp(x,lo,hi){return Math.max(lo,Math.min(hi,x))}
+function rnd(lo,hi){return Math.floor(Math.random()*(hi-lo+1))+lo}
+function stats(){
+var a={s:g.stats.s,a:g.stats.a,i:g.stats.i,r:g.stats.r},spent=0;
+['head','top','shoes','accessory','tool'].forEach(function(slot){var it=GOODS[g.equip[slot]],b=it&&it.bonus;if(!b)return;['s','a','i','r'].forEach(function(k){if(b[k]&&spent<4){var v=Math.min(b[k],4-spent,10-a[k]);a[k]+=v;spent+=v}})});
+return a;
+}
+function accuracyPenalty(){var n=0;Object.keys(g.equip).forEach(function(k){var it=GOODS[g.equip[k]];if(it)n+=it.accuracy||0});return n}
+function stylePenalty(){return g.equip.top==='tracksuit'&&g.equip.shoes==='boots'?1:0}
+function totalMinutes(){return (g.day-1)*1440+g.minute}
+function advance(m){var x=totalMinutes()+m;g.day=1+Math.floor(x/1440);g.minute=x%1440}
+function clock(){return ('0'+Math.floor(g.minute/60)).slice(-2)+':'+('0'+g.minute%60).slice(-2)}
+function hour(){return g.minute/60}
+function dayTag(){return 'День '+g.day+' · '+clock()}
+function log(text){g.last=text;g.log.push('Д'+g.day+' '+clock()+' — '+text);if(g.log.length>80)g.log.shift()}
+function exp(n){g.xp+=n;var need=40+g.level*20;while(g.level<40&&g.xp>=need){g.xp-=need;g.level++;if(g.level%5===0){g.statPoints++;g.skillPoints++;log('Уровень '+g.level+'! Получено очко характеристики и навыка.')}else log('Уровень '+g.level+'!');need=40+g.level*20}}
+function action(text,mins,xp){if(mins)advance(mins);if(xp)exp(xp);log(text);screen='scene';save();render()}
+function locName(){var p=PLACES.concat(AREAS).find(function(x){return x.id===g.loc});return p?p.name:g.loc}
+function inTime(from,to){return hour()>=from&&hour()<to}
+function getRumor(src){if(!g.flags.rumor){g.flags.rumor=true;exp(14)}log(src+' Теперь ясно: Дамир пропал после странной разгрузки возле дома №12.');}
+function getNote(src){if(!g.evidence.note){g.evidence.note=true;exp(17)}log(src+' «Если спросят — не видел. Не верь тому, кто предложит помощь первым».');}
+function getReceipt(src){if(!g.evidence.receipt){g.evidence.receipt=true;exp(19)}log(src+' На бумаге «Северный двор», подпись и дата. Суммы не сходятся.');}
+function completed(){return !!(g.flags.rumor&&g.evidence.note&&g.evidence.receipt)}
+function changePlace(id,mins){advance(mins||12);g.loc=id;g.area=AREAS.some(function(x){return x.id===id})?id:'q5';g.scene=null;screen='scene';log('Ты направился в «'+locName()+'».');save();render()}
+function itemName(id){return GOODS[id]?GOODS[id].name:id}
+function efx(){var s=stats();return 'Сила '+s.s+' · Ловкость '+s.a+' · Смекалка '+s.i+' · Авторитет '+s.r}
+function btn(text,id,sub,cls,disabled){return '<button class="act '+(cls||'')+'" data-act="'+esc(id)+'"'+(disabled?' disabled':'')+'><b>'+esc(text)+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</button>'}
+function wrapActions(a){return '<div class="buttons">'+a.map(function(t){return btn(t[0],t[1],t[2],t[3],t[4])}).join('')+'</div>'}
+function panel(title,desc,buttons){return '<div class="panel"><div class="pad"><div class="caps">'+esc(title)+'</div><p class="story">'+esc(desc)+'</p></div>'+wrapActions(buttons)+'</div>'}
+function pfx(){return g.origin==='ordinary'?'Ты вырос в этих дворах и знаешь многих соседей.':g.origin==='gop'?'В компании тебя узнают с первого взгляда.':g.origin==='thief'?'Ты замечаешь мелкие детали, которые другие пропускают.':'Люди стараются понять, чего от тебя ждать.'}
+function localDesc(){
+if(g.scene)return '';
+var s={
+home:CLASSES[g.origin].intro+' Здесь можно передохнуть и оставить вещи в шкафу.',
+court:'Между панельными домами скрипят качели. На лавочке обсуждают новости. '+pfx(),
+house12:'Обшарпанный подъезд. Кто-то недавно срывал объявления с доски. Второй этаж пахнет свежей краской.',
+kiosk:'Запах хлеба и тёплых пирожков. Борис за прилавком внимательно оценивает посетителей.',
+playground:'Старые турники, разметка на потрескавшемся асфальте. Несколько парней о чём-то спорят.',
+backcourt:'Здесь меньше прохожих. От гаражей тянется узкая тропинка, на стене свежая надпись.',
+basement:'Трубы, щиток и тёмный коридор. Свет моргает, а у стены лежит старая коробка.',
+garages:'Металлические боксы, запах машинного масла. Валера возится с неисправным замком.',
+stop:'Выцветшее расписание. Автобусы и трамваи отправляются в разные части города.',
+market:'Витрины рынка забиты дешёвыми куртками. Торговцы спорят из-за цен.',
+station:'На вокзале постоянно кто-то приезжает и уезжает. Носильщик знает последние новости.',
+factory:'На проходной завода рабочие обсуждают задержанную зарплату и недавние отгрузки.',
+garagearea:'Среди гаражей находится мастерская Ильдара. Механики обсуждают машины.',
+river:'Вдоль реки тянутся склады. У причала слышны гудки и плеск воды.',
+center:'Очереди, вывески, кафе и учреждения. Здесь охотнее говорят о деньгах, чем о дворах.'
+};
+return s[g.loc]||'Казань, осень 1998 года.';
+}
+function stageText(){
+if(g.chapterFinished)return 'Глава 1 завершена. Твоя история продолжится в следующих версиях. Можно исследовать текущие места.';
+var k=Number(!!g.flags.rumor)+Number(!!g.evidence.note)+Number(!!g.evidence.receipt);
+return k===0?'Начало расследования · 0/3 зацепок':k===3?'Три зацепки собраны · можно завершать главу':'Расследование · '+k+'/3 зацепок';
+}
+function sceneActions(){
+var a=[],p=g.loc;
+if(p==='home'){
+a.push(['Осмотреть комнату','home-look','Мелочи могут оказаться важнее денег']);
+a.push(['Поговорить с домочадцами','home-talk','Разные варианты для четырёх героев']);
+a.push(['Проверить почту','home-mail','Конверты и записки']);
+a.push(['Отдохнуть 2 часа','rest','+20 HP · восстановление сил']);
+a.push(['Поспать 8 часов','sleep','+60 HP · полная выносливость']);
+a.push(['Открыть шкаф','closet','Хранение запасных вещей']);
+a.push(['Выйти во двор','go:court','12 минут']);
+}
+if(p==='court'){
+a.push(['Осмотреть лавочки','bench','Следы вчерашней встречи']);
+if(inTime(8,19))a.push(['Поговорить с тётей Зоей','zoya','Соседка знает новости']);
+if(inTime(17,23))a.push(['Поговорить с Саньком','sanya','Друг детства']);
+if(inTime(18,24))a.push(['Поговорить с Геной','gena','Дворовая компания']);
+a.push(['Проверить слухи','rumor','Узнать, почему исчез Дамир']);
+if(g.quest.bag===1)a.push(['Обсудить пропажу с Зоей','zoya','Поручение «Сумка Зои»']);
+}
+if(p==='house12'){
+a.push(['Осмотреть доску объявлений','board','Старые бумаги']);
+a.push(['Проверить лестничную площадку','stairs','Следы чужой спешки']);
+a.push(['Осмотреть почтовые ящики','mailboxes','Открытки и записки']);
+if(g.quest.light>=1)a.push(['Проверить проводку','light-check','Задание слесаря']);
+}
+if(p==='kiosk'){
+a.push(['Поговорить с Борисом','boris','Работает с 08:00 до 21:00','',!inTime(8,21)]);
+a.push(['Прицениться к товарам','trade','Покупка, продажа и торг','',!inTime(8,21)]);
+a.push(['Купить хлеб · 12 ₽','bread','Небольшое бытовое поручение','',g.money<12||!inTime(8,21)]);
+}
+if(p==='playground'){
+a.push(['Осмотреть площадку','field','Поиск потерянных вещей']);
+a.push(['Разобраться со спором','dispute','Можно договориться, уйти или драться']);
+}
+if(p==='backcourt'){
+a.push(['Осмотреть дальний двор','back-look','Старые следы']);
+if(hour()>=21||hour()<6)a.push(['Проверить ночные огни','night-look','Только ночью']);
+}
+if(p==='basement'){
+a.push(['Осмотреть коробки','box-look','Не всё здесь хлам']);
+if(g.quest.light===1)a.push(['Помочь с освещением','repair','Поручение слесаря']);
+}
+if(p==='garages'){
+if(inTime(9,19))a.push(['Поговорить с Валерой','valera','Слесарь и подработки']);
+a.push(['Разгрузить детали','job','Раз в игровой день · +45 ₽','',g.jobDays.garages===g.day]);
+a.push(['Посмотреть гаражный проход','garage-look','Есть ли связь с домом №12?']);
+}
+if(p==='stop'){
+a.push(['Посмотреть расписание','bus','Куда можно уехать']);
+a.push(['Выбрать район на карте','map','Семь районов доступны сразу']);
+}
+if(p==='market'){
+a.push(['Разгрузить товар','market-job','Раз в игровой день · +40 ₽','',g.jobDays.market===g.day]);
+a.push(['Поговорить с торговцами','market-talk','Новые слухи о документах']);
+}
+if(p==='station')a.push(['Спросить носильщика','station-talk','Может знать людей с рынка']);
+if(p==='factory')a.push(['Поговорить с рабочими','factory-talk','Невыплаченные зарплаты']);
+if(p==='garagearea')a.push(['Поговорить с механиком','mechanic-talk','Следы странных грузов']);
+if(p==='river')a.push(['Осмотреть причал','river-look','Следы ночной разгрузки']);
+if(p==='center')a.push(['Прочитать объявления','center-look','Газеты и учреждения']);
+if(g.area!=='q5')a.push(['Вернуться в Пятый квартал','go:court','30 минут']);
+if(completed()&&!g.chapterFinished)a.push(['Завершить главу «После девяти»','finish','Выбрать, кому доверить находки','primary wide']);
+if(g.area==='q5'&&p!=='court')a.push(['В главный двор','go:court','10 минут']);
+return a;
+}
+function heroBox(){var st=stats();return '<div class="stats"><div class="stat"><b>'+g.hp+'/100</b><span>Здоровье</span><div class="bar"><i style="width:'+g.hp+'%"></i></div></div><div class="stat"><b>'+g.stamina+'/100</b><span>Выносливость</span><div class="bar stam"><i style="width:'+g.stamina+'%"></i></div></div><div class="stat"><b>'+g.money+' ₽</b><span>Деньги</span></div><div class="stat"><b>'+g.level+'</b><span>Уровень</span></div></div><p class="small muted">'+efx()+'</p>'}
+function tabNav(){var tabs=[['scene','🏘️','Место'],['map','🗺️','Карта'],['hero','🎒','Герой'],['journal','📖','Дела'],['log','🕘','Журнал']];return '<nav class="menu" aria-label="Меню игры">'+tabs.map(function(x){return '<button class="navbtn '+(screen===x[0]?'sel':'')+'" data-act="tab:'+x[0]+'"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('')+'</nav>'}
+function renderIntro(){
+var cards=Object.keys(CLASSES).map(function(id){var c=CLASSES[id];return '<button class="choice '+(selected===id?'active':'')+'" data-act="select:'+id+'"><strong>'+esc(c.name)+'</strong><small>'+esc(c.home)+'<br>С '+c.s+' · Л '+c.a+' · См '+c.i+' · А '+c.r+'</small></button>'}).join('');
+app.innerHTML='<header class="head"><div><div class="logo">КАЗАНЬ · 1998</div><h1>ГОПНИК</h1><div class="gold">Чужие долги · тест главы 1</div></div><div class="clock">ОСЕНЬ 1998</div></header><div class="hero home"><div class="hero-text"><div class="caps">Новая история</div><h2>Один город.<br>Четыре дороги.</h2><p>Исчез Дамир. Люди говорят разное. Кому верить — решать тебе.</p></div></div><div class="panel pad"><div class="caps">Выбери происхождение</div><p class="story">Все четыре пути ведут к общей истории, но отличаются жильём, диалогами и начальными характеристиками.</p><div class="choices" style="margin-top:14px">'+cards+'</div><div class="section-label">Имя или погоняло</div><input class="input" id="heroName" maxlength="24" placeholder="Как тебя называют?" value="Игрок"><div style="margin-top:10px">'+btn('НАЧАТЬ ИГРУ','start','Первый день · Пятый квартал','primary wide')+'</div></div><footer>Автосохранение только для этой тестовой версии. Старая игра и её прогресс не затрагиваются.</footer>';
+}
+function render(){
+if(!g){renderIntro();return}
+var localArea=g.area==='q5';
+var selectedArea=AREAS.find(function(x){return x.id===g.area});
+var top='<header class="head"><div><div class="logo">ГОПНИК · ЧУЖИЕ ДОЛГИ</div><h1>'+esc(g.name)+'</h1><div class="sub">'+esc(CLASSES[g.origin].name)+' · '+esc(stageText())+'</div></div><div><div class="clock">'+dayTag()+'</div><div class="sub" style="text-align:right">Казань · 1998</div></div></header>'+heroBox();
+if(g.combat){app.innerHTML=top+renderCombat()+tabNav();return}
+if(g.scene){app.innerHTML=top+renderStory()+tabNav();return}
+if(screen==='map'){
+ var places=localArea?'<div class="section-label">Пятый квартал · девять мест</div><div class="map-grid">'+PLACES.map(function(p){return '<button class="place '+(g.loc===p.id?'here':'')+'" data-act="go:'+p.id+'"><b>'+esc(p.name)+'</b><small>'+esc(p.hint)+'</small></button>'}).join('')+'</div>':'';
+ var areas='<div class="section-label">Семь районов · все открыты</div><div class="map-grid">'+AREAS.map(function(a){return '<button class="place '+(g.area===a.id?'here':'')+'" data-act="go:'+a.loc+'"><b>'+esc(a.name)+'</b><small>'+esc(a.desc)+(a.id==='q5'?'':' · ознакомительная зона')+'</small></button>'}).join('')+'</div>';
+ app.innerHTML=top+'<div class="panel pad"><h2>Карта города</h2><p class="story">Перемещения расходуют игровое время. Другие районы доступны с начала, но их полные истории будут добавлены в следующих главах.</p></div>'+places+areas+tabNav();return;
+}
+if(screen==='hero'){
+ var z='<div class="panel pad"><h2>Персонаж и снаряжение</h2><p class="story">'+esc(CLASSES[g.origin].home)+'</p><p class="boxhint">Рюкзак: '+g.inventory.length+'/20 · Надето: '+Object.values(g.equip).filter(Boolean).length+'/5 · '+efx()+'</p>';
+ var slots=['head','top','shoes','accessory','tool'].map(function(k){return '<div class="listitem"><div class="split"><b>'+SLOTNAMES[k]+': '+(g.equip[k]?itemName(g.equip[k]):'пусто')+'</b>'+(g.equip[k]?btn('Снять','unequip:'+k,'','',g.inventory.length>=20):'')+'</div></div>'}).join('');
+ var bag=g.inventory.map(function(id,n){var ob=GOODS[id];return '<div class="listitem"><div class="split"><div><b>'+esc(ob.name)+'</b><p>'+esc(ob.desc)+'</p></div><div>'+btn(ob.slot?'Надеть':'Использовать',(ob.slot?'equip:':'use:')+n,'')+'</div></div></div>'}).join('')||'<div class="listitem muted">Рюкзак пуст.</div>';
+ z+='</div><div class="panel"><div class="pad caps">Слоты экипировки</div>'+slots+'</div><div class="panel"><div class="pad caps">Рюкзак · 20 ячеек</div>'+bag+'</div>';
+ if(g.statPoints||g.skillPoints){z+='<div class="panel pad"><h3>Развитие</h3><p class="story">Очки характеристик: '+g.statPoints+' · навыков: '+g.skillPoints+'</p>'+wrapActions([['+1 Сила','stat:s'],['+1 Ловкость','stat:a'],['+1 Смекалка','stat:i'],['+1 Авторитет','stat:r'],['Выучить контратаку','skill:counter','Требует очко навыка']])+'</div>'}
+ app.innerHTML=top+z+tabNav();return;
+}
+if(screen==='journal'){
+ var q=g.quest,ev=g.evidence;
+ var z='<div class="panel pad"><h2>Дела и расследование</h2><p class="story">'+esc(stageText())+'</p><div class="tags">'+['Слух о Дамире','Записка','Квитанция'].map(function(t,i){var yes=[g.flags.rumor,ev.note,ev.receipt][i];return '<span class="tag">'+(yes?'✓ ':'○ ')+t+'</span>'}).join('')+'</div><p class="boxhint">Глава 1 «После девяти». Узнай, что случилось у дома №12, собери три зацепки и сам реши, как с ними поступить. Любую зацепку можно получить несколькими путями.</p></div>';
+ z+='<div class="panel"><div class="listitem"><b>Сумка Зои</b><p>'+(q.bag===0?'Поговори с соседкой во дворе днём.':q.bag===1?'Найди потерянную вещь на спортплощадке или в дальнем дворе.':q.bag===2?'Верни найденное Зое.':'Задание завершено.')+'</p></div><div class="listitem"><b>Свет в подъезде</b><p>'+(q.light===0?'Поговори с Валерой у гаражей.':q.light===1?'Проверь подвал и помоги с проводкой.':q.light===2?'Вернись к Валере за наградой.':'Задание завершено.')+'</p></div></div>';
+ if(completed()&&!g.chapterFinished)z+=wrapActions([['Завершить первую главу','finish','Ты собрал достаточно доказательств','primary wide']]);
+ if(g.chapterFinished)z+='<div class="panel pad"><h3>Первая глава завершена</h3><p class="story">Твоё решение: '+esc(g.endingChoice)+'. Продолжение сюжета находится в разработке.</p></div>';
+ app.innerHTML=top+z+tabNav();return;
+}
+if(screen==='log'){
+ app.innerHTML=top+'<div class="panel pad"><h2>История событий</h2><p class="story muted">Записи сохраняются вместе с персонажем.</p>'+g.log.slice().reverse().map(function(x){return '<div class="logline">'+esc(x)+'</div>'}).join('')+'</div>'+wrapActions([['Сохранить прогресс','save','Автосохранение включено'],['Новая игра','reset','Удалит только сейв тестовой версии']])+tabNav();return;
+}
+if(screen==='trade'){app.innerHTML=top+renderTrade()+tabNav();return}
+if(screen==='closet'){app.innerHTML=top+renderCloset()+tabNav();return}
+var desc=localDesc(),scene='<div class="hero '+(g.loc==='home'?'home':g.loc==='market'||g.loc==='kiosk'?'market':hour()>=21||hour()<6?'late':'')+'"><div class="hero-text"><div class="caps">'+esc(localArea?'Пятый квартал':selectedArea.name)+'</div><h2>'+esc(locName())+'</h2><p>'+esc(stageText())+'</p></div></div>';
+app.innerHTML=top+scene+'<div class="panel pad"><p class="story">'+esc(desc)+'</p></div>'+panel('Действия','Выбирай, что сделать. Пока читаешь текст и думаешь, часы стоят.',sceneActions())+wrapActions([['Открыть карту','map','Выбор района и мест'],['Подождать до 09:00','wait:9','Без восстановления здоровья'],['Подождать до 18:00','wait:18','Без восстановления здоровья'],['Подождать до 22:00','wait:22','Без восстановления здоровья']])+'<div class="panel pad small muted"><b class="gold">Последнее событие</b><p class="story">'+esc(g.last)+'</p></div>'+tabNav();
+}
+function story(title,body,options){g.scene={title:title,body:body,options:options};screen='scene';save();render()}
+function renderStory(){return '<div class="hero"><div class="hero-text"><div class="caps">Сюжетная ситуация</div><h2>'+esc(g.scene.title)+'</h2><p>Твой выбор меняет события и отношения.</p></div></div>'+panel('Что происходит',g.scene.body,g.scene.options)}
+function renderCombat(){
+var c=g.combat;
+return '<div class="hero fight"><div class="hero-text"><div class="caps">Пошаговая схватка · без обязательной победы</div><h2>'+esc(c.name)+'</h2><p>Противник: '+c.hp+'/65 HP · намерение: '+(c.intent==='heavy'?'замахивается для сильного удара':c.intent==='quick'?'двигается резко':'пытается запутать')+'</p></div></div>'+
+'<div class="panel pad"><p class="story">Твои HP: '+g.hp+'/100 · Выносливость: '+g.stamina+'/100. Ударить, защищаться или уйти — решать тебе.</p><p class="boxhint">'+esc(g.last)+'</p></div>'+
+wrapActions([['Быстрый удар','hit:quick','90% · 6–10 урона · −8 выносливости'],['Обычный удар','hit:normal','70% · 10–14 урона · −12 выносливости'],['Сильный удар','hit:heavy','50% · 16–23 урона · −24 выносливости'],['Блок','def:block','Снижает урон, восстанавливает силы'],['Уклонение','def:dodge','Шанс зависит от ловкости'],['Убежать','run','Без потери прогресса'],['Договориться','talk-fight','Мирный исход с возможной ценой'],['Использовать бинт','fight-bandage','+20 HP, если есть бинт']])+(g.skills.includes('counter')?wrapActions([['Контратака','counter','Только после успешной защиты']]):'');
+}
+function renderTrade(){
+var d=shop;
+if(d){
+var ob=GOODS[d.id],base=d.dir==='buy'?ob.price:Math.floor(ob.price*.45);
+var label=d.dir==='buy'?'Купить':'Продать';
+return '<div class="panel pad"><h2>'+label+': '+esc(ob.name)+'</h2><p class="story">'+esc(ob.desc)+'<br>Предлагаемая цена: <b class="gold">'+d.price+' ₽</b></p><div class="boxhint">Шанс торга зависит от смекалки, авторитета и отношений с Борисом. Одна попытка на этот предмет в день.</div></div>'+wrapActions([['Попробовать торг','haggle','Скидка / надбавка','primary',!!g.flags['haggled:'+g.day+':'+d.dir+':'+d.id]],['Заключить сделку','deal','Цена: '+d.price+' ₽','good'],['Отмена','cancel-trade','Вернуться к ассортименту']]);
+}
+var list=Object.keys(GOODS).map(function(id){var it=GOODS[id],buy=g.inventory.length<20&&g.money>=it.price,sell=g.inventory.includes(id);return '<div class="listitem"><b>'+esc(it.name)+' · '+it.price+' ₽</b><p>'+esc(it.desc)+'</p><div class="buttons" style="padding:10px 0 0">'+btn('Купить','offer:buy:'+id,'', '',!buy)+btn('Продать','offer:sell:'+id,'Выкуп ~'+Math.floor(it.price*.45)+' ₽','',!sell)+'</div></div>'}).join('');
+return '<div class="panel pad"><h2>Киоск Бориса</h2><p class="story">Борис зарабатывает на разнице цен. При хорошем отношении охотнее уступает.</p><p class="small muted">Деньги: '+g.money+' ₽ · Рюкзак: '+g.inventory.length+'/20</p></div><div class="panel">'+list+'</div>'+wrapActions([['Выйти из магазина','cancel-trade','На улицу']]);
+}
+function renderCloset(){
+var l=g.inventory.map(function(id,n){return ['В шкаф: '+itemName(id),'store:'+n,'Перенести вещь']});
+l=l.concat(g.closet.map(function(id,n){return ['Забрать: '+itemName(id),'take:'+n,'Из шкафа в рюкзак']}));
+l.push(['Вернуться домой','closet-close','']);
+return '<div class="panel pad"><h2>Домашний шкаф</h2><p class="story">В шкафу: '+g.closet.length+' · в рюкзаке: '+g.inventory.length+'/20. Надетые вещи лежат отдельно.</p></div>'+panel('Хранение','Перекидывай вещи между шкафом и рюкзаком.',l);
+}
+function openScene(name){g.scene=null;screen=name;save();render()}
+function winConflict(via){
+g.combat=null;g.flags.disputeDone=true;g.relations.gena+=via==='talk'?1:via==='fight'?-1:0;exp(25);
+log(via==='fight'?'Конфликт разрешился победой. Весь двор теперь обсуждает потасовку.':via==='talk'?'Удалось договориться без драки. Парни признали твою правоту.':'Ты избежал драки, но сохранил своё достоинство.');screen='scene';save();render();
+}
+function enemyTurn(mode){
+if(!g.combat)return;
+var c=g.combat,st=stats(),hit=Math.random()<.78;
+var dmg=c.intent==='heavy'?rnd(12,20):c.intent==='quick'?rnd(7,11):rnd(5,9);
+if(mode==='block')dmg=Math.ceil(dmg*(c.intent==='heavy'?.7:.45));
+if(mode==='dodge'&&Math.random()<clamp((40+6*(st.a-3))/100,.15,.7))hit=false;
+if(hit){g.hp=Math.max(0,g.hp-dmg);log('Противник ударил: −'+dmg+' HP.'+(mode==='block'?' Часть урона заблокирована.':''))}
+else log('Атака противника не достигла цели.');
+g.stamina=clamp(g.stamina+6+(mode==='block'?14:0),0,100);
+c.turn++;c.intent=['quick','heavy','feint'][c.turn%3];
+if(g.hp<=0){g.combat=null;g.hp=30;g.stamina=35;g.flags.injured=true;advance(180);g.area='q5';g.loc='home';log('Ты очнулся дома с 30 HP и временной травмой. Задания и предметы не потеряны.');}
+}
+function hit(kind){
+var c=g.combat,p=stats();if(!c)return;
+var conf={quick:[8,.90,6,10],normal:[12,.70,10,14],heavy:[24,.50,16,23]}[kind];
+if(g.stamina<conf[0]){log('Недостаточно выносливости. Используй блок, чтобы восстановиться.');save();render();return}
+g.stamina-=conf[0];
+var pct=clamp(conf[1]+(p.a-3)*.02+accuracyPenalty()/100,.15,.98);
+if(Math.random()<pct){var dmg=rnd(conf[2],conf[3])+Math.max(0,p.s-2);c.hp=Math.max(0,c.hp-dmg);log('Попадание! Противнику нанесено '+dmg+' урона.');}
+else log('Удар прошёл мимо.');
+if(c.hp<=0){winConflict('fight');return}
+enemyTurn('none');save();render();
+}
+function handle(id){
+if(!g){if(id.indexOf('select:')===0){selected=id.split(':')[1];render();return}if(id==='start'){var nm=document.getElementById('heroName');g=fresh(selected,(nm&&nm.value||'').trim().slice(0,24)||'Безымянный');g.equip[GOODS[CLASSES[selected].start].slot]=CLASSES[selected].start;g.inventory=['bandage'];screen='scene';save();render()}return}
+if(id.indexOf('tab:')===0){if(g.combat||g.scene){log('Сначала закончи текущую ситуацию.');save();render();return}openScene(id.split(':')[1]);return}
+if(id==='save'){save();log('Сохранение записано на этом устройстве.');render();return}
+if(id==='reset'){if(confirm('Начать игру заново? Удалится только прогресс тестовой версии.')){localStorage.removeItem(SAVE);g=null;screen='scene';shop=null;render()}return}
+if(id==='map'){openScene('map');return}
+if(id.indexOf('go:')===0){var target=id.slice(3);var m=target===g.loc?0:AREAS.some(function(x){return x.id===target})?30:target==='court'?10:12;changePlace(target,m);return}
+if(id.indexOf('wait:')===0){var h=Number(id.split(':')[1]),now=totalMinutes(),t=(g.day-1)*1440+h*60;if(t<=now)t+=1440;advance(t-now);log('Время прошло. Сейчас '+clock()+'.');save();render();return}
+if(id==='home-look'){action('Ты нашёл старый снимок двора и коробочку с полезными мелочами. Дома всё ещё пахнет знакомой жизнью.',15,4);return}
+if(id==='home-talk'){advance(10);g.relations.zoya++;log('Домочадцы советуют прислушаться к соседке: по ночам у дома №12 стали появляться чужие люди.');screen='scene';save();render();return}
+if(id==='home-mail'){advance(8);getNote('Среди старых писем обнаружилась записка Дамира.');save();render();return}
+if(id==='rest'){advance(120);g.hp=Math.min(100,g.hp+20);g.stamina=Math.min(100,g.stamina+35);log('Ты отдохнул два часа. +20 HP, восстановлено немного сил.');save();render();return}
+if(id==='sleep'){advance(480);g.hp=Math.min(100,g.hp+60);g.stamina=100;log('Сон восстановил +60 HP и всю выносливость. Травма требует отдельного лечения.');save();render();return}
+if(id==='closet'){openScene('closet');return}
+if(id==='closet-close'){openScene('scene');return}
+if(id.indexOf('store:')===0){var n=+id.split(':')[1];if(g.inventory[n]){g.closet.push(g.inventory.splice(n,1)[0]);save();render()}return}
+if(id.indexOf('take:')===0){var n=+id.split(':')[1];if(g.closet[n]&&g.inventory.length<20){g.inventory.push(g.closet.splice(n,1)[0]);save();render()}return}
+if(id.indexOf('equip:')===0){var n=+id.split(':')[1],it=g.inventory[n],slot=it&&GOODS[it].slot;if(slot){var old=g.equip[slot];g.equip[slot]=it;g.inventory.splice(n,1);if(old)g.inventory.push(old);log('Теперь надето: '+itemName(it)+'.');save();render()}return}
+if(id.indexOf('unequip:')===0){var slot=id.split(':')[1],it=g.equip[slot];if(it&&g.inventory.length<20){g.inventory.push(it);g.equip[slot]=null;log('Снято: '+itemName(it)+'.');save();render()}return}
+if(id.indexOf('use:')===0){var n=+id.split(':')[1];if(g.inventory[n]==='bandage'){g.inventory.splice(n,1);g.hp=Math.min(100,g.hp+20);log('Бинт восстановил 20 HP.');save();render()}return}
+if(id.indexOf('stat:')===0){var k=id.split(':')[1];if(g.statPoints>0&&g.stats[k]<10){g.statPoints--;g.stats[k]++;log('Повышена характеристика.');save();render()}return}
+if(id==='skill:counter'){if(g.skillPoints>0&&!g.skills.includes('counter')){g.skillPoints--;g.skills.push('counter');log('Изучена контратака.');save();render()}return}
+if(id==='bench'){advance(12);getRumor('Под лавочкой найдена пуговица от форменной куртки.');save();render();return}
+if(id==='rumor'){advance(10);getRumor('Старик у подъезда подтвердил слух.');save();render();return}
+if(id==='zoya'){
+ if(g.quest.bag===0){story('Пропавшая сумка','«Слушай, вчера у меня сумку утащили. Не спеши никого обвинять, я сама могла забыть у скамейки», — говорит Зоя. Она также помнит грузовик возле дома №12.',[['Помочь найти сумку','reply:bag-accept','Поиск на площадке'],['Сначала расспросить о грузовике','reply:zoya-rumor','Получить сведения'],['Уйти','reply:leave','Вернуться во двор']]);return}
+ if(g.quest.bag===2){story('Вернуть сумку','Зоя узнаёт свою сумку: «Ох, так я сама и забыла! Не зря тебя попросила». Из благодарности она предлагает деньги или полезную информацию.',[['Взять 35 ₽','reply:bag-money',''],['Попросить сведения о Дамире','reply:bag-info',''],['Ничего не брать','reply:bag-kind','']]);return}
+ advance(10);getRumor('Зоя видела грузовик с надписью «Северный двор» у дома №12.');save();render();return;
+}
+if(id==='sanya'){story('Разговор у лавочки','Санёк нервно вертит ключ: «Все ищут Дамира, а я его два дня не видел. Он боялся человека из торговой фирмы. И никому не доверял».', [['Поверить Саньку','reply:sanya-trust','+отношения'],['Потребовать объяснений','reply:sanya-press','−отношения, +сведения'],['Не вмешиваться','reply:leave','']]);return}
+if(id==='gena'){story('Гена Рыжий','Гена косится на твою одежду. «Слышь, люди говорят, ты возле двенадцатого крутился. Знаешь чего — подходи вечером, поговорим».', [['Объясниться спокойно','reply:gena-calm',''],['Ответить жёстко','reply:gena-hard',''],['Разойтись','reply:leave','']]);return}
+if(id==='board'){advance(10);getReceipt('Под слоем объявлений обнаружена копия накладной №17.');save();render();return}
+if(id==='stairs'){action('На лестнице свежая царапина от тяжёлой коробки. Кто-то переносил бумаги вверх, а потом спешно уехал.',10,6);return}
+if(id==='mailboxes'){advance(12);getNote('В чужом ящике торчал конверт, адресованный Дамиру. Записка явно была оставлена для знакомых.');save();render();return}
+if(id==='light-check'){action('У электрощита заметны следы недавнего ремонта. Похоже, Валера ждёт помощи.',10,4);return}
+if(id==='boris'){
+ story('Торговец Борис','«Дамир? Заходил позавчера. Купил тетрадь в клеточку и спросил, кто возит накладные на завод», — говорит Борис. «Но слухи нынче дорого стоят».', [['Купить угощение · 10 ₽','reply:boris-pay',''],['Попробовать договориться','reply:boris-talk','Смекалка и авторитет'],['Просто поблагодарить','reply:boris-free','']]);return}
+if(id==='bread'){g.money-=12;advance(5);log('Ты купил хлеб. Дома оценят твою заботу.');save();render();return}
+if(id==='trade'){shop=null;openScene('trade');return}
+if(id.indexOf('offer:')===0){var parts=id.split(':'),dir=parts[1],item=parts[2];if(!GOODS[item])return;if(dir==='sell'&&!g.inventory.includes(item))return;shop={dir:dir,id:item,price:dir==='buy'?GOODS[item].price:Math.floor(GOODS[item].price*.45)};save();render();return}
+if(id==='haggle'){var d=shop;if(!d)return;var key='haggled:'+g.day+':'+d.dir+':'+d.id;if(g.flags[key])return;g.flags[key]=true;var st=stats(),chance=clamp(55+(st.i-5)*4+(st.r-5)*2+g.relations.boris*4-8,10,85);if(Math.random()*100<chance){d.price=d.dir==='buy'?Math.max(1,Math.floor(d.price*(1-rnd(5,20)/100))):Math.floor(d.price*(1+rnd(5,15)/100));log('Торг удался. Новая цена: '+d.price+' ₽.');}else log('Борис покачал головой: «На такую цену не согласен».');save();render();return}
+if(id==='deal'){var d=shop;if(!d)return;if(d.dir==='buy'){if(g.money<d.price||g.inventory.length>=20){log('Не хватает денег или места в рюкзаке.');save();render();return}g.money-=d.price;g.inventory.push(d.id)}else{var index=g.inventory.indexOf(d.id);if(index<0)return;g.inventory.splice(index,1);g.money+=d.price}advance(5);log((d.dir==='buy'?'Куплено: ':'Продано: ')+itemName(d.id)+' за '+d.price+' ₽.');g.relations.boris=Math.min(5,g.relations.boris+1);shop=null;save();render();return}
+if(id==='cancel-trade'){shop=null;openScene('scene');return}
+if(id==='field'){if(g.quest.bag===1){g.quest.bag=2;action('Под лавкой обнаружилась сумка Зои. Внутри только платок и чек. Лучше вернуть хозяйке.',15,12)}else action('На площадке кто-то потерял старую монету. Ты запомнил лица спорящих парней.',10,4);return}
+if(id==='dispute'){if(g.flags.disputeDone){action('Парни уже помнят ваш прошлый разговор. Сегодня конфликт не повторяется.',6,0);return}
+story('Спор на площадке','Два парня громко выясняют, кто занял турники. Один толкает тебя плечом: «Ты-то чего смотришь?» Второй предлагает разобраться по-человечески.',[['Договориться без драки','reply:dispute-talk','Смекалка / авторитет'],['Отойти и не вмешиваться','reply:dispute-leave','Не всякое столкновение обязательно'],['Ответить силой','reply:dispute-fight','Пошаговый бой']]);return}
+if(id==='back-look'){if(g.quest.bag===1){g.quest.bag=2;action('За урной обнаружена потерянная сумка Зои. Похоже, никто её не крал.',15,12)}else action('На кирпичах свежие следы погрузки. Кто-то тащил коробки ночью.',10,8);return}
+if(id==='night-look'){advance(15);getRumor('В темноте удалось заметить силуэт грузовика у дома №12.');save();render();return}
+if(id==='box-look'){advance(12);if(g.quest.light===0){getReceipt('В коробке старая копия накладной со склада.')}else log('В коробках запасные лампы и старая ведомость.');save();render();return}
+if(id==='valera'){
+ if(g.quest.light===0){story('Свет в подъезде','Валера ругается на щиток: «Коротит третий день. Поможешь разобраться — расплачусь. Только осторожно».', [['Помочь слесарю','reply:light-accept','Откроет задание в подвале'],['Расспросить о грузовике','reply:valera-rumor',''],['Пока не сейчас','reply:leave','']]);return}
+ if(g.quest.light===2){g.quest.light=3;g.money+=50;g.relations.valera+=2;action('Валера проверил работу и заплатил 50 ₽. Теперь доверяет тебе больше.',15,28);return}
+ advance(10);getRumor('Валера видел, как грузовик уехал из двора перед рассветом.');save();render();return;
+}
+if(id==='repair'){advance(65);g.quest.light=2;g.relations.valera++;exp(20);log('Ты помог со щитком. Теперь в подъезде светло; осталось получить награду у Валеры.');save();render();return}
+if(id==='job'||id==='market-job'){var key=id==='job'?'garages':'market';if(g.jobDays[key]===g.day)return;g.jobDays[key]=g.day;advance(90);g.money+=key==='garages'?45:40;exp(10);log('Подработка окончена. Заработано '+(key==='garages'?45:40)+' ₽. До следующего игрового дня работу не повторить.');save();render();return}
+if(id==='garage-look'){action('У дверей гаражей обнаружен клочок бумаги с логотипом «Северный двор».',12,5);return}
+if(id==='bus'){action('На остановке указаны направления по всем районам. До рынка и центра можно добраться без специальных условий.',5,2);return}
+if(id==='market-talk'){advance(15);getReceipt('Торговец показал оборот старой копии накладной №17.');save();render();return}
+if(id==='station-talk'){action('Носильщик вспомнил машину с завода. Водитель нервничал из-за неизвестных долгов.',15,6);return}
+if(id==='factory-talk'){advance(15);getRumor('Рабочие подтвердили: зарплаты нет, а машины «Северного двора» приезжали ночью.');save();render();return}
+if(id==='mechanic-talk'){action('Механик рассказал о грузовике, который дважды приезжал пустым, а уезжал с опломбированными коробками.',15,8);return}
+if(id==='river-look'){action('У причала сохранились следы недавней разгрузки. Это место ещё встретится в расследовании.',12,6);return}
+if(id==='center-look'){action('В газете напечатали заметку о невыплаченных зарплатах на Ремзаводе.',8,5);return}
+if(id==='finish'){if(!completed())return;story('Конец первой главы','Ты сопоставил слухи о Дамире с запиской и копией накладной. Бумаги связаны с фирмой «Северный двор». Теперь нужно решить, кому доверить находки. От этого изменится отношение людей к тебе.',[['Рассказать соседке и рабочим','reply:end-help','Поддержка обычных жителей'],['Поделиться со своей компанией','reply:end-street','Авторитет двора'],['Спрятать бумаги и действовать одному','reply:end-alone','Свой риск, своя выгода']]);return}
+if(id.indexOf('reply:')===0){reply(id.slice(6));return}
+if(g.combat){
+ if(id.indexOf('hit:')===0){hit(id.split(':')[1]);return}
+ if(id==='def:block'||id==='def:dodge'){g.stamina=clamp(g.stamina+(id==='def:block'?14:0),0,100);enemyTurn(id==='def:block'?'block':'dodge');save();render();return}
+ if(id==='run'){g.combat.escape=(g.combat.escape||0)+1;if(g.combat.escape>=3||Math.random()<.67){winConflict('escape')}else{log('Пока не удалось отступить.');enemyTurn('none');save();render()}return}
+ if(id==='talk-fight'){winConflict('talk');return}
+ if(id==='fight-bandage'){var i=g.inventory.indexOf('bandage');if(i<0){log('Нет бинта.');save();render();return}g.inventory.splice(i,1);g.hp=Math.min(100,g.hp+20);enemyTurn('none');save();render();return}
+ if(id==='counter'){log('Контратака доступна после успешной защиты и при достаточной выносливости.');save();render();return}
+}
+}
+function reply(id){
+var txt='';
+if(id==='leave'){g.scene=null;save();render();return}
+if(id==='bag-accept'){g.quest.bag=1;txt='Ты согласился помочь Зое. Она указала на спортплощадку.';g.relations.zoya++;getRumor('Зоя уточнила время, когда видела Дамира.')}
+else if(id==='zoya-rumor'){getRumor('Зоя видела автомобиль компании «Северный двор».');txt='Зоя советует проверить дом №12.'}
+else if(id.indexOf('bag-')===0){g.quest.bag=3;g.relations.zoya+=id==='bag-kind'?2:1;if(id==='bag-money')g.money+=35;if(id==='bag-info')getReceipt('Зоя сохранила подозрительный чек рядом с домом №12.');exp(22);txt='Зоя получила свою сумку. Весь подъезд теперь знает о твоей помощи.'}
+else if(id==='sanya-trust'){g.relations.sanya+=2;getRumor('Санёк назвал время исчезновения Дамира.');txt='Вы договорились держать связь.'}
+else if(id==='sanya-press'){g.relations.sanya--;getRumor('Санёк признался, что видел Дамира у гаражей.');txt='Санёк ушёл обиженным, но сказал правду.'}
+else if(id==='gena-calm'){g.relations.gena+=1;txt='Гена буркнул: «Ладно, не кипятись». Напряжение спало.'}
+else if(id==='gena-hard'){g.relations.gena-=1;txt='Гена запомнил резкий ответ. Возможно, позже вспомнит об этом.'}
+else if(id==='boris-pay'){if(g.money<10){txt='Не хватает денег, но Борис не гонит тебя.'}else{g.money-=10;g.relations.boris+=2;getReceipt('Борис дал старую копию накладной.');txt='Борис заметно подобрел.'}}
+else if(id==='boris-talk'){var s=stats(),ok=Math.random()<clamp(.5+(s.i+s.r)*.04,.15,.88);if(ok){getReceipt('Борис рассказал об ошибке в документах.');g.relations.boris++}txt=ok?'Торг словами удался. Борис доверил тебе копию.':'Борис не поверил. Можно попробовать другой путь к бумаге.'}
+else if(id==='boris-free'){getRumor('Борис подтвердил, что Дамир был в киоске.');txt='Ты поблагодарил Бориса и ушёл.'}
+else if(id==='light-accept'){g.quest.light=1;g.relations.valera++;txt='Валера дал разрешение посмотреть щиток. Он обещал деньги за помощь.'}
+else if(id==='valera-rumor'){getRumor('Валера вспомнил незнакомых людей.');txt='Ты узнал о странной разгрузке.'}
+else if(id==='dispute-talk'){g.scene=null;winConflict('talk');return}
+else if(id==='dispute-leave'){g.scene=null;winConflict('escape');return}
+else if(id==='dispute-fight'){g.scene=null;g.combat={name:'Парень с площадки',hp:65,intent:'quick',turn:0,escape:0};log('Началась схватка. Победа не обязательна.');save();render();return}
+else if(id.indexOf('end-')===0){g.chapterFinished=true;g.endingChoice={ 'end-help':'Помочь соседям и рабочим','end-street':'Обсудить находки со своей компанией','end-alone':'Сохранить документы у себя'}[id];if(id==='end-help')g.relations.zoya+=2;else if(id==='end-street')g.relations.gena+=2;else g.money+=15;exp(45);txt='Глава 1 «После девяти» завершена. Подозрения ведут к Старому рынку. Продолжение появится в следующих тестовых версиях.'}
+else{txt='Разговор закончился.'}
+advance(10);log(txt);g.scene=null;screen='scene';save();render();
+}
+document.addEventListener('click',function(e){
+var b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+var id=b.getAttribute('data-act');if(!id)return;
+try{handle(id)}catch(err){console.error(err);if(g){log('Произошла ошибка действия. Сохранение осталось доступно.');g.scene=null;g.combat=null;screen='scene';save();render()}else alert('Ошибка игры: '+err.message)}
+});
+if(g){screen='scene';log('Сохранённая история восстановлена.');save()}
+render();
+})();
+</script></body></html>
