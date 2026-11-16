@@ -36,6 +36,62 @@ h1,h2,h3,p{margin:0}h1{font-size:31px;line-height:1.05;letter-spacing:-1.4px}h2{
 footer{font-size:11px;color:#898d85;text-align:center;padding:13px;line-height:1.5}.logline{border-bottom:1px solid #353835;padding:9px 0;font-size:12px;line-height:1.6}.logline:last-child{border:0}
 @media(max-width:380px){#app{padding:10px 9px 95px}.stats{gap:4px}.stat b{font-size:14px}.act{font-size:12px;padding:9px 7px}.choice strong{font-size:13px}.head h1{font-size:25px}.hero-text h2{font-size:24px}}
 @media(min-width:630px){.hero{min-height:184px}.hero-text h2{font-size:32px}.buttons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* v1.1 single-screen illustrated mobile interface. No vertical page scrolling. */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:#111312}
+#app{height:100dvh;min-height:0;max-width:690px;margin:auto;padding:calc(7px + env(safe-area-inset-top)) 9px calc(7px + env(safe-area-inset-bottom));display:block;overflow:hidden}
+.one{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(85px,1fr) auto auto auto;gap:7px}
+.one.intro-one{grid-template-rows:auto minmax(85px,1fr) auto auto auto}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:37px;padding:0 3px}
+.toptitle{font-weight:950;font-size:15px;letter-spacing:.8px;color:#f6ebd6}
+.toptitle small{display:block;font-size:9px;color:#e2b86c;font-weight:800;letter-spacing:1.1px}
+.topclock{text-align:right;color:#faf1d9;font-size:13px;font-weight:850;font-variant-numeric:tabular-nums;white-space:nowrap}
+.topclock small{display:block;color:#ababa3;font-size:10px;font-weight:500}
+.sceneart{min-height:85px;position:relative;overflow:hidden;border:1px solid #695b48;border-radius:13px;background:#252b29;isolation:isolate}
+.sceneart svg{width:100%;height:100%;display:block;object-fit:cover;position:absolute;inset:0}
+.sceneart:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#090e0df5 0%,#0b121050 36%,transparent 80%);pointer-events:none}
+.scene-label{position:absolute;bottom:12px;left:15px;z-index:1;right:12px;text-shadow:0 2px 8px #000}
+.scene-label span{display:block;color:#efc986;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}
+.scene-label strong{display:block;font-size:clamp(20px,6vw,32px);line-height:1.05;font-weight:900;letter-spacing:-.5px}
+.scene-label em{display:block;font-style:normal;font-size:10px;color:#d3d0c7;margin-top:4px}
+.rowinfo{background:#1b1d1b;border:1px solid #3d423b;border-radius:11px;padding:7px 9px;min-height:0}
+.compactstats{display:grid;grid-template-columns:1fr 1fr auto auto;align-items:center;gap:9px}
+.compactstats div{min-width:0}
+.compactstats b{font-size:12px;font-weight:900;white-space:nowrap}
+.compactstats small{display:block;color:#aaa99f;font-size:9px}
+.compactstats .money{color:#e4ba74;font-size:14px}
+.meter{height:4px;background:#3e2928;border-radius:4px;overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:#dc8e72}
+.meter.blue{background:#213a34}.meter.blue i{background:#80c7ae}
+.notecompact{font-size:12px;line-height:1.36;color:#e6e0d4;padding:0 4px;min-height:34px;max-height:49px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.notecompact b{color:#e9c38c}
+.actzone{border:1px solid #3c3e39;border-radius:12px;background:#1d201e;padding:8px;min-height:0}
+.actiontop{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;height:20px}
+.actiontop b{font-size:11px;color:#e5c18b;letter-spacing:.3px}
+.pagertools{display:flex;align-items:center;gap:7px}
+.pagerbtn{background:#363a34;border:1px solid #626054;color:#fff0d4;border-radius:7px;width:35px;height:25px;display:grid;place-items:center;font-size:15px;font-weight:700;padding:0}
+.pagerbtn:disabled{opacity:.25}
+.pagerlabel{font-size:11px;color:#c6c1b8;font-variant-numeric:tabular-nums}
+.actionfour{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2, minmax(48px,1fr));gap:6px;height:118px}
+.bigact{min-width:0;min-height:0;border-radius:9px;border:1px solid #5b6258;background:#303630;color:#f2ecdf;text-align:left;padding:8px 10px;font-size:12px;font-weight:800;line-height:1.2;overflow:hidden}
+.bigact small{display:block;margin-top:4px;font-size:10px;font-weight:500;color:#c6c5b9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bigact.special{background:#4c3924;border-color:#bc925e}
+.bigact.positive{background:#27483c;border-color:#648e77}
+.bigact.empty{visibility:hidden}
+.bottomnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;background:#171918;border:1px solid #3b413c;border-radius:10px;padding:4px;height:52px;align-items:center}
+.navsmall{min-width:0;height:42px;border:0;background:none;border-radius:7px;color:#b3b3aa;font-size:9px;line-height:1.1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px}
+.navsmall span{font-size:19px;line-height:1.1}.navsmall.on{background:#453629;color:#f3ca84}.navsmall:disabled{opacity:.25}
+.minirow{font-size:10px;color:#baaa8b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.origincards{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.origin{border:1px solid #5c6154;background:#262a25;border-radius:10px;min-height:59px;text-align:left;padding:8px;color:#f8ecd6;font-size:12px}
+.origin b{display:block}.origin small{display:block;color:#b5c0ad;font-size:10px;margin-top:4px}.origin.chosen{border:2px solid #e9c18a;background:#41382d;padding:7px}
+.introfoot{display:flex;gap:7px;height:43px}
+.introfoot input{flex:1;min-width:0;background:#2b2e2a;color:#f7f1e8;border:1px solid #777059;border-radius:8px;font-size:14px;padding:10px}
+.introfoot button{min-width:125px;background:#72522f;border:1px solid #c6a16e;color:#fff5df;font-size:12px;font-weight:900;border-radius:8px;padding:8px}
+@media(max-height:640px){.one{gap:5px}.topline{min-height:30px}.scene-label strong{font-size:21px}.scene-label em{display:none}.rowinfo{padding:5px 8px}.notecompact{font-size:11px;min-height:26px;max-height:34px;-webkit-line-clamp:2}.actzone{padding:5px}.actiontop{margin-bottom:3px}.actionfour{height:106px;grid-template-rows:repeat(2,minmax(45px,1fr))}.bigact{font-size:11px;padding:6px}.bigact small{font-size:9px}.bottomnav{height:47px;padding:3px}.navsmall{height:39px}.navsmall span{font-size:18px}.origin{min-height:50px;padding:6px}}
+@media(max-height:520px){.sceneart{min-height:65px}.one{gap:3px}.topline{min-height:26px}.scene-label{bottom:6px}.notecompact{max-height:27px}.bigact small{display:none}.actionfour{height:86px}.actzone{padding:4px}.bottomnav{height:43px}.navsmall{height:35px}.navsmall span{font-size:15px}.origincards{gap:4px}.origin{min-height:44px}}
+
 </style></head><body><div id="app"></div><script>
 (function(){
 'use strict';
@@ -398,9 +454,149 @@ else if(id.indexOf('end-')===0){g.chapterFinished=true;g.endingChoice={ 'end-hel
 else{txt='Разговор закончился.'}
 advance(10);log(txt);g.scene=null;screen='scene';save();render();
 }
+
+/* v1.1 — compact illustrated renderer, state and save key unchanged. */
+var compactPage=0,compactContext='',lastRenderScreen='';
+var PICTO={home:'🏠',court:'🏘️',house12:'🏢',kiosk:'🛒',playground:'🏀',backcourt:'🌙',basement:'🔦',garages:'🔧',stop:'🚌',market:'🧥',station:'🚆',factory:'🏭',garagearea:'🚗',river:'🌉',center:'🏙️'};
+function iconOf(loc){return PICTO[loc]||'📍'}
+function sceneSVG(loc){
+ var night=!!g&&(hour()>=21||hour()<6);
+ var urban=['court','house12','playground','backcourt','home'].includes(loc);
+ var indoor=['home','basement','house12'].includes(loc);
+ var sky=night?'#172539':indoor?'#3e413c':'#728c88',sky2=night?'#34334a':indoor?'#777063':'#bf9873';
+ var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Иллюстрация места '+esc(locName())+'"><defs><linearGradient id="sk" x1="0" x2="0" y1="0" y2="1"><stop stop-color="'+sky+'"/><stop offset="1" stop-color="'+sky2+'"/></linearGradient><linearGradient id="wall" x1="0" x2="1"><stop stop-color="#4d5954"/><stop offset="1" stop-color="#7c7565"/></linearGradient><pattern id="win" width="48" height="60" patternUnits="userSpaceOnUse"><rect x="10" y="12" width="21" height="31" fill="#262d31" stroke="#9d9a86" stroke-width="3"/><rect x="20" y="12" width="2" height="31" fill="#a0a99e"/><rect x="11" y="36" width="19" height="7" fill="#c4a977" opacity=".45"/></pattern></defs>';
+ svg+='<rect width="800" height="400" fill="url(#sk)"/>';
+ if(indoor){
+  svg+='<rect x="0" y="0" width="800" height="320" fill="'+(loc==='basement'?'#353b3b':'#777066')+'"/><path d="M0 250L800 230V400H0" fill="#3c3a35"/><path d="M0 0H800V28H0Z" fill="#999082" opacity=".4"/>';
+  svg+='<rect x="120" y="55" width="235" height="195" rx="4" fill="#3a4b4b" stroke="#bbb19c" stroke-width="12"/><rect x="135" y="71" width="205" height="167" fill="#8bafba" opacity=".65"/><path d="M240 62v181M128 146h217" stroke="#b9c2ae" stroke-width="9"/>';
+  svg+='<rect x="510" y="80" width="155" height="255" rx="5" fill="#544c40" stroke="#9a8975" stroke-width="9"/><circle cx="632" cy="223" r="7" fill="#d9bd76"/>';
+  if(loc==='home')svg+='<path d="M50 275h360v18H50Z" fill="#574738"/><rect x="70" y="216" width="190" height="62" rx="8" fill="#8a6550"/><rect x="287" y="200" width="93" height="77" rx="6" fill="#292d2d"/><rect x="298" y="209" width="71" height="51" fill="#647777"/><path d="M110 215v-58h12v58M120 165l34-29 34 29" fill="#a18c65" stroke="#c3b28b" stroke-width="4"/>';
+  if(loc==='basement')svg+='<path d="M0 72h800M30 0v290M0 117h800" stroke="#918e72" stroke-width="18"/><rect x="410" y="112" width="94" height="133" fill="#5d6662" stroke="#a9aa96" stroke-width="8"/><path d="M425 145h62M425 180h62" stroke="#cbba91" stroke-width="7"/>';
+  if(loc==='house12')svg+='<path d="M395 246l-300 150M395 246l250 150" stroke="#a9a28f" stroke-width="11"/><path d="M0 310h800" stroke="#aba08c" stroke-width="6"/>';
+ } else {
+  if(night)svg+='<circle cx="680" cy="70" r="33" fill="#fae6b4" opacity=".7"/>';else svg+='<circle cx="640" cy="64" r="52" fill="#e9c18a" opacity=".7"/>';
+  svg+='<path d="M0 225 Q160 192 310 226 T800 210 V400 H0Z" fill="#46534f" opacity=".7"/><path d="M0 285L800 268V400H0Z" fill="#55554d"/>';
+  svg+='<rect x="-40" y="65" width="230" height="235" fill="#5b625d"/><rect x="-40" y="65" width="230" height="235" fill="url(#win)"/>';
+  svg+='<rect x="420" y="25" width="235" height="278" fill="url(#wall)"/><rect x="420" y="35" width="235" height="268" fill="url(#win)"/><rect x="700" y="115" width="175" height="188" fill="#535a59"/><rect x="700" y="115" width="175" height="188" fill="url(#win)"/>';
+  svg+='<path d="M0 316Q260 293 800 315L800 400H0Z" fill="#41433e"/><path d="M0 328Q300 320 800 335" stroke="#c2ad89" stroke-width="3" stroke-dasharray="15 22" opacity=".32"/>';
+ }
+ if(loc==='court'||loc==='backcourt'||loc==='playground'){
+  svg+='<rect x="260" y="286" width="180" height="12" rx="5" fill="#ae8e68"/><path d="M290 294v50m120-50v50" stroke="#565043" stroke-width="8"/><circle cx="260" cy="267" r="17" fill="#222d2d"/><path d="M260 282l-13 53m13-53l16 54" stroke="#252a2b" stroke-width="9"/><circle cx="487" cy="263" r="17" fill="#28292b"/><path d="M487 282l-17 57m17-57l22 57" stroke="#222627" stroke-width="11"/>';
+  if(loc==='playground')svg+='<path d="M530 250v-124h122M612 127v35" stroke="#a8a18c" stroke-width="9" fill="none"/><rect x="603" y="153" width="40" height="27" fill="none" stroke="#d4b18a" stroke-width="5"/>';
+ }
+ if(loc==='kiosk'||loc==='market'){
+  svg+='<rect x="260" y="170" width="278" height="158" fill="#75604d" stroke="#b7a180" stroke-width="8"/><path d="M236 169h327l-36-53H272Z" fill="#af6c4b"/><path d="M270 169v-53m52 53v-53m52 53v-53m52 53v-53m52 53v-53" stroke="#efc18d" stroke-width="17" opacity=".75"/><rect x="292" y="199" width="218" height="94" fill="#2c3938" stroke="#bea986" stroke-width="7"/><rect x="305" y="225" width="70" height="40" fill="#8a5e43"/><rect x="392" y="218" width="95" height="44" fill="#aa8a4e"/>';
+ }
+ if(loc==='garages'||loc==='garagearea'){
+  svg+='<rect x="170" y="192" width="390" height="139" fill="#717167" stroke="#a59b82" stroke-width="8"/><rect x="190" y="208" width="165" height="121" fill="#424e4d" stroke="#b8a992" stroke-width="5"/><rect x="370" y="208" width="170" height="121" fill="#3e4849" stroke="#b8a992" stroke-width="5"/><path d="M190 230h165m-165 23h165m-165 23h165m15-46h170m-170 23h170m-170 23h170" stroke="#8b8d83" stroke-width="4"/>';
+ }
+ if(loc==='stop'||loc==='station'){
+  svg+='<rect x="250" y="266" width="375" height="65" rx="12" fill="#baaa83" stroke="#55554e" stroke-width="8"/><rect x="280" y="273" width="260" height="32" fill="#4d777f"/><circle cx="315" cy="332" r="18" fill="#222a2a" stroke="#aaa18b" stroke-width="6"/><circle cx="565" cy="332" r="18" fill="#222a2a" stroke="#aaa18b" stroke-width="6"/><path d="M185 330V157" stroke="#dfd2b5" stroke-width="9"/><rect x="169" y="125" width="31" height="42" fill="#e2c99f"/>';
+ }
+ if(loc==='factory'||loc==='river'||loc==='center'){
+  svg+='<rect x="240" y="215" width="335" height="115" fill="#696b64"/><path d="M240 215l60-48 65 48 63-46 62 46 85-45v45" fill="#746d62"/><rect x="530" y="58" width="38" height="170" fill="#76695f"/><path d="M550 64c30-45 58-12 91-44" fill="none" stroke="#a7b0aa" stroke-width="18" opacity=".3"/>';
+  if(loc==='river')svg+='<path d="M0 330Q200 310 400 330T800 320V400H0Z" fill="#47636d" opacity=".8"/>';
+ }
+ svg+='</svg>';return svg;
+}
+function concise(txt,max){var t=String(txt||'').replace(/\s+/g,' ').trim();return t.length>max?t.slice(0,max).replace(/\s+\S*$/,'')+'…':t}
+function shortAct(label){return String(label).replace(/^[^\p{L}\p{N}]+/u,'').replace(/\s+\d{2,3}\s*₽/,' ₽')}
+function pageList(items){var size=4,pages=Math.max(1,Math.ceil(items.length/size));compactPage=Math.min(compactPage,pages-1);return {items:items.slice(compactPage*size,(compactPage+1)*size),pages:pages}}
+function actionsUI(items,heading){
+ var p=pageList(items),buttons=p.items.map(function(a){
+ var label=String(a[0]),sub=String(a[2]||''),cls=a[3]&&a[3].indexOf('primary')!==-1?'special':a[3]&&a[3].indexOf('good')!==-1?'positive':'';
+ return '<button class="bigact '+cls+'" data-act="'+esc(a[1])+'" '+(a[4]?'disabled':'')+'>'+esc(concise(shortAct(label),47))+(sub?'<small>'+esc(concise(sub,49))+'</small>':'')+'</button>';
+ }).join('');
+ while(p.items.length++<4)buttons+='<button class="bigact empty" disabled>·</button>';
+ return '<section class="actzone"><div class="actiontop"><b>'+esc(heading||'Выбери действие')+'</b><div class="pagertools"><button class="pagerbtn" data-act="page:prev" '+(compactPage===0?'disabled':'')+' aria-label="Предыдущие действия">‹</button><span class="pagerlabel">'+(compactPage+1)+' / '+p.pages+'</span><button class="pagerbtn" data-act="page:next" '+(compactPage===p.pages-1?'disabled':'')+' aria-label="Следующие действия">›</button></div></div><div class="actionfour">'+buttons+'</div></section>';
+}
+function navCompact(){
+ var tabs=[['scene','🏘️','Место'],['map','🗺️','Карта'],['hero','🎒','Вещи'],['journal','📖','Дела'],['log','📝','Журнал']];
+ return '<nav class="bottomnav" aria-label="Разделы игры">'+tabs.map(function(x){return '<button class="navsmall '+(screen===x[0]?'on':'')+'" data-act="tab:'+x[0]+'" '+((g.scene||g.combat)?'disabled':'')+'><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('')+'</nav>';
+}
+function infoCompact(){
+ return '<section class="rowinfo"><div class="compactstats"><div><b>❤️ '+g.hp+'/100</b><div class="meter"><i style="width:'+g.hp+'%"></i></div></div><div><b>⚡ '+g.stamina+'/100</b><div class="meter blue"><i style="width:'+g.stamina+'%"></i></div></div><div><b class="money">'+g.money+' ₽</b><small>Деньги</small></div><div><b>⭐ '+g.level+'</b><small>'+g.stats.i+' см / '+g.stats.r+' авт</small></div></div></section>';
+}
+function artCompact(loc,title,detail){var art=sceneSVG(loc);return '<div class="sceneart">'+art+'<div class="scene-label"><span>'+esc(g.area==='q5'?'Пятый квартал · 1998':AREAS.find(function(x){return x.id===g.area})?.name||'Казань · 1998')+'</span><strong>'+esc(title)+'</strong><em>'+esc(detail||'')+'</em></div></div>'}
+function shellCompact(name,loc,txt,actions,heading){
+ var context=screen+':'+loc+':'+(g.scene?.title||'')+':'+(g.combat?.name||'')+':'+(shop?.id||'');
+ if(context!==compactContext){compactPage=0;compactContext=context}
+ app.innerHTML='<div class="one"><header class="topline"><div class="toptitle">ГОПНИК<small>ЧУЖИЕ ДОЛГИ · ТЕСТ</small></div><div class="topclock">'+dayTag()+'<small>'+esc(g.name)+' · '+esc(CLASSES[g.origin].name)+'</small></div></header>'+artCompact(loc,name,stageText())+infoCompact()+'<div class="notecompact" title="'+esc(txt)+'">'+esc(concise(txt,170))+'</div>'+actionsUI(actions,heading)+navCompact()+'</div>';
+}
+function renderCompact(){
+ if(!g){
+ var cards=Object.keys(CLASSES).map(function(id){var c=CLASSES[id];return '<button class="origin '+(selected===id?'chosen':'')+'" data-act="select:'+id+'"><b>'+esc(c.name)+'</b><small>'+esc(c.home)+'</small></button>'}).join('');
+ app.innerHTML='<div class="one intro-one"><header class="topline"><div class="toptitle">ГОПНИК<small>КАЗАНЬ · 1998</small></div><div class="topclock">ПЕРВАЯ ГЛАВА<small>Тестовый выпуск</small></div></header><div class="sceneart"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="bgintro" x2="0" y2="1"><stop stop-color="#516c69"/><stop offset="1" stop-color="#b78c68"/></linearGradient><pattern id="wnd" width="53" height="65" patternUnits="userSpaceOnUse"><rect x="12" y="13" width="24" height="30" fill="#2b3738" stroke="#a99c82" stroke-width="4"/></pattern></defs><rect width="800" height="380" fill="url(#bgintro)"/><rect x="0" y="78" width="228" height="250" fill="#606862"/><rect x="0" y="78" width="228" height="250" fill="url(#wnd)"/><rect x="420" y="38" width="252" height="288" fill="#74766c"/><rect x="420" y="38" width="252" height="288" fill="url(#wnd)"/><rect x="680" y="115" width="120" height="210" fill="#515e5c"/><rect y="315" width="800" height="65" fill="#323c3a"/><path d="M320 275v-65m0 65l-15 62m15-62l20 62" stroke="#232a2b" stroke-width="18"/><circle cx="320" cy="190" r="22" fill="#242b2b"/><path d="M515 267v-66m0 66l-18 70m18-70l20 70" stroke="#23292a" stroke-width="18"/><circle cx="515" cy="183" r="22" fill="#252b2b"/></svg><div class="scene-label"><span>Криминальная RPG</span><strong>Чужие долги</strong><em>Четыре пути. Один пропавший человек.</em></div></div><div class="notecompact">Сентябрь 1998. Во дворе пропал Дамир. Каждый знает свою правду.</div><div class="origincards">'+cards+'</div><div class="introfoot"><input id="heroName" maxlength="24" aria-label="Имя героя" value="'+esc(draftName)+'"><button data-act="start">НАЧАТЬ →</button></div></div>';
+ return;
+ }
+ if(g.combat){
+ var c=g.combat,a=[['Быстрый удар','hit:quick','90% · 8 сил'],['Обычный удар','hit:normal','70% · 12 сил'],['Сильный удар','hit:heavy','50% · 24 силы'],['Блок','def:block','Снижение урона'],['Уклониться','def:dodge','Шанс от ловкости'],['Договориться','talk-fight','Без драки','good'],['Сбежать','run','Сохранить здоровье'],['Бинт','fight-bandage','Восстановить 20 HP','',!g.inventory.includes('bandage')]];
+ if(g.skills.includes('counter')&&c.counterReady)a.push(['Контратака','counter','12 выносливости']);
+ shellCompact(c.name,'playground','Противник: '+c.hp+'/65 HP. '+(c.intent==='heavy'?'Готовит сильный удар.':c.intent==='quick'?'Готовится быстро атаковать.':'Пытается сбить тебя с толку.')+' '+g.last,a,'Твой ход');return;
+ }
+ if(g.scene){shellCompact(g.scene.title,g.loc,g.scene.body,g.scene.options,'Твой выбор');return;}
+ if(screen==='map'){
+ var all=PLACES.map(function(x){return [iconOf(x.id)+' '+x.name,'go:'+x.id,x.hint,'',x.id==='basement'&&g.quest.light===0]});
+ all=all.concat(AREAS.map(function(x){return [iconOf(x.loc)+' '+x.name,'go:'+x.loc,x.id==='q5'?'Вернуться к дому':'Доступно · ознакомительная зона']}));
+ shellCompact('Карта города','stop','Все семь районов открыты. Выбирай место; переходы расходуют игровое время.',all,'Локации · 9 мест и 7 районов');return;
+ }
+ if(screen==='hero'){
+ var a=[],idx=0;
+ Object.keys(SLOTNAMES).forEach(function(slot){var it=g.equip[slot];if(it)a.push(['Снять: '+itemName(it),'unequip:'+slot,SLOTNAMES[slot],'',g.inventory.length>=20])});
+ g.inventory.forEach(function(id,n){var it=GOODS[id];a.push([(it.slot?'Надеть: ':'Использовать: ')+it.name,(it.slot?'equip:':'use:')+n,it.desc])});
+ if(g.loc==='home')a.push(['Домашний шкаф','closet','Оставить лишние вещи']);
+ if(g.statPoints)Object.keys(g.stats).forEach(function(s){a.push(['Характеристика +1','stat:'+s,{s:'Сила',a:'Ловкость',i:'Смекалка',r:'Авторитет'}[s]])});
+ if(g.skillPoints)a.push(['Изучить контратаку','skill:counter','Требует 1 очко навыка']);
+ if(!a.length)a=[['Выйти во двор','go:court','Пока инвентарь пуст']];
+ shellCompact('Снаряжение','home','Рюкзак '+g.inventory.length+'/20 · надето '+Object.values(g.equip).filter(Boolean).length+'/5. '+efx(),a,'Предметы и навыки');return;
+ }
+ if(screen==='journal'){
+ var a=[['Сумка Зои','go:court',g.quest.bag===3?'✓ Завершено':'Соседка → площадка → Зоя'],
+ ['Свет в подъезде','go:garages',g.quest.light===3?'✓ Завершено':'Валера → подвал → Валера'],
+ ['Проверить дом №12','go:house12',g.evidence.receipt?'✓ Квитанция найдена':'Найди копию документа'],
+ ['Поговорить с жителями','go:court',g.flags.rumor?'✓ Слух подтверждён':'Кто видел Дамира?'],
+ ['Проверить почту','go:home',g.evidence.note?'✓ Записка найдена':'Ищи письмо'],
+ ['На рынок','go:market','Другие торговцы и работа']];
+ if(completed()&&!g.chapterFinished)a.unshift(['Завершить главу','finish','Выбрать судьбу находок','primary']);
+ shellCompact('Дела и зацепки','house12',(g.chapterFinished?'✓ Глава 1 завершена. ':'')+'Следы: '+Number(!!g.flags.rumor)+Number(!!g.evidence.note)+Number(!!g.evidence.receipt)+'/3. История зависит от твоего выбора.',a,'Журнал заданий');return;
+ }
+ if(screen==='log'){
+ var a=g.log.slice().reverse().map(function(t,n){return [concise(t,52),'noop', 'Запись '+(g.log.length-n),'',true]});
+ a.push(['Сохранить','save','Прогресс сохранится здесь']);a.push(['Новая игра','reset','Удалить тестовое сохранение']);
+ shellCompact('История событий','home','Последние новости: '+g.last,a,'Записи и управление');return;
+ }
+ if(screen==='closet'){
+ var a=g.inventory.map(function(id,n){return ['В шкаф: '+itemName(id),'store:'+n,'Убрать из рюкзака']});
+ a=a.concat(g.closet.map(function(id,n){return ['Забрать: '+itemName(id),'take:'+n,'Из шкафа','',g.inventory.length>=20]}));
+ a.push(['Вернуться домой','closet-close','К комнате','good']);
+ shellCompact('Домашний шкаф','home','В шкафу '+g.closet.length+' вещей. В рюкзаке '+g.inventory.length+'/20.',a,'Хранение');return;
+ }
+ if(screen==='trade'){
+ var a=[];
+ if(shop){
+  var d=shop,it=GOODS[d.id];var key='haggled:'+g.day+':'+d.dir+':'+d.id;
+  a=[['Торговаться','haggle','Шанс от смекалки и авторитета','primary',!!g.flags[key]],
+  [d.dir==='buy'?'Купить':'Продать','deal','Цена '+d.price+' ₽','good',d.dir==='buy'&&(g.money<d.price||g.inventory.length>=20)],
+  ['Отмена','cancel-trade','Обратно в киоск']];
+  shellCompact(it.name,'kiosk',(d.dir==='buy'?'Покупка':'Продажа')+' · '+d.price+' ₽. '+it.desc,a,'Сделка у Бориса');return;
+ }
+ Object.keys(GOODS).forEach(function(id){var it=GOODS[id];a.push(['Купить: '+it.name,'offer:buy:'+id,it.price+' ₽','',g.inventory.length>=20]);a.push(['Продать: '+it.name,'offer:sell:'+id,'Выкуп '+Math.floor(it.price*.45)+' ₽','',!g.inventory.includes(id)])});
+ a.push(['Закрыть магазин','cancel-trade','Вернуться в киоск']);
+ shellCompact('Киоск Бориса','kiosk','Борис продаёт одежду, инструменты и бинты. Покупай, продавай, торгуйся.',a,'Товары · листай стрелками');return;
+ }
+ var a=sceneActions();
+ if(g.area==='q5')a.push(['Подождать до 18:00','wait:18','Ожидание не лечит']);
+ if(g.loc==='court')a.push(['Подождать до 09:00','wait:9','Для разговора с соседями']);
+ if(g.loc!=='home'&&g.area==='q5')a.push(['Вернуться домой','go:home','Отдых и шкаф']);
+ shellCompact(locName(),g.loc,localDesc(),a,'Что сделать дальше?');
+}
+render=renderCompact;
+
 document.addEventListener('click',function(e){
 var b=e.target.closest('[data-act]');if(!b||b.disabled)return;
 var id=b.getAttribute('data-act');if(!id)return;
+if(id==='page:prev'||id==='page:next'){compactPage=Math.max(0,compactPage+(id==='page:next'?1:-1));render();return}
+compactPage=0;
 try{handle(id)}catch(err){console.error(err);if(g){log('Произошла ошибка действия. Сохранение осталось доступно.');g.scene=null;g.combat=null;screen='scene';save();render()}else alert('Ошибка игры: '+err.message)}
 });
 if(g){screen='scene';log('Сохранённая история восстановлена.');save()}
