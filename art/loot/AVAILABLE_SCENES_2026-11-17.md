@@ -64,3 +64,8 @@
 - `art/loot/alternates/center_archive_yard_winter_alt02.webp` — 1032×581 WebP, 221 КБ
 - `art/loot/alternates/center_archive_yard_winter_alt03.webp` — 1032×581 WebP, 232 КБ
 
+
+## Крыша девятиэтажки (утверждённая сезонная пара)
+
+- `art/loot/city_rooftop.webp` — зима, WebP 1032×581, 89 КБ
+- `art/loot/city_rooftop_summer.webp` — лето, WebP 1032×581, 124 КБ
