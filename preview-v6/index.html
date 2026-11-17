@@ -1814,5 +1814,250 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.land .scenebox{display:flex;width:min(900px,100%);max-height:100%}.land .sceneimg{width:62%;aspect-ratio:auto;height:auto;max-height:calc(100dvh - 24px);border-radius:13px 0 0 13px}.land .scenetext{flex:1;display:flex;flex-direction:column;justify-content:center}'+
 '</style>');
 
+/* ===== v6: общая карта города, ходьба по карте, события в дороге, погода ===== */
+const CMW=1536,CMH=1024,CMS=1032/1536,CMWH=Math.round(CMH*CMS);           // мир карты 1032×688
+const CITY_XY=[[720,280],[770,660],[1010,390],[280,350],[700,890],[420,545],[680,540]]; // координаты районов на схеме 1536×1024
+const KM_PX=20/1536,ROUTE_K=1.35;
+const CITY_ICON=['🏠','🛒','🚉','🏭','🚙','⚓','🏛️'];
+function cityKm(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])*KM_PX*ROUTE_K}
+function winterNow(){const m=gameDate().getUTCMonth();return m>=10||m<=2}
+function cityArt(){const k=winterNow()?'../art/maps/city_winter.webp':'../art/maps/city_summer.webp';return ASSET_OK[k]?k:'../art/reference/city_schema.jpg'}
+['../art/maps/city_winter.webp','../art/maps/city_summer.webp'].forEach(probeAsset);
+function absMin(){return (g.day-1)*1440+g.minute}
+
+/* стоимость поездок — по настоящему расстоянию на карте */
+cityCost=function(destination,method){
+ const s=S(),from=s.trip?[s.trip.x,s.trip.y]:CITY_XY[g.region||0],km=cityKm(from,CITY_XY[destination]);
+ if(method==='foot')return {minutes:Math.round(km*12)+5,cost:0,fuel:0,wear:0,km};
+ if(method==='bus')return {minutes:12+Math.round(km*3.2),cost:6+Math.round(km),fuel:0,wear:0,km};
+ if(method==='taxi')return {minutes:6+Math.round(km*2.2),cost:20+Math.round(km*4),fuel:0,wear:0,km};
+ if(method==='car')return {minutes:4+Math.round(km*2),cost:0,fuel:2+Math.round(km*.9),wear:1+Math.round(km/4),km};
+ return null;
+};
+
+/* ---------- погода: дождь осенью/весной, метель зимой ---------- */
+function weatherNow(){const w=S().weather;return w&&w.until>absMin()?w.kind:null}
+function rollWeather(m){
+ const s=S();if(weatherNow())return;
+ const mon=gameDate().getUTCMonth();
+ const kind=(mon>=10||mon<=2)?'snow':'rain';
+ const perHour=(mon===8||mon===9||mon===3||mon===4)?.10:(kind==='snow'?.05:.03);
+ if(Math.random()<1-Math.pow(1-perHour,m/60)){
+  s.weather={kind,until:absMin()+60+Math.floor(Math.random()*120)};
+  survNote(kind==='rain'?'🌧 Начался дождь. На улице промокаешь — тепло уходит быстрее.':'🌨 Началась метель. На улице мёрзнешь вдвое быстрее.');
+ }
+}
+const _coldRateC=coldRate;
+coldRate=function(){const w=weatherNow();return _coldRateC()*(w==='snow'?2:w==='rain'?1.5:1)};
+const _advanceC=advance;
+advance=function(m){const r=_advanceC.apply(this,arguments);if(g&&m>0)rollWeather(m);return r};
+function weatherFx(){const w=weatherNow();return w?'<div class="wxfx wx-'+w+'" aria-hidden="true"></div>':''}
+
+/* ---------- экран карты города ---------- */
+function cityOn(){return !!(g&&S().cityMode)}
+function openCity(){const s=S();s.cityMode=true;view='map';focus=s.trip?'trip':'cityinfo';page=0;root.dataset.initializedMap='';cityFresh=true;save();render()}
+function closeCity(){const s=S();if(s.trip)return;s.cityMode=false;view='map';focus=null;page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';save();render()}
+let cityFresh=false,tripTimer=0;
+function heroXY(){const s=S();return s.trip?[s.trip.x,s.trip.y]:CITY_XY[g.region||0]}
+function cityWorld(){
+ const s=S(),[hx,hy]=heroXY(),t=s.trip;
+ let h='<img class="mapart cityart" src="'+cityArt()+'" alt="" draggable="false">';
+ if(t){const a=[hx*CMS,hy*CMS],b=[CITY_XY[t.to][0]*CMS,CITY_XY[t.to][1]*CMS];
+  h+='<svg class="cityroute" viewBox="0 0 1032 '+CMWH+'"><line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/></svg>'}
+ h+=CITY_XY.map((p,i)=>'<button class="pin citypin '+(i===(t?t.to:g.region)?'active':'')+'" data-do="surv:cpin:'+i+'" data-name="'+esc(regions[i])+'" style="left:'+Math.round(p[0]*CMS)+'px;top:'+Math.round(p[1]*CMS)+'px">'+CITY_ICON[i]+'</button>').join('');
+ h+='<div class="cityhero'+(t&&!t.paused?' walking':'')+'" style="left:'+Math.round(hx*CMS+(t?0:30))+'px;top:'+Math.round(hy*CMS-(t?0:14))+'px">🚶</div>';
+ return h;
+}
+function cityFit(){
+ const v=document.getElementById('maphost');if(!v)return;
+ viewportW=v.clientWidth;viewportH=v.clientHeight;
+ const cover=Math.max(viewportW/1032,viewportH/CMWH);
+ if(cityFresh||zoom<cover*.999){zoom=Math.max(cover,Math.min(1.4,cover*1.5));const [hx,hy]=heroXY(),dw=root.classList.contains('land')?(document.querySelector('.drawer')?.offsetWidth||0)+12:0;px=(viewportW-dw)/2-hx*CMS*zoom;py=viewportH/2-hy*CMS*zoom;cityFresh=false}
+ applyMap();
+}
+const _applyMapC=applyMap;
+applyMap=function(){
+ if(!cityOn())return _applyMapC();
+ const v=document.getElementById('maphost'),w=document.getElementById('world');if(!v||!w)return;
+ const ww=1032*zoom,wh=CMWH*zoom;
+ px=ww>v.clientWidth?Math.min(0,Math.max(v.clientWidth-ww,px)):(v.clientWidth-ww)/2;
+ py=wh>v.clientHeight?Math.min(0,Math.max(v.clientHeight-wh,py)):(v.clientHeight-wh)/2;
+ w.style.transform='translate('+px+'px,'+py+'px) scale('+zoom+')';
+};
+
+/* ---------- путь пешком ---------- */
+const STEP_MIN=10;
+function startWalk(d){
+ const s=S();d=Number(d);
+ if(!(d>=0&&d<=6))return;
+ if(!s.trip&&d===g.region){announceAndRender('Ты уже здесь.');return}
+ const [x,y]=heroXY();
+ s.trip={to:d,x,y,paused:false,ev:null,lastEv:absMin(),from:s.trip?s.trip.from:g.region};
+ s.cityMode=true;view='map';focus='trip';page=0;save();render();scheduleWalk();
+}
+function scheduleWalk(){clearTimeout(tripTimer);const s=g&&S();if(!s||!s.trip||s.trip.paused||s.trip.ev)return;tripTimer=setTimeout(walkStep,window.__WALK_MS||WALK_MS)}
+let WALK_MS=650;
+function walkStep(){
+ tripTimer=0;if(!g)return;const s=S(),t=s.trip;if(!t||t.paused||t.ev)return;
+ const goal=CITY_XY[t.to],dx=goal[0]-t.x,dy=goal[1]-t.y,dist=Math.hypot(dx,dy);
+ const pxPerStep=STEP_MIN/12/(KM_PX*ROUTE_K)*(s.energy<15?.7:1);   // 5 км/ч с учётом петляния дорог
+ s.mode='foot';try{advance(STEP_MIN)}finally{s.mode=null}
+ if(!s.trip||s.pendingDeath||g.hp<=0){save();render();return}
+ if(dist<=pxPerStep){arrive(t.to,'пешком');return}
+ t.x+=dx/dist*pxPerStep;t.y+=dy/dist*pxPerStep;
+ // опасное состояние — герой сам останавливается
+ if(!t.warnStop&&(s.warmth<15||s.food<8||g.hp<25)){t.paused=true;t.warnStop=true;survNote('⚠️ Ты остановился: '+(g.hp<25?'мало здоровья':s.warmth<15?'сильно замёрз':'очень хочется есть')+'. Подумай, идти ли дальше.')}
+ else if(absMin()-t.lastEv>=30&&Math.random()<.16){t.lastEv=absMin();t.ev=pickRoadEvent()}
+ save();render();scheduleWalk();
+}
+function arrive(d,how){
+ const s=S();clearTimeout(tripTimer);const old=regions[s.trip?.from??g.region];
+ s.trip=null;s.cityMode=false;g.region=d;g.loc=d===0?'stop':DISTRICTS[d].spots.find(x=>x.role==='travel')?.id||DISTRICTS[d].spots[0].id;
+ view='map';focus=null;page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';
+ announce('Дошёл: '+old+' → '+regions[d]+' ('+how+').');save();render();
+}
+function turnBack(){const s=S(),t=s.trip;if(!t)return;t.to=t.from;t.paused=false;t.ev=null;save();render();scheduleWalk()}
+
+/* ---------- события в дороге ---------- */
+const ROAD_EVENTS={
+ find:{title:'🔎 Находка у дороги',text:t=>'В траве у бордюра что-то лежит: '+(SUP[t.item]?SUP[t.item].name.toLowerCase():t.item==='money'?'несколько смятых купюр':'')+'.',opts:[['Подобрать','take','Пара минут'],['Пройти мимо','skip','']]},
+ dogs:{title:'🐕 Бродячие собаки',text:()=>'У гаражей стая собак. Вожак уже рычит и идёт навстречу.',opts:[['Обойти стороной','dogs-around','+20 мин, силы'],['Отогнать палкой','dogs-fight','Риск укуса']]},
+ gop:{title:'🚬 Компания на пустыре',text:()=>'Трое на корточках у теплотрассы: «Слышь, есть закурить?»',opts:[['Угостить сигаретой','gop-cig','Нужны сигареты'],['Отдать 10 ₽','gop-pay','Без проблем'],['Пройти уверенно','gop-bold','Как повезёт']]},
+ warm:{title:'🏢 Открытый подъезд',text:()=>'Дверь подъезда подпёрта кирпичом, внутри тепло от батареи.',opts:[['Погреться 20 минут','warm-in','Тепло +'],['Идти дальше','skip','']]},
+ ride:{title:'🚗 Попутка',text:t=>'Рядом тормозит «копейка». Водитель: «Куда путь держишь? До района «'+regions[t.to]+'» подкину за 15 ₽».',opts:[['Сесть за 15 ₽','ride-yes','Быстро'],['Отказаться','skip','']]},
+ shelter:{title:'☂️ Навес остановки',text:()=>weatherNow()==='snow'?'Метёт так, что не видно дороги. Рядом — пустая остановка с навесом.':'Льёт как из ведра. Рядом — пустая остановка с навесом.',opts:[['Переждать 30 минут','shelter-wait','Тепло тратится медленнее'],['Идти дальше','skip','']]}
+};
+function pickRoadEvent(){
+ const s=S(),pool=['find','find','dogs','gop','warm','ride'];
+ if(weatherNow())pool.push('shelter','shelter');
+ if(survNight())pool.push('dogs','gop');
+ const k=pool[Math.floor(Math.random()*pool.length)];
+ const ev={k};
+ if(k==='find'){const items=['food_bread','drink_water','cigs','bandage','food_potato','money'];ev.item=items[Math.floor(Math.random()*items.length)]}
+ return ev;
+}
+function roadAnswer(a){
+ const s=S(),t=s.trip;if(!t||!t.ev)return;const ev=t.ev;t.ev=null;
+ const outside=fn=>{s.mode='foot';try{fn()}finally{s.mode=null}};
+ if(a==='take'){outside(()=>advance(3));if(ev.item==='money'){const n=5+Math.floor(Math.random()*20);g.money+=n;announce('Подобрал '+n+' ₽.')}else if(g.inventory.length<20){g.inventory.push(ev.item);announce('Подобрал: '+supName(ev.item)+'.')}else announce('Рюкзак полон — пришлось оставить.')}
+ else if(a==='dogs-around'){outside(()=>advance(20));s.energy=clampN(s.energy-5);announce('Обошёл собак через дворы.')}
+ else if(a==='dogs-fight'){outside(()=>advance(5));if(Math.random()<.6){s.nerves=clampN(s.nerves-3);announce('Собаки отступили, но руки дрожат.')}else{g.hp=Math.max(1,g.hp-12);s.nerves=clampN(s.nerves-8);announce('Собака цапнула за ногу. −12 HP.')}}
+ else if(a==='gop-cig'){const i=g.inventory.indexOf('cigs');if(i>=0){g.inventory.splice(i,1);s.nerves=clampN(s.nerves+3);announce('Угостил пачкой. «Нормальный пацан», — пропустили.')}else{t.ev=ev;announce('Сигарет нет.');save();render();return}}
+ else if(a==='gop-pay'){if(g.money>=10){g.money-=10;announce('Отдал 10 ₽ и пошёл дальше.')}else{t.ev=ev;announce('Нет даже десятки.');save();render();return}}
+ else if(a==='gop-bold'){if(Math.random()<.5){s.nerves=clampN(s.nerves+4);announce('Прошёл не оглядываясь — не тронули.')}else{const lost=Math.round(g.money*.2);g.money-=lost;g.hp=Math.max(1,g.hp-15);s.nerves=clampN(s.nerves-10);announce('Догнали. −15 HP'+(lost?', −'+lost+' ₽':'')+'.')}}
+ else if(a==='warm-in'){s.mode='inside';try{advance(20)}finally{s.mode=null}announce('Отогрелся у батареи.')}
+ else if(a==='ride-yes'){if(g.money<15){t.ev=ev;announce('Не хватает 15 ₽.');save();render();return}g.money-=15;const c=cityCost(t.to,'taxi');s.mode='car';try{advance(Math.max(5,c.minutes-6))}finally{s.mode=null}arrive(t.to,'на попутке');return}
+ else if(a==='shelter-wait'){s.mode='inside';try{advance(30)}finally{s.mode=null}s.warmth=clampN(s.warmth-4);announce('Переждал под навесом.')}
+ else announce('Пошёл дальше.');
+ save();render();scheduleWalk();
+}
+const _survIndoorC=survIndoor;
+survIndoor=function(){const s=S();if(s.mode==='inside')return true;return _survIndoorC()};
+
+/* ---------- окна (drawer) ---------- */
+const _actionsForC=actionsFor;
+actionsFor=function(id){
+ if(!g)return _actionsForC(id);
+ const s=S(),t=s.trip;
+ if(id==='cityinfo')return [{name:'↩ Вернуться в район',doit:'surv:cityclose',sub:regions[g.region],alt:true}];
+ if(String(id).startsWith('cityd:')){
+  const d=+id.slice(6);
+  if(!t&&d===g.region)return [{name:'🚏 Войти в район',doit:'surv:cityclose',sub:'Ты здесь',alt:true}];
+  const c=cityCost(d,'foot'),a=[{name:'🚶 Идти пешком',doit:'surv:walk:'+d,sub:c.km.toFixed(1)+' км · ~'+c.minutes+' мин · события в пути',alt:true}];
+  if(!t){a.push({name:'🚌 Автобус',doit:'travel:'+d+':bus',sub:cityCost(d,'bus').minutes+' мин · '+cityCost(d,'bus').cost+' ₽',alt:false});
+   a.push({name:'🚕 Такси',doit:'travel:'+d+':taxi',sub:cityCost(d,'taxi').minutes+' мин · '+cityCost(d,'taxi').cost+' ₽',alt:false});
+   if(canCarTravel(d))a.push({name:'🚗 На своей машине',doit:'travel:'+d+':car',sub:cityCost(d,'car').minutes+' мин · '+cityCost(d,'car').fuel+' л',alt:false});}
+  a.push({name:'← Назад',doit:'surv:cityback',sub:'',alt:false});
+  return a;
+ }
+ if(id==='trip'&&t){
+  if(t.ev){const E=ROAD_EVENTS[t.ev.k];return E.opts.map(([n,k,sub])=>({name:n,doit:'surv:road:'+k,sub,alt:false}))}
+  const a=t.paused?[{name:'▶ Идти дальше',doit:'surv:tripgo',sub:'К: '+regions[t.to],alt:true}]:[{name:'⏸ Остановиться',doit:'surv:trippause',sub:'Поесть, подумать',alt:true}];
+  if(t.to!==t.from)a.push({name:'↩ Повернуть назад',doit:'surv:tripback',sub:'В '+regions[t.from],alt:false});
+  return a;
+ }
+ return _actionsForC(id);
+};
+const _infoForC=infoFor;
+infoFor=function(id){
+ if(!g)return _infoForC(id);
+ const s=S(),t=s.trip;
+ if(id==='cityinfo')return 'Карта города. Нажми на район, чтобы выбрать путь. Пешком бесплатно, но в дороге тратятся время, еда и тепло'+(weatherNow()?', а в непогоду — вдвое':'')+'.';
+ if(String(id).startsWith('cityd:')){const d=+id.slice(6);return (t||d!==g.region?'Отсюда до района «'+regions[d]+'» ':'Ты здесь. ')+(t||d!==g.region?cityCost(d,'foot').km.toFixed(1)+' км по дорогам.':'')+' '+(DISTRICTS[d]?.tag||'Дом, двор, соседи')+'.'}
+ if(id==='trip'&&t){
+  if(t.ev){const E=ROAD_EVENTS[t.ev.k];return E.text(Object.assign({to:t.to},t.ev))}
+  const left=cityCost(t.to,'foot');
+  return (t.paused?'Стоишь у дороги. ':'Идёшь пешком. ')+'До района «'+regions[t.to]+'»: '+left.km.toFixed(1)+' км, ~'+left.minutes+' мин.'+(weatherNow()==='rain'?' 🌧 Дождь.':weatherNow()==='snow'?' 🌨 Метель.':'');
+ }
+ return _infoForC(id);
+};
+const _drawDrawerC=drawDrawer;
+drawDrawer=function(){
+ let h=_drawDrawerC();if(!g||!focus)return h;
+ const t=S().trip;
+ const title=focus==='cityinfo'?'🗺️ Город':String(focus).startsWith('cityd:')?CITY_ICON[+focus.slice(6)]+' '+regions[+focus.slice(6)]:focus==='trip'&&t?(t.ev?ROAD_EVENTS[t.ev.k].title:'🚶 В пути'):null;
+ if(title)h=h.replace('<strong>'+esc(focus)+'</strong>','<strong>'+esc(title)+'</strong>');
+ if(focus==='trip'||focus==='cityinfo')h=h.replace(/<button[^>]*class="drawer-close"[^>]*>[\s\S]*?<\/button>/,'');
+ return h;
+};
+
+/* ---------- действия ---------- */
+const _survActionC=survAction;
+survAction=function(id){
+ const p=id.split(':'),s=S();
+ if(p[1]==='cpin'){const d=+p[2];focus='cityd:'+d;page=0;render();return}
+ if(p[1]==='walk'){startWalk(p[2]);return}
+ if(p[1]==='cityclose'){closeCity();return}
+ if(p[1]==='cityback'){focus=s.trip?'trip':'cityinfo';page=0;render();return}
+ if(p[1]==='tripgo'&&s.trip){s.trip.paused=false;focus='trip';save();render();scheduleWalk();return}
+ if(p[1]==='trippause'&&s.trip){s.trip.paused=true;clearTimeout(tripTimer);save();render();return}
+ if(p[1]==='tripback'){turnBack();return}
+ if(p[1]==='road'){roadAnswer(p[2]);return}
+ return _survActionC(id);
+};
+const _doActionC=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid==='city'){openCity();return}
+ if(g&&sid.startsWith('travel:')){const x=sid.split(':');if(x[2]==='foot'){startWalk(x[1]);return}const r=_doActionC(id);const s=S();if(g.region===+x[1]){s.cityMode=false;s.trip=null;save();render()}return r}
+ return _doActionC(id);
+};
+const _doDeathC=doDeath;
+doDeath=function(){const s=S();clearTimeout(tripTimer);s.trip=null;s.cityMode=false;root.dataset.initializedMap='';return _doDeathC.apply(this,arguments)};
+
+/* ---------- отрисовка ---------- */
+const _renderC=render;
+render=function(){
+ if(g){const s=S();if(s.cityMode&&view==='map'&&!focus)focus=s.trip?'trip':'cityinfo';if(s.trip&&s.trip.ev&&view==='map')focus='trip'}
+ _renderC();
+ if(!g||root.querySelector('.setup'))return;
+ const host=document.getElementById('maphost');
+ if(host){
+  if(cityOn()&&view==='map'){
+   host.classList.add('citymap');
+   const w=document.getElementById('world');w.innerHTML=cityWorld();w.style.height=CMWH+'px';
+   host.querySelectorAll('.map-hint,.floating-log').forEach(x=>x.remove());
+   cityFit();
+  }
+  host.insertAdjacentHTML('beforeend',weatherFx());
+ }
+ const s=S();if(s.trip&&!s.trip.paused&&!s.trip.ev&&!tripTimer)scheduleWalk();
+};
+const _landSideC=landSide;
+landSide=function(){let h=_landSideC();if(cityOn())h=h.replace(/<div class="ls-card">[\s\S]*?<\/div>/,'<div class="ls-card"><b>🗺️ Город</b><small>'+(S().trip?'В пути → '+esc(regions[S().trip.to]):'Казань, 1998 год')+'</small></div>');return h};
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.citymap .world{height:'+CMWH+'px}.cityart{object-fit:fill}'+
+'.cityroute{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}.cityroute line{stroke:#ffd27a;stroke-width:4;stroke-dasharray:10 8;stroke-linecap:round;filter:drop-shadow(0 1px 2px #000)}'+
+'.citypin{z-index:2}.citypin.active{box-shadow:0 0 0 4px #ffd27a,0 0 18px #ffb84d}'+
+'.cityhero{position:absolute;z-index:3;transform:translate(-50%,-100%);font-size:26px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#ffd27acc,#ffb84d55 60%,transparent 72%);filter:drop-shadow(0 2px 3px #000);pointer-events:none;transition:left .6s linear,top .6s linear}'+
+'.cityhero.walking{animation:heroBob .5s ease-in-out infinite alternate}@keyframes heroBob{to{margin-top:-4px}}'+
+'.wxfx{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.55;background-repeat:repeat}'+
+'.wx-rain{background-image:repeating-linear-gradient(105deg,transparent 0 14px,#b9d4ff55 14px 15px,transparent 15px 31px);background-size:62px 120px;animation:wxRain .45s linear infinite;background-color:#1a263333}'+
+'.wx-snow{background-image:radial-gradient(#fff 1.4px,transparent 2px),radial-gradient(#fff 1px,transparent 1.6px);background-size:46px 46px,29px 29px;background-position:0 0,13px 7px;animation:wxSnow 2.4s linear infinite;background-color:#dfe8f022}'+
+'@keyframes wxRain{to{background-position:-30px 120px}}@keyframes wxSnow{to{background-position:-20px 46px,-6px 36px}}'+
+'@media (prefers-reduced-motion:reduce){.wx-rain,.wx-snow,.cityhero.walking{animation:none}}'+
+'</style>');
+
 render();
 })();</script></body></html>
