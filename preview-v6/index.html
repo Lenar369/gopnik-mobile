@@ -1350,6 +1350,8 @@ const MONTHS_SHORT=['янв','фев','мар','апр','мая','июн','ию�
 const COLD_DAY=[10,9,6,3,0,0,0,0,1,3,6,8],COLD_NIGHT=[12,11,8,5,2,1,1,1,3,5,8,10];
 const NEED_DEF=[['food','🍞','Сытость'],['warmth','🔥','Тепло'],['energy','☕','Бодрость'],['nerves','🚬','Нервы']];
 const clampN=v=>Math.max(0,Math.min(100,v));
+const HUD_ICON={food:'need_food',warmth:'need_warmth',energy:'need_energy',nerves:'need_nerves',hp:'stat_hp',bag:'stat_weight'};
+function hudImg(k,alt,cls){return '<img class="'+(cls||'needico')+'" src="../art/hud/'+HUD_ICON[k]+'.webp" alt="'+alt+'" onerror="this.replaceWith(document.createTextNode(this.alt))">'}
 
 function S(){
  if(!g)return null;
@@ -1511,11 +1513,11 @@ const _render=render;
 render=function(){if(g){S();if(g.surv.pendingDeath&&!g.fight)doDeath()}_render()};
 
 const _toolbar=toolbar;
-toolbar=function(){let h=_toolbar();if(!g)return h;return h.replace(/<span class="phase-name">День \d+ · /,'<span class="phase-name">'+dateShort()+' · ')};
+toolbar=function(){let h=_toolbar();if(!g)return h;return h.replace(/<span class="phase-name">День \d+ · /,'<span class="phase-name">'+dateShort()+' · ').replace('<div class="metric hp">♥ ','<div class="metric hp">'+hudImg('hp','♥','needico hpico'))};
 
 function needsChips(){
  const s=S();
- return '<span class="needs" aria-label="Потребности героя">'+NEED_DEF.map(([k,ico,label])=>{const v=Math.round(s[k]);return '<span class="need '+(v<=10?'crit':v<30?'low':'')+'" title="'+label+' '+v+'/100">'+ico+v+'</span>'}).join('')+(s.cold?'<span class="need low" title="Простуда">🤧</span>':'')+'</span>';
+ return '<span class="needs" aria-label="Потребности героя">'+NEED_DEF.map(([k,ico,label])=>{const v=Math.round(s[k]);return '<span class="need '+(v<=10?'crit':v<30?'low':'')+'" title="'+label+' '+v+'/100">'+hudImg(k,ico)+v+'</span>'}).join('')+(s.cold?'<span class="need low" title="Простуда">🤧</span>':'')+'</span>';
 }
 const _eventStrip=eventStrip;
 eventStrip=function(){let h=_eventStrip();if(!g)return h;return h.replace(/<b>(🥊 Ход драки|📝 Что произошло)<\/b>/,(m,t)=>'<b>'+(t.startsWith('🥊')?'🥊':'📝')+'</b>'+needsChips()).replace('>Весь журнал ›<','>Журнал ›<')};
@@ -1563,7 +1565,7 @@ drawDrawer=function(){
 
 function needsBars(){
  const s=S();
- return NEED_DEF.map(([k,ico,label])=>{const v=Math.round(s[k]);return '<div class="line needline"><strong>'+ico+' '+label+'</strong><span class="needbar"><i style="width:'+v+'%" class="'+(v<=10?'crit':v<30?'low':'')+'"></i></span><b>'+v+'</b></div>'}).join('');
+ return NEED_DEF.map(([k,ico,label])=>{const v=Math.round(s[k]);return '<div class="line needline"><strong>'+hudImg(k,ico,'needico big')+' '+label+'</strong><span class="needbar"><i style="width:'+v+'%" class="'+(v<=10?'crit':v<30?'low':'')+'"></i></span><b>'+v+'</b></div>'}).join('');
 }
 const _viewPanel=viewPanel;
 viewPanel=function(){
@@ -1573,7 +1575,7 @@ viewPanel=function(){
   const counts={};g.inventory.forEach(x=>{if(SUP[x])counts[x]=(counts[x]||0)+1});
   const sup=Object.keys(counts).map(x=>'<button class="tile" data-do="surv:use:'+x+'"><b>'+SUP[x].icon+' '+esc(SUP[x].name)+(counts[x]>1?' ×'+counts[x]:'')+'</b><small>Использовать: '+esc(fxText(SUP[x].fx))+'</small></button>').join('');
   const gear=g.inventory.map((x,i)=>SUP[x]?'':'<button class="tile" data-do="item:'+i+'"><b>'+esc(goods[x]?.name||x)+'</b><small>Надеть · '+esc(goods[x]?.stat||'')+'</small></button>').join('');
-  const h='<div class="avatar"><div class="face">🎒</div><div><strong>Рюкзак '+g.inventory.length+'/20</strong><div>Еда и лекарства — нажми, чтобы использовать</div></div></div>'+needsBars()+
+  const h='<div class="avatar"><div class="face">'+hudImg('bag','🎒','faceico')+'</div><div><strong>Рюкзак '+g.inventory.length+'/20</strong><div>Еда и лекарства — нажми, чтобы использовать</div></div></div>'+needsBars()+
    '<div class="line"><strong>Припасы</strong></div><div class="tilegrid">'+(sup||'<div class="line">Пусто. Купи еду в киоске, на рынке или в универмаге.</div>')+'</div>'+
    (gear?'<div class="line"><strong>Вещи</strong></div><div class="tilegrid">'+gear+'</div>':'')+
    '<div class="line"><strong>Надето:</strong> '+Object.entries(g.equip).map(([k,v])=>esc(k)+': '+(v?esc(goods[v]?.name||v):'—')).join(' · ')+' · утепление '+Math.round(insulation()*100)+'%</div>';
@@ -1617,7 +1619,7 @@ doAction=function(id){
 };
 
 /* стили режима выживания */
-document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
+document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needico{width:15px;height:15px;vertical-align:-3px;margin-right:2px;object-fit:contain}.needico.big{width:22px;height:22px;vertical-align:-6px}.needico.hpico{width:16px;height:16px;margin-right:3px}.faceico{width:100%;height:100%;object-fit:contain}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
 if(g)S();
 
 render();
