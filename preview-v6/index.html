@@ -3242,5 +3242,49 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '@media (orientation:landscape) and (max-height:500px){.battle.gridph,.battle.talkph{grid-template-columns:minmax(0,1fr) minmax(280px,38%)}.battle.gridph .gwrap,.battle.talkph .tfield{grid-column:1;grid-row:2}.battle.gridph .blog,.battle.talkph .blog{grid-column:1;grid-row:3}.battle.gridph .bacts,.battle.talkph .bacts{grid-column:2;grid-row:2/4}.trow{grid-template-columns:1fr 1fr}.bbtn.talk{min-height:58px}}'+
 '</style>');
 
+/* ===== v6: картинки заказа 02 — сезоны, ночь, ракурсы, места на карте, фоны драк ===== */
+const LOOT_ALTS=["center_archive_yard_alt01", "center_archive_yard_alt02", "center_archive_yard_alt03", "center_archive_yard_alt04", "center_archive_yard_winter_alt01", "center_archive_yard_winter_alt02", "center_archive_yard_winter_alt03", "center_construction_alt01", "center_construction_alt02", "factory_boiler_alt01", "factory_boiler_alt02", "factory_hall_alt01", "factory_scrap_alt01", "factory_scrap_alt02", "factory_scrap_alt03", "factory_scrap_alt04", "factory_scrap_alt05", "factory_scrap_alt06", "garage_abandoned_alt01", "garage_abandoned_alt02", "garage_junkyard_alt01", "garage_junkyard_alt02", "market_backrows_alt01", "market_backrows_alt02", "market_backrows_winter_alt01", "q5_dumpster_alt01", "q5_dumpster_alt02", "river_boathouse_alt01", "river_flooded_alt01", "river_flooded_alt02", "station_wagons_alt01", "station_warehouse_alt01", "station_warehouse_alt02"];
+const LOOT_DIR='../art/loot/';
+// основной файл: лето/зима; у крыши основа — зимняя, а летняя с суффиксом _summer
+const LOOT_SEASON={city_rooftop:{summer:'city_rooftop_summer',winter:'city_rooftop'}};
+['market_backrows_winter','market_backrows_closed','station_wagons_winter','garage_junkyard_winter','center_archive_yard_winter','city_rooftop_summer'].forEach(k=>probeAsset(LOOT_DIR+k+'.webp'));
+LOOT_ALTS.forEach(k=>probeAsset(LOOT_DIR+'alternates/'+k+'.webp'));
+const WINTERISH_ALTS=new Set(['garage_junkyard_alt01','garage_junkyard_alt02']);
+function lootVariants(k){
+ const win=winterNow(),out=[];
+ const base=LOOT_SEASON[k]?LOOT_SEASON[k][win?'winter':'summer']:(win&&ASSET_OK[LOOT_DIR+k+'_winter.webp']?k+'_winter':k);
+ if(k==='market_backrows'&&!win&&(survNight()||g.minute<7*60||g.minute>19*60)&&ASSET_OK[LOOT_DIR+'market_backrows_closed.webp'])return [LOOT_DIR+'market_backrows_closed.webp'];
+ if(ASSET_OK[LOOT_DIR+base+'.webp'])out.push(LOOT_DIR+base+'.webp');
+ LOOT_ALTS.forEach(a=>{if(!a.startsWith(base+'_alt'))return;if(!win&&WINTERISH_ALTS.has(a))return;if(ASSET_OK[LOOT_DIR+'alternates/'+a+'.webp'])out.push(LOOT_DIR+'alternates/'+a+'.webp')});
+ if(win&&k==='garage_junkyard')LOOT_ALTS.filter(a=>WINTERISH_ALTS.has(a)).forEach(a=>ASSET_OK[LOOT_DIR+'alternates/'+a+'.webp']&&out.push(LOOT_DIR+'alternates/'+a+'.webp'));
+ return out;
+}
+function pickOne(list,seed){if(!list.length)return null;return list[Math.abs(seed)%list.length]}
+// места на карте города — подходящие кадры из готового
+const WILD_ART={heat:['factory_boiler_alt02','factory_boiler_alt01'],sector:['q5_attic'],dachas:['river_boathouse_alt01'],camp:['factory_hall_alt01'],dump:['factory_scrap_alt06','factory_scrap_alt03','factory_scrap_alt05'],bank:['station_wagons_alt01'],hospital:['center_construction_alt02','center_construction_alt01'],cellar:['q5_basement']};
+function wildVariants(k){
+ const own=LOOT_DIR+'wild_'+k+'.webp';if(ASSET_OK[own])return [own];
+ return (WILD_ART[k]||[]).map(n=>LOOT_DIR+(LOOT_ALTS.includes(n)?'alternates/':'')+n+'.webp').filter(u=>ASSET_OK[u]);
+}
+lootArt=function(k){
+ const L=k.startsWith('wild_')?wildVariants(k.slice(5)):lootVariants(k);
+ if(!L.length)return k.startsWith('wild_')?(WILD[k.slice(5)].fb||null):null;
+ const s=S();s.lootPic=s.lootPic||{};s.lootPic[k]=((s.lootPic[k]||0)+1);   // при каждом обыске — следующий ракурс
+ return pickOne(L,s.lootPic[k]);
+};
+wildArt=function(k){const L=wildVariants(k);return L.length?L[0]:(WILD[k].fb||null)};
+// фон драки: картинка места, где дерёшься
+const _battleBgP=battleBg;
+battleBg=function(F){
+ if(F.bg)return F.bg;const s=S();
+ let bg=null;
+ if(F.onWin&&F.onWin.startsWith('loot:'))bg=lootArt(F.onWin.slice(5));
+ else if(s.atWild)bg=wildArt(s.atWild);
+ else if(s.cityMode||s.trip){const L=winterNow()?['alternates/garage_junkyard_alt02','alternates/center_archive_yard_winter_alt02','station_wagons_winter']:['alternates/factory_scrap_alt01','alternates/factory_scrap_alt04','q5_dumpster','alternates/q5_dumpster_alt01'];const ok=L.map(n=>LOOT_DIR+n+'.webp').filter(u=>ASSET_OK[u]);bg=ok.length?ok[Math.floor(Math.random()*ok.length)]:null}
+ else{const k=Object.keys(LOOT).find(k=>LOOT[k].at===focus||LOOT[k].at===F.back);if(k){const L=lootVariants(k);bg=L[Math.floor(Math.random()*L.length)]||null}}
+ if(bg){F.bg=bg;return bg}
+ return _battleBgP(F);
+};
+
 render();
 })();</script></body></html>
