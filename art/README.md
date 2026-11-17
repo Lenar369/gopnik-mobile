@@ -35,5 +35,5 @@
 ## Список заказов
 | Файл | Что | Статус |
 |---|---|---|
-| [REQUEST_01_survival_core.md](REQUEST_01_survival_core.md) | Иконки потребностей, еда, медицина, тепло, экран смерти | ⏳ |
+| [REQUEST_01_survival_core.md](REQUEST_01_survival_core.md) | Иконки потребностей, еда, медицина, тепло, экран смерти | 🔄 6 из 32 (HUD готов) |
 | [REQUEST_02_loot_places.md](REQUEST_02_loot_places.md) | 17 мест для вылазок за хабаром | ⏳ |
