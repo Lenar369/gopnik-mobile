@@ -1632,7 +1632,7 @@ doAction=function(id){
  if(String(id).startsWith('world:work:'))addXP(8);
  const sc=progressScore();
  if(s.score==null||sc<s.score)s.score=sc;
- else if(sc>s.score){addXP(sc-s.score);s.score=sc}
+ else if(sc>s.score){addXP(sc-s.score);s.score=sc;save();render();return}
  save();
  if(s.pendingDeath&&!g.fight)render();
 };
@@ -1640,6 +1640,131 @@ doAction=function(id){
 /* стили режима выживания */
 document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needico{width:15px;height:15px;vertical-align:-3px;margin-right:2px;object-fit:contain}.needico.big{width:22px;height:22px;vertical-align:-6px}.needico.hpico{width:16px;height:16px;margin-right:3px}.faceico{width:100%;height:100%;object-fit:contain}.menubtn{flex:0 0 auto;width:34px;height:34px;margin-right:2px;border-radius:8px;background:#2a241be8;border:1px solid #97754b;color:#f9d6a0;font-size:19px;font-weight:900;line-height:1;padding:0}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
 if(g)S();
+
+
+/* ===================== ГОРИЗОНТАЛЬНЫЙ ЭКРАН + МЕНЮ ИЗ 6 КНОПОК (v6) =====================
+   Образец: art/reference/landscape_mockup.jpg. Картинки из art/ui/ подхватываются сами,
+   когда появятся (проверка загрузкой); до этого — эмодзи. */
+const ASSET_OK={};let assetTimer=0,landTab='q';
+function probeAsset(p){if(p in ASSET_OK)return;ASSET_OK[p]=false;const im=new Image();im.onload=()=>{ASSET_OK[p]=true;if(g&&!assetTimer)assetTimer=setTimeout(()=>{assetTimer=0;render()},80)};im.src=p}
+function artOr(p,emo,cls){return ASSET_OK[p]?'<img class="'+cls+'" src="'+p+'" alt="" draggable="false">':'<span class="'+cls+' emo">'+emo+'</span>'}
+const UI='../art/ui/';
+const NAV6=[['map','🗺️','Карта','Карта','nav_map'],['bag','🎒','Вещи','Инвентарь','nav_bag'],['hero','🧍','Герой','Персонаж','nav_hero'],['quests','📜','Задания','Задания','nav_quests'],['people','👥','Люди','Люди','nav_people'],['log','📖','Журнал','Дневник','nav_log']];
+const PORTRAIT_EMO={ordinary:'🧑',gop:'🧢',thief:'🕶️',frost:'😠'};
+NAV6.forEach(n=>probeAsset(UI+n[4]+'.webp'));probeAsset(UI+'nav_settings.webp');
+Object.keys(PORTRAIT_EMO).forEach(k=>probeAsset(UI+'portrait_'+k+'.webp'));
+const WEEKDAYS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+function isLand(){return window.innerWidth>window.innerHeight*1.2&&window.innerWidth>=600}
+
+navbar=function(){return '<nav class="bottom">'+NAV6.map(([id,ico,s,l,a])=>'<button class="'+(view===id?'on':'')+'" data-nav="'+id+'"><span>'+artOr(UI+a+'.webp',ico,'navico')+'</span><em class="nl-s">'+s+'</em><em class="nl-l">'+l+'</em></button>').join('')+'</nav>'};
+
+function plate(cls,icon,val,title){return '<div class="lb-plate '+cls+'" title="'+title+'">'+icon+'<span>'+val+'</span></div>'}
+function lvlCls(v){return v<=10?'crit':v<30?'low':''}
+function landBar(){
+ const s=S(),li=levelInfo(),d=gameDate(),pct=li.need?Math.round(li.progress/li.need*100):100;
+ const face=artOr(UI+'portrait_'+g.origin+'.webp',PORTRAIT_EMO[g.origin]||'🧑','lb-faceimg');
+ let h='<div class="landbar"><div class="lb-hero"><div class="lb-face">'+face+'</div><div class="lb-id"><b>'+esc(g.name)+'</b><span>Ур. '+li.lvl+' · '+li.progress+'/'+(li.need||'—')+'</span><i class="xpbar"><u style="width:'+pct+'%"></u></i></div></div><div class="lb-stats">';
+ h+=plate(lvlCls(g.hp)+' lb-hp',hudImg('hp','♥','lbico'),g.hp,'Здоровье');
+ h+=plate(lvlCls(g.stamina)+' lb-stamina','<span class="lbico emo">⚡</span>',g.stamina,'Силы');
+ NEED_DEF.forEach(([k,ico,label])=>{const v=Math.round(s[k]);h+=plate(lvlCls(v),hudImg(k,ico,'lbico'),v,label)});
+ if(s.cold)h+='<div class="lb-plate low" title="Простуда">🤧</div>';
+ h+='</div>'+plate('lb-money','<b class="rub">₽</b>',g.money,'Деньги');
+ h+='<div class="lb-plate lb-date" title="'+esc(dateText())+'"><small>'+WEEKDAYS[d.getUTCDay()]+', '+dateShort()+' 1998</small><b>'+partOfDay().icon+' '+hourMinute()+'</b></div>';
+ h+='<button class="menubtn lb-menu" data-do="surv:menu" aria-label="Меню игры">'+artOr(UI+'nav_settings.webp','☰','lbmenuico')+'</button></div>';
+ return h;
+}
+const _toolbarL=toolbar;
+toolbar=function(){let h=_toolbarL();if(!g)return h;const k=h.lastIndexOf('</header>');return k>0?h.slice(0,k)+landBar()+h.slice(k):h};
+
+function questLines(){
+ const out=[];
+ const main=g.c2&&g.c2.ended?worldMainTask():taskText();
+ out.push({t:'Основной сюжет',d:main,cls:'main'});
+ if(g.region===0){
+  [['bag','Сумка Зои',['Поговори с Зоей','Осмотри площадку и дальний двор','Верни сумку Зое']],['light','Свет в подъезде',['Поговори с Валерой','Помоги в подвале','Вернись за наградой']],['boris','Киоск Бориса',['Борис просит помощи с долгами','Проверь расчёт','Верни записи']]].forEach(([k,t,st])=>{const v=(g.quests||{})[k]||0;out.push({t,d:v>=3?'Выполнено':st[v],cls:v>=3?'done':v>0?'act':''})});
+ }else{
+  const w=cityState();(CQUESTS[g.region]||[]).forEach((q,qi)=>{const v=w.quests[g.region+'-'+qi]||0;out.push({t:q.title,d:v>=3?'Выполнено':v===0?'Можно взять: '+citySpotName(q.from):v===1?'Найти: '+citySpotName(q.find):'Вернуться: '+citySpotName(q.back),cls:v>=3?'done':v>0?'act':''})});
+ }
+ return out;
+}
+function landSide(){
+ const reg=g.region||0,name=reg===0?regions[0]:(DISTRICTS[reg]?.name||regions[reg]),tag=reg===0?'Казань, 1998 год':(DISTRICTS[reg]?.tag||'');
+ let body='';
+ if(landTab==='q')body=questLines().map(x=>'<div class="ls-item '+x.cls+'"><b>'+(x.cls==='done'?'✓ ':x.cls==='main'?'❗ ':x.cls==='act'?'▸ ':'○ ')+esc(x.t)+'</b>'+esc(x.d)+'</div>').join('');
+ else body=(g.log||[]).slice(0,14).map(t=>'<div class="ls-item ev">'+esc(t)+'</div>').join('')||'<div class="ls-item">Пока тихо.</div>';
+ const fresh=Date.now()-noticeAt<6000;
+ return '<aside class="landside"><div class="ls-card"><b>'+esc(name)+'</b><small>'+esc(tag)+'</small></div>'+
+  '<div class="ls-tabs"><button class="'+(landTab==='q'?'on':'')+'" data-do="surv:ltab:q">❗ Задания</button><button class="'+(landTab==='e'?'on':'')+'" data-do="surv:ltab:e">💬 События</button></div>'+
+  '<div class="ls-body">'+body+'</div>'+
+  (g.log&&g.log[0]&&landTab==='q'?'<div class="ls-last'+(fresh?' fresh':'')+'">📝 '+esc(g.log[0])+'</div>':'')+'</aside>';
+}
+
+function peoplePanel(){
+ const rel=g.relations||{},att=v=>v>=3?'🤝 свой':v>=1?'🙂 знакомый':v<0?'😠 в обиде':'· нейтрально';
+ const local=[['zoya','Тётя Зоя','соседка, Пятый квартал'],['sanya','Санёк','друг детства, Пятый квартал'],['valera','Слесарь Валера','гаражи, Пятый квартал'],['gena','Гена Рыжий','дворовая компания'],['boris','Борис','киоск, Пятый квартал']];
+ let h='<div class="line"><strong>Пятый квартал</strong></div>'+local.map(([k,n,d])=>'<div class="line peopleline"><b>'+n+'</b><small>'+d+'</small><span>'+att(rel[k]||0)+'</span></div>').join('');
+ const w=cityState(),met=Object.keys(w.met||{}).filter(k=>w.met[k]);
+ h+='<div class="line"><strong>Знакомые по городу</strong></div>'+(met.length?met.map(sid=>{const sp=dspot(sid);if(!sp)return '';return '<div class="line peopleline"><b>'+esc(sp.person||sp.name)+'</b><small>'+esc(sp.name)+' · '+esc(regions[regionForSpot(sid)]||'')+'</small><span>🙂 знакомый</span></div>'}).join(''):'<div class="line">Пока ни с кем не познакомился. Ищи «Познакомиться» на точках районов.</div>');
+ return '<section class="overlay"><header class="panel-head"><h2>Люди</h2><button data-nav="map">×</button></header><div class="panel-body">'+h+'</div></section>';
+}
+const _viewPanelL=viewPanel;
+viewPanel=function(){if(g&&view==='people')return peoplePanel();return _viewPanelL()};
+
+const _survActionL=survAction;
+survAction=function(id){if(id.startsWith('surv:ltab:')){landTab=id.slice(10)==='e'?'e':'q';render();return}_survActionL(id)};
+
+const _setupMapL=setupMap;
+setupMap=function(){
+ const fresh=!root.dataset.initializedMap;_setupMapL();
+ if(!root.classList.contains('land')||!viewportW||!viewportH)return;
+ const cover=Math.max(viewportH/581,viewportW/1032);
+ if(fresh||zoom<cover){zoom=cover;if(fresh){px=(viewportW-1032*zoom)/2;py=(viewportH-581*zoom)/2}}
+};
+
+const _renderL=render;
+render=function(){
+ const land=isLand();root.classList.toggle('land',land);
+ _renderL();
+ if(g&&land&&!root.querySelector('.setup'))root.insertAdjacentHTML('beforeend',landSide());
+};
+window.addEventListener('resize',()=>{if(!g)return;const l=isLand();if(l!==root.classList.contains('land')){root.dataset.initializedMap='';render()}});
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.bottom{grid-template-columns:repeat(6,1fr)}.bottom button em{font-style:normal}.nl-l{display:none}.navico{width:24px;height:24px;object-fit:contain;display:inline-block}.navico.emo{width:auto;height:auto}'+
+'.landbar,.landside{display:none}'+
+'.land{--sideW:clamp(190px,27vw,260px);--topH:48px;--navH:50px;--safeL:env(safe-area-inset-left,0px);--safeR:env(safe-area-inset-right,0px)}'+
+'.land .top{height:var(--topH);padding:0 calc(6px + var(--safeR)) 0 calc(6px + var(--safeL));gap:6px}'+
+'.land .top>.brand,.land .top>.metrics,.land .top>.menubtn{display:none}'+
+'.land .landbar{display:flex;align-items:center;gap:5px;width:100%;height:100%;min-width:0}'+
+'.lb-hero{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 185px}'+
+'.lb-face{width:40px;height:40px;border-radius:7px;border:2px solid #b08a52;overflow:hidden;background:#3a2f24;display:grid;place-items:center;font-size:23px;flex:0 0 auto;box-shadow:0 2px 6px #000a}'+
+'.lb-faceimg{width:100%;height:100%;object-fit:cover}.lb-faceimg.emo{width:auto;height:auto}'+
+'.lb-id{min-width:0;flex:1;font-size:10.5px;line-height:1.15;color:#d7c7ae}.lb-id b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:#ffe6b8;font-weight:900}.lb-id span{white-space:nowrap}'+
+'.xpbar{display:block;height:5px;background:#1a1612;border:1px solid #5a4a36;border-radius:3px;margin-top:2px;overflow:hidden}.xpbar u{display:block;height:100%;background:linear-gradient(90deg,#c8902f,#f2c25c)}'+
+'.lb-stats{display:flex;gap:4px;flex:1;justify-content:center;min-width:0}'+
+'.lb-plate{display:flex;align-items:center;gap:3px;height:36px;padding:0 7px;border-radius:7px;background:linear-gradient(#2b251ee8,#17140fe8);border:1px solid #6a5539;font-size:12.5px;font-weight:800;white-space:nowrap;color:#f1e3c4;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px 0 #ffffff12}'+
+'.lbico{width:18px;height:18px;object-fit:contain}.lbico.emo{width:auto;height:auto;font-size:14px}.rub{color:#ffd27a;font-size:14px}'+
+'.lb-plate.low{border-color:#c98a3a;color:#ffc56b}.lb-plate.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}'+
+'.lb-date{flex-direction:column;align-items:flex-end;justify-content:center;gap:0;line-height:1.05}.lb-date small{font-size:9.5px;color:#d7c7ae;font-weight:700}.lb-date b{font-size:14px;color:#ffdd99}'+
+'.lb-menu{display:grid;place-items:center;flex:0 0 auto}.lbmenuico{width:22px;height:22px;object-fit:contain}.lbmenuico.emo{width:auto;height:auto}'+
+'@media (max-width:760px){.land .lb-stamina{display:none}.lb-hero{flex-basis:150px}.lb-plate{padding:0 5px;font-size:11.5px}}'+
+'@media (max-width:680px){.land .lb-id span{display:none}.lb-hero{flex-basis:118px}.lb-date small{display:none}}'+
+'.land .landside{display:flex;flex-direction:column;position:absolute;z-index:12;top:var(--topH);bottom:var(--navH);left:0;width:calc(var(--sideW) + var(--safeL));padding-left:var(--safeL);background:linear-gradient(#231d17f7,#15120ef7);border-right:2px solid #856440;box-shadow:4px 0 16px #0007}'+
+'.ls-card{padding:6px 10px 7px;border-bottom:2px solid #6a5034;background:linear-gradient(120deg,#e0d0ad,#b49c76);color:#2a1f14;box-shadow:inset 0 0 18px #6b4d2a55}.ls-card b{display:block;font-size:16px;font-weight:900;line-height:1.1}.ls-card small{display:block;font-size:10.5px;line-height:1.2;color:#4a3826}'+
+'.ls-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #5a4a36}.ls-tabs button{background:#27221d;color:#c9b9a2;border:0;border-right:1px solid #4a3c2c;padding:7px 4px;font-size:11.5px;font-weight:800}'+
+'.ls-body{flex:1;overflow:auto;padding:2px 8px;min-height:0}'+
+'.ls-item{padding:6px 2px;border-bottom:1px solid #3e3328;font-size:11px;line-height:1.3;color:#e2d5bd}.ls-item b{display:block;color:#f3e2c0;font-size:12px;margin-bottom:1px}.ls-item.main b{color:#ffc95e}.ls-item.act b{color:#ffe0a0}.ls-item.done{opacity:.5}.ls-item.ev{font-size:11px}'+
+'.ls-last{padding:6px 9px;font-size:11px;line-height:1.3;border-top:1px solid #856440;background:#1b1714;color:#f3e6cc;max-height:60px;overflow:hidden}.ls-last.fresh{background:#43321c;color:#fff2d6}'+
+'.land .maphost{top:var(--topH);bottom:var(--navH);left:calc(var(--sideW) + var(--safeL));right:0}'+
+'.land .map-hint,.land .event-strip{display:none}'+
+'.land .overlay{top:var(--topH);bottom:var(--navH);left:calc(var(--sideW) + var(--safeL));right:var(--safeR)}'+
+'.land .drawer{left:auto;right:calc(6px + var(--safeR));top:calc(var(--topH) + 6px);bottom:calc(var(--navH) + 6px);width:min(300px,38vw);max-height:none;margin:0}'+
+'.land .actionsbar{grid-template-columns:1fr;overflow:auto;gap:5px;padding:7px;min-height:0}.land .act{min-height:38px;padding:6px 9px}.land .description{max-height:96px}'+
+'.land .bottom{height:var(--navH);grid-template-columns:repeat(6,1fr);padding:3px calc(5px + var(--safeR)) max(3px,env(safe-area-inset-bottom)) calc(5px + var(--safeL))}'+
+'.land .bottom button{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:800}.land .bottom button span{font-size:19px;margin:0}.land .nl-s{display:none}.land .nl-l{display:inline}'+
+'.peopleline{display:grid;grid-template-columns:1fr auto;gap:0 10px}.peopleline small{grid-column:1;color:#b9aa92;font-size:11.5px}.peopleline span{grid-row:1/3;grid-column:2;align-self:center;font-size:12px;color:#e8d6b0}'+
+'</style>');
 
 render();
 })();</script></body></html>
