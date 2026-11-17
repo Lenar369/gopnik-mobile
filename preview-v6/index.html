@@ -2399,9 +2399,10 @@ const WILD={
  dump:{name:'Городская свалка',icon:'🗑️',xy:[1120,900],fb:'./maps/garage.webp',desc:'Горы мусора до горизонта, вороньё и дым. Найти можно что угодно — и нарваться тоже.',t:{scrap:4,bottle:3,can:4,plastic:3,battery:2,wire:2,leather:1,glass:2}},
  bank:{name:'Насыпь у Волги',icon:'🌊',xy:[600,700],fb:'./maps/river.webp',desc:'Железнодорожная насыпь над водой: выброшенные шпалы, обрывки сетей, перевёрнутые лодки.',t:{planks:3,rope:3,coal:2,plastic:2,scrap:1,matches:1}},
  hospital:{name:'Долгострой больницы',icon:'🏗️',xy:[960,610],fb:'./maps/center.webp',desc:'Бетонный каркас в девять этажей. Строители бросили всё в 1991-м.',t:{brick:4,wire:3,pipe:2,nails:3,plastic:2,spiral:1,tape:1}},
- bunker:{name:'Старое бомбоубежище',icon:'🚪',xy:[560,800],fb:'../art/loot/q5_basement.webp',indoor:true,desc:'Тяжёлая гермодверь приоткрыта. Внутри сухо и не так холодно: нары, ящики, противогазы.',t:{cloth:2,can:2,food_stew:2,drink_water:2,battery:2,rope:1,med_iodine:1}}
+ cellar:{name:'Подвал старой пятиэтажки',icon:'🧱',xy:[560,800],fb:'../art/loot/q5_basement.webp',warm:true,desc:'Тёплый подвал: трубы отопления, сухо даже зимой. Ящики, старые вещи жильцов, а иногда чьи-то заначки.',t:{pipe:2,rags:3,cloth:2,can:2,food_stew:1,food_potato:2,drink_water:1,rope:1,spirit:1}}
 };
 for(const[k,w]of Object.entries(WILD)){LOOT['wild_'+k]={at:null,name:w.name,t:w.t,cold:!w.indoor&&!w.warm};probeAsset('../art/loot/wild_'+k+'.webp')}
+function migrateWild(){const s=g&&S();if(s&&s.atWild==='bunker')s.atWild='cellar';if(s&&s.trip&&s.trip.to==='w:bunker')s.trip.to='w:cellar';if(s&&s.trip&&s.trip.from==='w:bunker')s.trip.from='w:cellar'}
 function wildArt(k){const a='../art/loot/wild_'+k+'.webp';return ASSET_OK[a]?a:WILD[k].fb||null}
 function lootArt(k){if(k.startsWith('wild_'))return wildArt(k.slice(5));const a='../art/loot/'+k+'.webp';return ASSET_OK[a]?a:null}
 
@@ -2414,6 +2415,7 @@ survIndoor=function(){const s=S();if(!s.mode&&!s.sleeping&&s.atWild&&WILD[s.atWi
 
 const _cityWorldW=cityWorld;
 cityWorld=function(){
+ migrateWild();
  const s=S(),t=s.trip;
  return _cityWorldW()+Object.entries(WILD).map(([k,w])=>{const on=s.atWild===k||t&&t.to==='w:'+k,L=lootState('wild_'+k);
   return '<button class="pin citypin wildpin '+(on?'active':'')+(L.ch<=0?' empty':'')+'" data-do="surv:wpin:'+k+'" data-name="'+esc(w.name)+'" style="left:'+Math.round(w.xy[0]*CMS)+'px;top:'+Math.round(w.xy[1]*CMS)+'px">'+w.icon+'</button>'}).join('');
