@@ -1855,7 +1855,7 @@ function weatherFx(){const w=weatherNow();return w?'<div class="wxfx wx-'+w+'" a
 
 /* ---------- экран карты города ---------- */
 function cityOn(){return !!(g&&S().cityMode)}
-function openCity(){const s=S();s.cityMode=true;view='map';focus=s.trip?'trip':'cityinfo';page=0;root.dataset.initializedMap='';cityFresh=true;save();render()}
+function openCity(){const s=S();s.cityMode=true;view='map';focus=s.trip&&s.trip.ev?'trip':null;page=0;root.dataset.initializedMap='';cityFresh=true;save();render()}
 function closeCity(){const s=S();if(s.trip)return;s.cityMode=false;view='map';focus=null;page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';save();render()}
 let cityFresh=false,tripTimer=0;
 function heroXY(){const s=S();return s.trip?[s.trip.x,s.trip.y]:CITY_XY[g.region||0]}
@@ -1893,7 +1893,7 @@ function startWalk(d){
  if(!s.trip&&d===g.region){announceAndRender('Ты уже здесь.');return}
  const [x,y]=heroXY();
  s.trip={to:d,x,y,paused:false,ev:null,lastEv:absMin(),from:s.trip?s.trip.from:g.region};
- s.cityMode=true;view='map';focus='trip';page=0;save();render();scheduleWalk();
+ s.cityMode=true;view='map';focus=null;page=0;save();render();scheduleWalk();
 }
 function scheduleWalk(){clearTimeout(tripTimer);const s=g&&S();if(!s||!s.trip||s.trip.paused||s.trip.ev)return;tripTimer=setTimeout(walkStep,window.__WALK_MS||WALK_MS)}
 let WALK_MS=650;
@@ -2008,8 +2008,8 @@ survAction=function(id){
  if(p[1]==='cpin'){const d=+p[2];focus='cityd:'+d;page=0;render();return}
  if(p[1]==='walk'){startWalk(p[2]);return}
  if(p[1]==='cityclose'){closeCity();return}
- if(p[1]==='cityback'){focus=s.trip?'trip':'cityinfo';page=0;render();return}
- if(p[1]==='tripgo'&&s.trip){s.trip.paused=false;focus='trip';save();render();scheduleWalk();return}
+ if(p[1]==='cityback'){focus=s.trip&&s.trip.ev?'trip':null;page=0;render();return}
+ if(p[1]==='tripgo'&&s.trip){s.trip.paused=false;focus=null;save();render();scheduleWalk();return}
  if(p[1]==='trippause'&&s.trip){s.trip.paused=true;clearTimeout(tripTimer);save();render();return}
  if(p[1]==='tripback'){turnBack();return}
  if(p[1]==='road'){roadAnswer(p[2]);return}
@@ -2028,7 +2028,7 @@ doDeath=function(){const s=S();clearTimeout(tripTimer);s.trip=null;s.cityMode=fa
 /* ---------- отрисовка ---------- */
 const _renderC=render;
 render=function(){
- if(g){const s=S();if(s.cityMode&&view==='map'&&!focus)focus=s.trip?'trip':'cityinfo';if(s.trip&&s.trip.ev&&view==='map')focus='trip'}
+ if(g){const s=S();if(s.trip&&s.trip.ev&&view==='map')focus='trip';else if(focus==='trip'||focus==='cityinfo')focus=null}
  _renderC();
  if(!g||root.querySelector('.setup'))return;
  const host=document.getElementById('maphost');
@@ -2037,6 +2037,7 @@ render=function(){
    host.classList.add('citymap');
    const w=document.getElementById('world');w.innerHTML=cityWorld();w.style.height=CMWH+'px';
    host.querySelectorAll('.map-hint,.floating-log').forEach(x=>x.remove());
+   host.insertAdjacentHTML('beforeend',cityBar());
    cityFit();
   }
   host.insertAdjacentHTML('beforeend',weatherFx());
@@ -2057,6 +2058,30 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.wx-snow{background-image:radial-gradient(#fff 1.4px,transparent 2px),radial-gradient(#fff 1px,transparent 1.6px);background-size:46px 46px,29px 29px;background-position:0 0,13px 7px;animation:wxSnow 2.4s linear infinite;background-color:#dfe8f022}'+
 '@keyframes wxRain{to{background-position:-30px 120px}}@keyframes wxSnow{to{background-position:-20px 46px,-6px 36px}}'+
 '@media (prefers-reduced-motion:reduce){.wx-rain,.wx-snow,.cityhero.walking{animation:none}}'+
+'</style>');
+
+/* ===== v6: правки 17.11 — без левой панели в горизонтали, карта города без окна «Город» ===== */
+function cityBar(){
+ const s=S(),t=s.trip;
+ if(!t)return '<div class="citybar"><button data-do="surv:cityclose">↩ В район: '+esc(regions[g.region])+'</button></div>';
+ if(t.ev)return '';
+ const left=cityCost(t.to,'foot'),wx=weatherNow()==='rain'?' 🌧':weatherNow()==='snow'?' 🌨':'';
+ return '<div class="citybar trip"><span>'+(t.paused?'⏸':'🚶')+' → <b>'+esc(regions[t.to])+'</b> · '+left.km.toFixed(1)+' км · ~'+left.minutes+' мин'+wx+'</span>'+
+  (t.paused?'<button data-do="surv:tripgo">▶ Идти</button>':'<button data-do="surv:trippause">⏸ Стоп</button>')+
+  (t.to!==t.from?'<button data-do="surv:tripback">↩ Назад</button>':'')+'</div>';
+}
+landSide=function(){
+ const fresh=Date.now()-noticeAt<6000;
+ return fresh&&g.log&&g.log[0]&&view==='map'?'<div class="landtoast">📝 '+esc(g.log[0])+'</div>':'';
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.land .maphost,.land .overlay{left:var(--safeL)}.land .landside{display:none!important}'+
+'.landtoast{position:absolute;z-index:14;left:calc(10px + var(--safeL,0px));top:calc(var(--topH,48px) + 8px);max-width:min(420px,52vw);padding:7px 11px;border-radius:9px;background:#1b1712ee;border:1px solid #b18b56;color:#f1e3c4;font-size:12.5px;line-height:1.35;box-shadow:0 4px 14px #0009;pointer-events:none;animation:toastOut 6s forwards}'+
+'@keyframes toastOut{0%,80%{opacity:1}100%{opacity:0}}'+
+'.citybar{position:absolute;z-index:6;left:10px;bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:calc(100% - 20px)}'+
+'.citybar span{padding:8px 11px;border-radius:10px;background:#1b1712ee;border:1px solid #b18b56;color:#f1e3c4;font-size:13px}'+
+'.citybar button{padding:8px 12px;border-radius:10px;background:linear-gradient(#3f5a45,#26382b);border:1px solid #9fc79a;color:#eaf6e2;font-size:13px;font-weight:700}'+
+'.citybar.trip button{background:linear-gradient(#5a4630,#33271b);border-color:#d0a868;color:#ffe9c2}'+
 '</style>');
 
 render();
