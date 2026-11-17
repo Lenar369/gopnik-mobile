@@ -1594,11 +1594,11 @@ viewPanel=function(){
  if(view==='bag'){
   const counts={};g.inventory.forEach(x=>{if(SUP[x])counts[x]=(counts[x]||0)+1});
   const sup=Object.keys(counts).map(x=>'<button class="tile itemtile" data-do="surv:use:'+x+'">'+artOr(itemPath(x),SUP[x].icon,'itemico')+'<b>'+esc(SUP[x].name)+(counts[x]>1?' ×'+counts[x]:'')+'</b><small>Использовать: '+esc(fxText(SUP[x].fx))+'</small></button>').join('');
-  const gear=g.inventory.map((x,i)=>SUP[x]?'':'<button class="tile" data-do="item:'+i+'"><b>'+esc(goods[x]?.name||x)+'</b><small>Надеть · '+esc(goods[x]?.stat||'')+'</small></button>').join('');
+  const gear=g.inventory.map((x,i)=>SUP[x]?'':'<button class="tile itemtile" data-do="item:'+i+'">'+(GOODS_ART[x]?artOr(goodsPath(x),'🧥','itemico'):'')+'<b>'+esc(goods[x]?.name||x)+'</b><small>Надеть · '+esc(goods[x]?.stat||'')+'</small></button>').join('');
   const h='<div class="avatar"><div class="face">'+hudImg('bag','🎒','faceico')+'</div><div><strong>Рюкзак '+g.inventory.length+'/20</strong><div>Еда и лекарства — нажми, чтобы использовать</div></div></div>'+needsBars()+
    '<div class="line"><strong>Припасы</strong></div><div class="tilegrid">'+(sup||'<div class="line">Пусто. Купи еду в киоске, на рынке или в универмаге.</div>')+'</div>'+
    (gear?'<div class="line"><strong>Вещи</strong></div><div class="tilegrid">'+gear+'</div>':'')+
-   '<div class="line"><strong>Надето:</strong> '+Object.entries(g.equip).map(([k,v])=>esc(k)+': '+(v?esc(goods[v]?.name||v):'—')).join(' · ')+' · утепление '+Math.round(insulation()*100)+'%</div>';
+   '<div class="line"><strong>Надето:</strong> '+Object.entries(g.equip).map(([k,v])=>esc(k)+': '+(v?(GOODS_ART[v]&&ASSET_OK[goodsPath(v)]?'<img class="eqico" src="'+goodsPath(v)+'" alt="">':'')+esc(goods[v]?.name||v):'—')).join(' · ')+' · утепление '+Math.round(insulation()*100)+'%</div>';
   return '<section class="overlay"><header class="panel-head"><h2>Инвентарь</h2><button data-nav="map">×</button></header><div class="panel-body">'+h+'</div></section>';
  }
  let h=_viewPanel();
@@ -1769,6 +1769,49 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.land .bottom{height:var(--navH);grid-template-columns:repeat(6,1fr);padding:3px calc(5px + var(--safeR)) max(3px,env(safe-area-inset-bottom)) calc(5px + var(--safeL))}'+
 '.land .bottom button{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:800}.land .bottom button span{font-size:19px;margin:0}.land .nl-s{display:none}.land .nl-l{display:inline}'+
 '.itemtile{display:flex;flex-direction:column;align-items:flex-start}.itemico{width:46px;height:46px;object-fit:contain;margin:-4px 0 4px -2px;filter:drop-shadow(0 2px 3px #000a)}.itemico.emo{width:auto;height:auto;font-size:26px;margin:0 0 4px}.peopleline{display:grid;grid-template-columns:1fr auto;gap:0 10px}.peopleline small{grid-column:1;color:#b9aa92;font-size:11.5px}.peopleline span{grid-row:1/3;grid-column:2;align-self:center;font-size:12px;color:#e8d6b0}'+
+'</style>');
+
+/* ===== v6: картинки заказа 01 — тёплые вещи и сцены ===== */
+const GOODS_ART={ushanka:'warm_hat',downjacket:'warm_jacket',winterboots:'warm_boots',gloves:'warm_gloves'};
+function goodsPath(id){return '../art/items/'+GOODS_ART[id]+'.webp'}
+Object.keys(GOODS_ART).forEach(id=>probeAsset(goodsPath(id)));
+const SCENES={
+ death:{img:'death_wakeup',title:'☠ Ты очнулся',text:()=>'Облупленный потолок, тусклая лампа, капельница. '+(S().deathInfo?lossText(S().deathInfo)+'.':''),btn:'Прийти в себя'},
+ winter:{img:'winter_yard',title:'❄️ Декабрь 1998',text:()=>'Двор занесло снегом, из подвальных окон валит пар. На улице мороз — без тёплой одежды долго не протянешь.',btn:'Выйти во двор'},
+ default:{img:'default_news',title:'📉 17 августа 1998',text:()=>'По телевизору говорят о дефолте. Рубль рухнул, цены на еду и лекарства выросли вдвое. Кошелёк на столе пуст.',btn:'Ничего, прорвёмся'}
+};
+Object.values(SCENES).forEach(x=>probeAsset('../art/scenes/'+x.img+'.webp'));
+function sceneHtml(){
+ const s=S(),k=s.scene,d=SCENES[k];if(!d)return '';
+ const src='../art/scenes/'+d.img+'.webp';
+ return '<div class="scenecard" role="dialog"><div class="scenebox"><img class="sceneimg" src="'+src+'" alt="" draggable="false"><div class="scenetext"><strong>'+d.title+'</strong><p>'+esc(d.text())+'</p><button class="act alt" data-do="surv:scene-ok">'+d.btn+'</button></div></div></div>';
+}
+const _doDeathS=doDeath;
+doDeath=function(){_doDeathS.apply(this,arguments);if(g)S().scene='death'};
+const _advanceS=advance;
+advance=function(m){const s=g?S():null,was=s?s.defaultSeen:true;const r=_advanceS.apply(this,arguments);if(s&&!was&&s.defaultSeen&&!s.scene)s.scene='default';return r};
+const _survActionS=survAction;
+survAction=function(id){if(id==='surv:scene-ok'){S().scene=null;save();render();return}return _survActionS(id)};
+const _doActionS=doAction;
+doAction=function(id){
+ if(id==='start-winter'){_doActionS(id);if(g){const s=S();s.defaultSeen=true;s.scene='winter';save();render()}return}
+ return _doActionS(id);
+};
+const _renderS=render;
+render=function(){
+ _renderS();
+ if(!g||root.querySelector('.setup'))return;
+ const s=S();
+ if(s.scene&&(g.fight||!SCENES[s.scene])){if(!SCENES[s.scene])s.scene=null;return}
+ if(s.scene)root.insertAdjacentHTML('beforeend',sceneHtml());
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.eqico{width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:2px}'+
+'.scenecard{position:absolute;inset:0;z-index:60;background:#000c;display:flex;align-items:center;justify-content:center;padding:12px calc(12px + env(safe-area-inset-right,0px)) 12px calc(12px + env(safe-area-inset-left,0px))}'+
+'.scenebox{width:min(640px,100%);max-height:100%;overflow:auto;background:linear-gradient(145deg,#31291f,#1b1a18);border:1px solid #b18b56;border-radius:14px;box-shadow:0 10px 40px #000}'+
+'.sceneimg{display:block;width:100%;aspect-ratio:1032/581;object-fit:cover;border-radius:13px 13px 0 0;background:#111}'+
+'.scenetext{padding:10px 14px 14px}.scenetext strong{font-size:18px;color:#f0d9a8}.scenetext p{margin:6px 0 10px;line-height:1.45;color:#e2d4bb}.scenetext .act{width:100%}'+
+'.land .scenebox{display:flex;width:min(900px,100%);max-height:100%}.land .sceneimg{width:62%;aspect-ratio:auto;height:auto;max-height:calc(100dvh - 24px);border-radius:13px 0 0 13px}.land .scenetext{flex:1;display:flex;flex-direction:column;justify-content:center}'+
 '</style>');
 
 render();
