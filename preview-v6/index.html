@@ -1594,7 +1594,7 @@ viewPanel=function(){
  if(view==='bag'){
   const counts={};g.inventory.forEach(x=>{if(SUP[x])counts[x]=(counts[x]||0)+1});
   const sup=Object.keys(counts).map(x=>'<button class="tile itemtile" data-do="surv:use:'+x+'">'+artOr(itemPath(x),SUP[x].icon,'itemico')+'<b>'+esc(SUP[x].name)+(counts[x]>1?' ×'+counts[x]:'')+'</b><small>Использовать: '+esc(fxText(SUP[x].fx))+'</small></button>').join('');
-  const gear=g.inventory.map((x,i)=>SUP[x]?'':'<button class="tile itemtile" data-do="item:'+i+'">'+(GOODS_ART[x]?artOr(goodsPath(x),'🧥','itemico'):'')+'<b>'+esc(goods[x]?.name||x)+'</b><small>Надеть · '+esc(goods[x]?.stat||'')+'</small></button>').join('');
+  const gear=g.inventory.map((x,i)=>SUP[x]?'':'<button class="tile itemtile" data-do="item:'+i+'">'+anyArt(x,'itemico')+'<b>'+esc(goods[x]?.name||x)+'</b><small>Надеть · '+esc(goods[x]?.stat||'')+'</small></button>').join('');
   const h='<div class="avatar"><div class="face">'+hudImg('bag','🎒','faceico')+'</div><div><strong>Рюкзак '+g.inventory.length+'/20</strong><div>Еда и лекарства — нажми, чтобы использовать</div></div></div>'+needsBars()+
    '<div class="line"><strong>Припасы</strong></div><div class="tilegrid">'+(sup||'<div class="line">Пусто. Купи еду в киоске, на рынке или в универмаге.</div>')+'</div>'+
    (gear?'<div class="line"><strong>Вещи</strong></div><div class="tilegrid">'+gear+'</div>':'')+
@@ -2082,6 +2082,308 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.citybar span{padding:8px 11px;border-radius:10px;background:#1b1712ee;border:1px solid #b18b56;color:#f1e3c4;font-size:13px}'+
 '.citybar button{padding:8px 12px;border-radius:10px;background:linear-gradient(#3f5a45,#26382b);border:1px solid #9fc79a;color:#eaf6e2;font-size:13px;font-weight:700}'+
 '.citybar.trip button{background:linear-gradient(#5a4630,#33271b);border-color:#d0a868;color:#ffe9c2}'+
+'</style>');
+
+/* ===== v6 этап Б: хабар, вес, обыск мест, крафт, ящик дома, скупщик ===== */
+const MAT={
+ rags:{name:'Тряпки',icon:'🩳',w:.3,p:1},planks:{name:'Доски',icon:'🪵',w:1.5,p:2},nails:{name:'Гвозди',icon:'📌',w:.2,p:2},
+ wire:{name:'Проволока',icon:'➰',w:.3,p:2},bottle:{name:'Пустая бутылка',icon:'🍾',w:.4,p:1},can:{name:'Жестяная банка',icon:'🥫',w:.1,p:1},
+ pipe:{name:'Обрезок трубы',icon:'📏',w:1.2,p:3},scrap:{name:'Металлолом',icon:'⚙️',w:2,p:4},rope:{name:'Верёвка',icon:'🪢',w:.3,p:2},
+ tape:{name:'Изолента',icon:'📼',w:.1,p:3},cloth:{name:'Старое одеяло',icon:'🛏️',w:1,p:3},wool:{name:'Старый свитер',icon:'🧶',w:.6,p:3},
+ paper:{name:'Газеты',icon:'📰',w:.2,p:1},coal:{name:'Уголь',icon:'⚫',w:1,p:2},brick:{name:'Кирпич',icon:'🧱',w:2,p:1},
+ spiral:{name:'Спираль от плитки',icon:'🌀',w:.2,p:5},battery:{name:'Батарейка',icon:'🔋',w:.1,p:3},glass:{name:'Стекло',icon:'🪟',w:.3,p:1},
+ leather:{name:'Кусок кожи',icon:'👜',w:.4,p:4},plastic:{name:'Плёнка',icon:'🛍️',w:.2,p:1},spirit:{name:'Спирт',icon:'🧪',w:.5,p:6},
+ herbs:{name:'Сушёные травы',icon:'🌿',w:.1,p:2},matches:{name:'Спички',icon:'🔥',w:.05,p:2,art:'warm_matches'}
+};
+function matPath(id){return '../art/items/'+(MAT[id].art||'mat_'+id)+'.webp'}
+Object.keys(MAT).forEach(id=>probeAsset(matPath(id)));
+
+/* ---- новые расходники и вещи из крафта ---- */
+Object.assign(SUP,{
+ campfire:{name:'Костёр',icon:'🔥',cost:0,fx:{warmth:45,nerves:5},time:30,w:3},
+ hot_bottle:{name:'Грелка из бутылки',icon:'🍶',cost:0,fx:{warmth:20},w:.6},
+ paper_lining:{name:'Газеты под куртку',icon:'📰',cost:0,fx:{warmth:12},w:.2},
+ torch:{name:'Факел',icon:'🔦',cost:0,fx:{warmth:8},w:.8,light:true},
+ herbal_tea:{name:'Травяной чай',icon:'🍵',cost:0,fx:{energy:12,warmth:15,nerves:5}},
+ compress:{name:'Спиртовой компресс',icon:'🩹',cost:0,fx:{hp:8,warmth:5},cure:true},
+ baked_potato:{name:'Печёная картошка',icon:'🥔',cost:0,fx:{food:35,warmth:10}},
+ stew_soup:{name:'Суп с тушёнкой',icon:'🍲',cost:0,fx:{food:65,warmth:20,nerves:5},w:1},
+ rusks:{name:'Сухари',icon:'🍘',cost:0,fx:{food:22},w:.2}
+});
+Object.assign(goods,{
+ wool_hat:{name:'Вязаная шапка',slot:'Голова',cost:25,stat:'тепло +12%'},
+ blanket_vest:{name:'Жилет из одеяла',slot:'Верх',cost:35,stat:'тепло +22%'},
+ mittens:{name:'Варежки из свитера',slot:'Аксессуар',cost:15,stat:'тепло +8%'},
+ wrapped_boots:{name:'Утеплённые обмотки',slot:'Обувь',cost:15,stat:'тепло +12%'},
+ shiv:{name:'Заточка',slot:'Оружие',cost:20,stat:'удар +8, режет'},
+ pipe_club:{name:'Труба с изолентой',slot:'Оружие',cost:20,stat:'удар +11'},
+ knuckles:{name:'Кастет',slot:'Оружие',cost:30,stat:'удар +10'},
+ nail_bat:{name:'Бита с гвоздями',slot:'Оружие',cost:35,stat:'удар +15'},
+ crowbar:{name:'Монтировка',slot:'Инструмент',cost:30,stat:'обыск: +1 находка, быстрее'},
+ flashlight:{name:'Фонарик',slot:'Аксессуар',cost:40,stat:'обыск ночью без штрафа, +1 находка'},
+ sack:{name:'Мешок из плёнки',slot:null,cost:10,stat:'+5 кг к переноске'},
+ home_backpack:{name:'Самодельный рюкзак',slot:null,cost:45,stat:'+12 кг к переноске'},
+ sled:{name:'Санки',slot:null,cost:40,stat:'зимой +20 кг к переноске'}
+});
+Object.assign(WARM_GEAR,{wool_hat:.12,blanket_vest:.22,mittens:.08,wrapped_boots:.12});
+const WEAPON={shiv:8,pipe_club:11,knuckles:10,nail_bat:15};
+const GOODS_W={sack:.3,home_backpack:1.2,sled:4,crowbar:1.5,flashlight:.4,shiv:.3,pipe_club:1.2,knuckles:.3,nail_bat:1.4,wrench:.6};
+
+/* ---- рецепты ---- */
+// st: где можно делать (any — везде, home — дома), tool: нужный инструмент, out: что получится, base: улучшение дома
+const RECIPES=[
+ {cat:'Тепло',id:'campfire',need:{planks:2,paper:1,matches:1},min:15,st:'any',out:'campfire'},
+ {cat:'Тепло',id:'hot_bottle',need:{bottle:1},min:10,st:'home',out:'hot_bottle'},
+ {cat:'Тепло',id:'paper_lining',need:{paper:2},min:5,st:'any',out:'paper_lining'},
+ {cat:'Тепло',id:'torch',need:{planks:1,rags:1,spirit:1},min:10,st:'any',out:'torch'},
+ {cat:'Одежда',id:'wool_hat',need:{wool:1},min:40,st:'home',out:'wool_hat'},
+ {cat:'Одежда',id:'mittens',need:{wool:1,rags:1},min:40,st:'home',out:'mittens'},
+ {cat:'Одежда',id:'blanket_vest',need:{cloth:1,rope:1},min:50,st:'home',tool:'shiv',out:'blanket_vest'},
+ {cat:'Одежда',id:'wrapped_boots',need:{rags:2,plastic:1,tape:1},min:25,st:'any',out:'wrapped_boots'},
+ {cat:'Еда и лечение',id:'bandage',need:{rags:2},min:10,st:'any',out:'bandage'},
+ {cat:'Еда и лечение',id:'compress',need:{spirit:1,rags:1},min:10,st:'any',out:'compress'},
+ {cat:'Еда и лечение',id:'herbal_tea',need:{herbs:1,drink_water:1},min:15,st:'home',out:'herbal_tea'},
+ {cat:'Еда и лечение',id:'baked_potato',need:{food_potato:1,planks:1,matches:1},min:30,st:'any',out:'baked_potato'},
+ {cat:'Еда и лечение',id:'stew_soup',need:{food_stew:1,food_potato:1,drink_water:1},min:40,st:'home',out:'stew_soup'},
+ {cat:'Еда и лечение',id:'rusks',need:{food_bread:1},min:30,st:'home',out:'rusks',n:2},
+ {cat:'Оружие',id:'shiv',need:{scrap:1,tape:1},min:30,st:'any',out:'shiv'},
+ {cat:'Оружие',id:'pipe_club',need:{pipe:1,tape:1},min:15,st:'any',out:'pipe_club'},
+ {cat:'Оружие',id:'knuckles',need:{scrap:2},min:60,st:'home',tool:'wrench',out:'knuckles'},
+ {cat:'Оружие',id:'nail_bat',need:{planks:1,nails:3},min:30,st:'home',base:'workbench',out:'nail_bat'},
+ {cat:'Снаряжение',id:'crowbar',need:{pipe:1,scrap:1},min:45,st:'home',tool:'wrench',out:'crowbar'},
+ {cat:'Снаряжение',id:'flashlight',need:{battery:2,can:1,wire:1,glass:1},min:40,st:'home',out:'flashlight'},
+ {cat:'Снаряжение',id:'sack',need:{plastic:2,rope:1},min:20,st:'any',out:'sack'},
+ {cat:'Снаряжение',id:'home_backpack',need:{cloth:1,leather:1,rope:2},min:90,st:'home',tool:'shiv',out:'home_backpack'},
+ {cat:'Снаряжение',id:'sled',need:{planks:3,nails:2,rope:1},min:60,st:'home',base:'workbench',out:'sled'},
+ {cat:'Дом',id:'workbench',need:{planks:4,nails:3},min:90,st:'home',build:'workbench',title:'Верстак',icon:'🪚',desc:'Крафт дома вдвое быстрее; открывает биту и санки'},
+ {cat:'Дом',id:'heater',need:{spiral:1,brick:2,wire:1},min:60,st:'home',build:'heater',title:'Обогреватель',icon:'♨️',desc:'Дома теплее: сон лечит простуду за ночь, нервы +',art:'warm_heater'},
+ {cat:'Дом',id:'windows',need:{plastic:2,tape:1,paper:2},min:45,st:'home',build:'windows',title:'Утеплённые окна',icon:'🪟',desc:'Сон восстанавливает больше бодрости'},
+ {cat:'Дом',id:'radio',need:{wire:2,can:1,battery:1},min:40,st:'home',build:'radio',title:'Антенна для приёмника',icon:'📻',desc:'Новости по утрам: нервы +5 после сна'},
+ {cat:'Дом',id:'woodpile',need:{planks:3,coal:2},min:30,st:'home',build:'woodpile',title:'Запас топлива',icon:'🪵',desc:'«Чай у плиты» греет сильнее'},
+];
+const RECIPE_BY=Object.fromEntries(RECIPES.map(r=>[r.id,r]));
+
+/* ---- места для вылазок (привязаны к местам районов) ---- */
+const LOOT={
+ q5_basement:{at:'house12',name:'Подвал дома №12',t:{pipe:3,rags:3,bottle:3,can:2,wire:2,coal:2,food_potato:1,spirit:1}},
+ q5_attic:{at:'home',name:'Чердак своего дома',t:{cloth:2,wool:3,paper:3,rope:2,leather:1,battery:1,glass:1}},
+ q5_dumpster:{at:'kiosk',name:'Мусорные баки за киоском',t:{bottle:4,can:4,paper:3,rags:2,plastic:3,food_bread:1,cigs:1}},
+ city_rooftop:{at:'court',name:'Крыша девятиэтажки',t:{wire:4,glass:2,battery:2,plastic:2,tape:1},cold:true},
+ market_backrows:{at:'m_side',name:'Пустые задние ряды',t:{plastic:4,rope:3,rags:2,can:2,herbs:3,matches:1}},
+ market_crates:{at:'m_depot',name:'Склад тары',t:{planks:5,nails:3,rope:2,plastic:2}},
+ station_warehouse:{at:'s_platform',name:'Заброшенный пакгауз',t:{planks:4,nails:2,rope:2,coal:3,scrap:2}},
+ station_wagons:{at:'s_platform',name:'Тупик с вагонами',t:{coal:4,scrap:3,planks:2,cloth:1,spirit:1},cold:true},
+ factory_hall:{at:'f_repair',name:'Заброшенный цех',t:{scrap:4,wire:3,spiral:2,pipe:2,tape:2,spirit:1}},
+ factory_scrap:{at:'f_warehouse',name:'Свалка металлолома',t:{scrap:5,pipe:3,wire:2,battery:1,brick:2},cold:true},
+ factory_boiler:{at:'f_boiler',name:'Котельная',t:{coal:4,pipe:2,brick:3,spiral:1,tape:1}},
+ garage_junkyard:{at:'g_scrap',name:'Разборка',t:{scrap:4,battery:2,glass:3,wire:2,leather:2,plastic:1},cold:true},
+ garage_abandoned:{at:'g_park',name:'Ничейный гараж',t:{tape:2,nails:2,spirit:2,rope:2,battery:1,glass:1,food_stew:1}},
+ river_boathouse:{at:'w_boat',name:'Лодочный сарай',t:{rope:4,planks:3,plastic:2,cloth:2,matches:1}},
+ river_flooded:{at:'w_warehouse',name:'Полузатопленный склад',t:{planks:3,can:3,bottle:2,cloth:2,food_stew:1,drink_water:1}},
+ center_construction:{at:'c_square',name:'Долгострой',t:{brick:4,planks:3,nails:3,wire:2,pipe:2,plastic:2},cold:true},
+ center_archive_yard:{at:'c_archive',name:'Двор архива',t:{paper:5,cloth:2,planks:2,glass:2,leather:1}}
+};
+Object.keys(LOOT).forEach(k=>probeAsset('../art/loot/'+k+'.webp'));
+
+/* ---- состояние ---- */
+function B(){const s=S();if(!s.mats)s.mats={};if(!s.stash)s.stash={mats:{},items:[]};if(!s.loot)s.loot={};if(!s.base)s.base={};return s}
+function has(id){return g.inventory.includes(id)||Object.values(g.equip||{}).includes(id)}
+function cnt(id){const s=B();return MAT[id]?(s.mats[id]||0):g.inventory.filter(x=>x===id).length}
+function cntHome(id){const s=B();return cnt(id)+(MAT[id]?(s.stash.mats[id]||0):s.stash.items.filter(x=>x===id).length)}
+function atHome(){return (g.region||0)===0&&g.loc==='home'}
+function itemW(id){return SUP[id]?(SUP[id].w??.4):GOODS_W[id]??(goods[id]?1:.3)}
+function carryW(){const s=B();let w=0;for(const[k,n]of Object.entries(s.mats))w+=(MAT[k]?.w||0)*n;g.inventory.forEach(x=>w+=itemW(x));return Math.round(w*10)/10}
+function carryMax(){let m=15;if(has('sack'))m+=5;if(has('home_backpack'))m+=12;if(has('sled')&&winterNow())m+=20;return m}
+function overload(){return carryW()>carryMax()}
+function addLoot(id,n=1){const s=B();if(MAT[id]){s.mats[id]=(s.mats[id]||0)+n;return true}for(let i=0;i<n;i++){if(g.inventory.length>=20)return false;g.inventory.push(id)}return true}
+function anyName(id){return MAT[id]?.name||SUP[id]?.name||goods[id]?.name||id}
+const GICON={wool_hat:'🧢',blanket_vest:'🦺',mittens:'🧤',wrapped_boots:'🥾',shiv:'🔪',pipe_club:'🔧',knuckles:'👊',nail_bat:'🏏',crowbar:'🪛',flashlight:'🔦',sack:'🛍️',home_backpack:'🎒',sled:'🛷',ushanka:'🧢',downjacket:'🧥',winterboots:'🥾',gloves:'🧤',wrench:'🔧',hat:'🧢',sneak:'👟',coat:'🧥',glasses:'🕶️'};
+function anyIcon(id){return MAT[id]?.icon||SUP[id]?.icon||GICON[id]||'📦'}
+function anyArt(id,cls){if(MAT[id])return artOr(matPath(id),MAT[id].icon,cls);if(SUP[id])return artOr(itemPath(id),SUP[id].icon,cls);if(GOODS_ART[id])return artOr(goodsPath(id),'🧥',cls);return artOr('../art/items/'+id+'.webp',anyIcon(id),cls)}
+Object.keys(goods).forEach(id=>{if(!GOODS_ART[id])probeAsset('../art/items/'+id+'.webp')});['campfire','hot_bottle','paper_lining','torch','herbal_tea','compress','baked_potato','stew_soup','rusks'].forEach(id=>probeAsset(itemPath(id)));
+
+/* ---- обыск ---- */
+function lootState(k){const s=B(),L=s.loot[k]||(s.loot[k]={ch:3,refill:0});if(L.ch<=0&&g.day>=L.refill){L.ch=3}return L}
+function lootLeft(k){const c=lootState(k).ch;return c>=3?'много':c===2?'есть':c===1?'мало':'пусто'}
+function search(k){
+ const P=LOOT[k];if(!P)return;const s=B(),L=lootState(k);
+ if(L.ch<=0){announceAndRender('Здесь уже всё вынесли. Загляни через пару дней.');return}
+ if(s.energy<8){announceAndRender('Нет сил лазить по завалам. Отдохни или выпей чаю.');return}
+ const night=survNight(),light=has('flashlight')?'flashlight':(night&&g.inventory.includes('torch')?'torch':null);
+ const mins=has('crowbar')?30:45;
+ s.mode=P.cold?'foot':null;try{advance(mins)}finally{s.mode=null}
+ s.energy=clampN(s.energy-6);
+ if(light==='torch'){g.inventory.splice(g.inventory.indexOf('torch'),1)}
+ L.ch--;if(L.ch<=0)L.refill=g.day+3;
+ // риск
+ const r=Math.random();
+ if(r<.08){g.hp=Math.max(1,g.hp-8);s.nerves=clampN(s.nerves-4);announce('🔎 '+P.name+': порезался о ржавое железо, −8 HP. Ничего не нашёл.');save();render();return}
+ if(r<.13){s.nerves=clampN(s.nerves-6);announce('🔎 '+P.name+': сторож шуганул тебя. Пришлось уйти с пустыми руками.');save();render();return}
+ let rolls=2+Math.floor(Math.random()*3)+(has('crowbar')?1:0)+(light?1:0)-(night&&!light?1:0);
+ const pool=[];for(const[id,w]of Object.entries(P.t))for(let i=0;i<w;i++)pool.push(id);
+ const got={};let lost=0;
+ for(let i=0;i<Math.max(1,rolls);i++){const id=pool[Math.floor(Math.random()*pool.length)];if(addLoot(id))got[id]=(got[id]||0)+1;else lost++}
+ const list=Object.entries(got).map(([id,n])=>anyIcon(id)+' '+anyName(id)+(n>1?' ×'+n:'')).join(', ');
+ announce('🔎 '+P.name+': '+(list||'ничего')+'.'+(lost?' Рюкзак полон — '+lost+' пришлось бросить.':'')+(night&&!light?' В темноте много не найдёшь.':'')+(overload()?' ⚖️ Перегруз: '+carryW()+'/'+carryMax()+' кг — идти будет тяжело.':''));
+ addXP(4,'обыск');save();render();
+}
+
+/* ---- крафт ---- */
+function recipeName(r){return r.title||anyName(r.out)}
+function recipeIcon(r){return r.icon||anyIcon(r.out)}
+function canCraft(r){
+ const s=B(),home=atHome();
+ if(r.st==='home'&&!home)return {ok:false,why:'Только дома'};
+ if(r.build&&s.base[r.build])return {ok:false,why:'Уже сделано'};
+ if(r.base&&!s.base[r.base])return {ok:false,why:'Нужен верстак'};
+ if(r.tool&&!has(r.tool)&&!(home&&s.stash.items.includes(r.tool)))return {ok:false,why:'Нужно: '+anyName(r.tool)};
+ for(const[id,n]of Object.entries(r.need)){if((home?cntHome(id):cnt(id))<n)return {ok:false,why:'Не хватает: '+anyName(id)}}
+ if(!r.build&&!MAT[r.out]&&g.inventory.length+(r.n||1)>20)return {ok:false,why:'Рюкзак полон'};
+ return {ok:true};
+}
+function take(id,n){const s=B();for(let i=0;i<n;i++){if(MAT[id]){if(s.mats[id]>0){s.mats[id]--;if(!s.mats[id])delete s.mats[id]}else{s.stash.mats[id]--;if(!s.stash.mats[id])delete s.stash.mats[id]}}else{const j=g.inventory.indexOf(id);if(j>=0)g.inventory.splice(j,1);else{const k=s.stash.items.indexOf(id);if(k>=0)s.stash.items.splice(k,1)}}}}
+function craft(id){
+ const r=RECIPE_BY[id];if(!r)return;const c=canCraft(r);if(!c.ok){announceAndRender(c.why);return}
+ const s=B();for(const[k,n]of Object.entries(r.need))take(k,n);
+ const mins=Math.round(r.min*(atHome()&&s.base.workbench?.5:1));
+ if(atHome())advance(mins);else{s.mode='foot';try{advance(mins)}finally{s.mode=null}}
+ if(r.build){s.base[r.build]=true;announce('🔨 Готово: '+r.icon+' '+r.title+'. '+r.desc+'.')}
+ else{addLoot(r.out,r.n||1);announce('🔨 Сделано: '+recipeIcon(r)+' '+recipeName(r)+((r.n||1)>1?' ×'+r.n:'')+' ('+mins+' мин).')}
+ addXP(3,'крафт');save();render();
+}
+
+/* ---- ящик дома и скупщик ---- */
+function stashAll(){const s=B();for(const[k,n]of Object.entries(s.mats))s.stash.mats[k]=(s.stash.mats[k]||0)+n;s.mats={};announce('📦 Весь хабар выложен в ящик.');save();render()}
+function stashTake(id){const s=B();if(MAT[id]){if(!(s.stash.mats[id]>0))return;s.stash.mats[id]--;if(!s.stash.mats[id])delete s.stash.mats[id];s.mats[id]=(s.mats[id]||0)+1}else{const k=s.stash.items.indexOf(id);if(k<0)return;if(g.inventory.length>=20){announceAndRender('Рюкзак полон.');return}s.stash.items.splice(k,1);g.inventory.push(id)}save();render()}
+function stashItem(i){const s=B(),id=g.inventory[i];if(!id)return;g.inventory.splice(i,1);s.stash.items.push(id);save();render()}
+function sellMat(id,all){const s=B(),n=all?(s.mats[id]||0):1;if(!(s.mats[id]>=n)||!n)return;const price=Math.max(1,Math.round(MAT[id].p*(afterDefault()?1.5:1)))*n;s.mats[id]-=n;if(!s.mats[id])delete s.mats[id];g.money+=price;announce('💰 Сдал '+MAT[id].name+(n>1?' ×'+n:'')+' за '+price+' ₽.');save();render()}
+function dropMat(id){const s=B();if(!(s.mats[id]>0))return;s.mats[id]--;if(!s.mats[id])delete s.mats[id];save();render()}
+
+/* ---- влияние на игру ---- */
+// перегруз — медленнее идёшь по карте
+const _walkStepB=walkStep;
+walkStep=function(){
+ if(g&&S().trip&&!S().trip.paused&&!S().trip.ev&&overload()){const s=S(),t=s.trip;t.slowTick=!t.slowTick;if(t.slowTick){tripTimer=0;s.mode='foot';try{advance(STEP_MIN)}finally{s.mode=null}save();render();scheduleWalk();return}}
+ return _walkStepB();
+};
+// оружие ослабляет противника в начале драки
+const _doActionB=doAction;
+doAction=function(id){
+ const sid=String(id),wasFight=!!(g&&g.fight);
+ if(g&&sid.startsWith('surv:loot:')){search(sid.slice(10));return}
+ if(g&&sid.startsWith('surv:craft:')){craft(sid.slice(11));return}
+ if(g&&sid==='surv:stashall'){stashAll();return}
+ if(g&&sid.startsWith('surv:stashtake:')){stashTake(sid.slice(15));return}
+ if(g&&sid.startsWith('surv:stashitem:')){stashItem(+sid.slice(15));return}
+ if(g&&sid.startsWith('surv:sell:')){const p=sid.split(':');sellMat(p[2],p[3]==='all');return}
+ if(g&&sid.startsWith('surv:drop:')){dropMat(sid.slice(10));return}
+ if(g&&sid.startsWith('surv:view:')){view=sid.slice(10);focus=null;page=0;render();return}
+ const r=_doActionB(id);
+ if(g&&!wasFight&&g.fight){const w=g.equip?.['Оружие'];if(w&&WEAPON[w]){g.fight.hp=Math.max(10,g.fight.hp-WEAPON[w]);announce('🗡️ '+goods[w].name+' в руке — противник сразу осторожнее (−'+WEAPON[w]+' к его здоровью).');save();render()}}
+ return r;
+};
+// дом: обогреватель, окна, радио, запас топлива
+const _restSleepB=restSleep;
+restSleep=function(){
+ const s=B(),wasCold=s.cold,e0=s.energy;const r=_restSleepB.apply(this,arguments);
+ if((g.region||0)===0){
+  if(s.base.heater&&wasCold&&s.cold){s.cold=false;survNote('♨️ У обогревателя простуда прошла за ночь.')}
+  if(s.base.heater)s.nerves=clampN(s.nerves+4);
+  if(s.base.windows&&s.energy>e0)s.energy=clampN(s.energy+Math.round((s.energy-e0)*.25));
+  if(s.base.radio){s.nerves=clampN(s.nerves+5);survNote('📻 По радио утренние новости и старые песни. Нервы +5.')}
+  save();
+ }
+ return r;
+};
+const _survActionB=survAction;
+survAction=function(id){
+ const r=_survActionB(id);
+ if(id==='surv:hometea'&&B().base.woodpile){S().warmth=clampN(S().warmth+20)}
+ return r;
+};
+// костёр и прочие долгие расходники
+const _useSupplyB=useSupply;
+useSupply=function(id){const it=SUP[id];_useSupplyB(id);if(it&&it.time>5){const s=S();s.mode=survIndoor()?null:'foot';try{advance(it.time-5)}finally{s.mode=null}save();render()}};
+
+/* ---- окна мест ---- */
+const _actionsForB=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForB(id);
+ if(!g||typeof id!=='string')return a;
+ const extra=[];
+ for(const[k,P]of Object.entries(LOOT))if(P.at===id){const left=lootLeft(k);extra.push({name:'🔎 Обыскать: '+P.name,doit:'surv:loot:'+k,sub:(has('crowbar')?'30':'45')+' мин · хабара: '+left+(P.cold?' · на холоде':''),alt:left!=='пусто'})}
+ if(id==='home'&&(g.region||0)===0){extra.push({name:'📦 Ящик с хабаром',doit:'surv:view:stash',sub:'Выложить и взять вещи',alt:false});extra.push({name:'🔨 Мастерить',doit:'surv:view:craft',sub:'Дома доступны все рецепты',alt:false})}
+ if(id==='m_pawn')extra.push({name:'💰 Сдать хабар',doit:'surv:view:sell',sub:'Скупщик берёт всё',alt:false});
+ return extra.length?extra.concat(a):a;
+};
+
+/* ---- экраны: рюкзак (хабар), крафт, ящик, скупщик ---- */
+function matTiles(src,act,sub){
+ const e=Object.entries(src).filter(([,n])=>n>0);
+ if(!e.length)return '<div class="line">Пусто.</div>';
+ return '<div class="tilegrid">'+e.map(([id,n])=>'<button class="tile itemtile" data-do="'+act(id)+'">'+anyArt(id,'itemico')+'<b>'+esc(MAT[id].name)+' ×'+n+'</b><small>'+sub(id,n)+'</small></button>').join('')+'</div>';
+}
+function panel(title,body){return '<section class="overlay"><header class="panel-head"><h2>'+title+'</h2><button data-nav="map">×</button></header><div class="panel-body">'+body+'</div></section>'}
+function craftPanel(){
+ const home=atHome(),s=B();
+ let h='<div class="line"><strong>'+(home?'🏠 Ты дома: можно брать материалы из ящика, доступны все рецепты.':'🧭 Вне дома — только простые рецепты. Сложное — дома.')+'</strong><div>⚖️ '+carryW()+' / '+carryMax()+' кг'+(s.base.workbench?' · 🪚 верстак: крафт дома вдвое быстрее':'')+'</div></div>';
+ const cats=[...new Set(RECIPES.map(r=>r.cat))];
+ cats.forEach(c=>{
+  h+='<div class="line"><strong>'+c+'</strong></div><div class="tilegrid">'+RECIPES.filter(r=>r.cat===c).map(r=>{
+   const ok=canCraft(r);
+   const need=Object.entries(r.need).map(([id,n])=>{const have=home?cntHome(id):cnt(id);return '<span class="'+(have>=n?'hv':'nh')+'">'+anyIcon(id)+' '+esc(anyName(id))+' '+have+'/'+n+'</span>'}).join(' ');
+   const art=r.art?artOr('../art/items/'+r.art+'.webp',r.icon,'itemico'):r.build?'<span class="itemico emo">'+r.icon+'</span>':anyArt(r.out,'itemico');
+   return '<button class="tile itemtile crafttile '+(ok.ok?'can':'')+'" data-do="surv:craft:'+r.id+'" '+(ok.ok?'':'aria-disabled="true"')+'>'+art+'<b>'+esc(recipeName(r))+((r.n||1)>1?' ×'+r.n:'')+'</b><small class="need">'+need+'</small><small>'+(r.desc?esc(r.desc)+' · ':goods[r.out]?esc(goods[r.out].stat)+' · ':SUP[r.out]?esc(fxText(SUP[r.out].fx))+' · ':'')+r.min+' мин'+(r.st==='home'?' · дома':'')+(r.tool?' · нужен '+esc(anyName(r.tool)).toLowerCase():'')+'</small>'+(ok.ok?'':'<small class="why">'+esc(ok.why)+'</small>')+'</button>';
+  }).join('')+'</div>';
+ });
+ const built=Object.keys(s.base).filter(k=>s.base[k]);
+ if(built.length)h+='<div class="line"><strong>Дом обустроен:</strong> '+built.map(k=>RECIPE_BY[k]?.icon+' '+RECIPE_BY[k]?.title).join(' · ')+'</div>';
+ return panel('🔨 Мастерить',h);
+}
+function stashPanel(){
+ const s=B();
+ if(!atHome())return panel('📦 Ящик',`<div class="line">Ящик стоит дома, в кладовке. Приходи домой.</div>`);
+ let h='<div class="line"><strong>⚖️ С собой: '+carryW()+' / '+carryMax()+' кг</strong><div><button class="act alt" data-do="surv:stashall">Выложить весь хабар в ящик</button></div></div>';
+ h+='<div class="line"><strong>В ящике — нажми, чтобы взять</strong></div>'+matTiles(s.stash.mats,id=>'surv:stashtake:'+id,(id,n)=>(MAT[id].w*n).toFixed(1)+' кг');
+ if(s.stash.items.length)h+='<div class="tilegrid">'+[...new Set(s.stash.items)].map(id=>'<button class="tile itemtile" data-do="surv:stashtake:'+id+'">'+anyArt(id,'itemico')+'<b>'+esc(anyName(id))+' ×'+s.stash.items.filter(x=>x===id).length+'</b><small>Взять</small></button>').join('')+'</div>';
+ h+='<div class="line"><strong>Положить вещь из рюкзака</strong></div><div class="tilegrid">'+g.inventory.map((id,i)=>'<button class="tile itemtile" data-do="surv:stashitem:'+i+'">'+anyArt(id,'itemico')+'<b>'+esc(anyName(id))+'</b><small>В ящик</small></button>').join('')+'</div>';
+ return panel('📦 Ящик с хабаром',h);
+}
+function sellPanel(){
+ const s=B(),k=afterDefault()?1.5:1;
+ let h='<div class="line"><strong>Скупщик в комиссионке берёт любой хабар.</strong><div>'+(afterDefault()?'После дефолта цены выше в полтора раза.':'Цены копеечные, но всё лучше, чем тащить.')+' Нажми — сдать одну штуку, «всё» — всю кучу.</div></div>';
+ const e=Object.entries(s.mats).filter(([,n])=>n>0);
+ h+=e.length?'<div class="tilegrid">'+e.map(([id,n])=>{const p=Math.max(1,Math.round(MAT[id].p*k));return '<div class="tile itemtile">'+anyArt(id,'itemico')+'<b>'+esc(MAT[id].name)+' ×'+n+'</b><small>'+p+' ₽ за штуку</small><span class="sellbtns"><button data-do="surv:sell:'+id+':one">1 шт.</button><button data-do="surv:sell:'+id+':all">всё · '+p*n+' ₽</button></span></div>'}).join('')+'</div>':'<div class="line">Хабара с собой нет.</div>';
+ return panel('💰 Скупщик',h);
+}
+const _viewPanelB=viewPanel;
+viewPanel=function(){
+ if(!g)return _viewPanelB();
+ if(view==='craft')return craftPanel();
+ if(view==='stash')return stashPanel();
+ if(view==='sell')return sellPanel();
+ let h=_viewPanelB();
+ if(view==='bag'){
+  const s=B(),over=overload();
+  const block='<div class="line"><strong>⚖️ Вес: '+carryW()+' / '+carryMax()+' кг'+(over?' — перегруз, идёшь вдвое медленнее':'')+'</strong><div><button class="act alt" data-do="surv:view:craft">🔨 Мастерить</button>'+(atHome()?' <button class="act" data-do="surv:view:stash">📦 Ящик</button>':'')+'</div></div>'+
+   '<div class="line"><strong>Хабар</strong> <small>нажми — выбросить одну штуку</small></div>'+matTiles(s.mats,id=>'surv:drop:'+id,(id,n)=>(MAT[id].w*n).toFixed(1)+' кг');
+  const i=h.indexOf('<div class="line needline">');h=i>0?h.slice(0,i)+block+h.slice(i):h.replace('<div class="line"><strong>Припасы</strong></div>',block+'<div class="line"><strong>Припасы</strong></div>');
+ }
+ return h;
+};
+// в «Вещах» вещи без слота (мешок, рюкзак, санки) не надеваются — подсказка
+const _doActionB2=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('item:')){const it=g.inventory[+sid.slice(5)];if(it&&goods[it]&&!goods[it].slot&&it!=='bandage'){announceAndRender(goods[it].name+': работает, пока лежит в рюкзаке.');return}}
+ return _doActionB2(id);
+};
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.crafttile{opacity:.62}.crafttile.can{opacity:1;border-color:#9fc79a}.crafttile .need{display:flex;flex-wrap:wrap;gap:3px 6px;margin:2px 0}.crafttile .need span{white-space:nowrap}.crafttile .hv{color:#a9d39b}.crafttile .nh{color:#e58f7a}.crafttile .why{color:#e5b77a}'+
+'.crafttile .itemico{width:34px;height:34px}.crafttile .itemico.emo{font-size:22px}.crafttile b{font-size:13.5px}.crafttile small{font-size:11px}'+'.land .overlay .tilegrid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}'+
+'.sellbtns{display:flex;gap:5px;margin-top:5px}.sellbtns button{padding:5px 8px;border-radius:7px;border:1px solid #b18b56;background:#3a2c1d;color:#ffe3b4;font-size:12px}'+
+'.line .act{display:inline-block;width:auto;margin-top:6px;padding:7px 12px}'+
 '</style>');
 
 render();
