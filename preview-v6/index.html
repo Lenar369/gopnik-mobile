@@ -1478,8 +1478,21 @@ function doDeath(){
 function lossText(d){const l=[];if(d.lostXp)l.push(d.lostXp+' опыта');if(d.items&&d.items.length)l.push(d.items.join(', '));if(d.money)l.push(d.money+' ₽');return l.length?'Потеряно: '+l.join(', '):'Ничего не потеряно'}
 const _start=start;
 start=function(){_start();S().score=progressScore()};
+const BACKUP_KEY=KEY+'-backup';
+function hasBackup(){try{return !!localStorage.getItem(BACKUP_KEY)}catch(e){return false}}
+function backupLabel(){try{const b=JSON.parse(localStorage.getItem(BACKUP_KEY));const sh=(b.surv&&b.surv.shift)||0;const d=new Date(Date.UTC(1998,7,1+(b.day-1)+sh));return esc(b.name)+' · '+d.getUTCDate()+' '+MONTHS_SHORT[d.getUTCMonth()]+' · '+b.money+' ₽'}catch(e){return ''}}
+function survMenu(id){
+ if(id==='surv:menu'){focus='survmenu';page=0;render();return true}
+ if(id==='surv:newgame'){focus='survmenu-confirm';page=0;render();return true}
+ if(id==='surv:newgame-yes'){try{localStorage.setItem(BACKUP_KEY,JSON.stringify(g))}catch(e){}g=null;focus=null;view='map';page=0;render();return true}
+ if(id==='surv:restore'){let b=null;try{b=JSON.parse(localStorage.getItem(BACKUP_KEY))}catch(e){}if(!b){announceAndRender('Прошлой игры нет.');return true}
+  try{localStorage.setItem(BACKUP_KEY,JSON.stringify(g))}catch(e){}g=b;focus=null;view='map';page=0;root.dataset.initializedMap='';save();announceAndRender('Вернулась прошлая игра. Та, что была до этого, теперь в «прошлой».');return true}
+ if(id==='surv:cancel-new'){let cur=null;try{cur=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(cur){g=cur;focus=null;view='map';root.dataset.initializedMap='';render()}return true}
+ return false;
+}
 function survAction(id){
  const s=S(),p=id.split(':');
+ if(survMenu(id))return;
  if(p[1]==='use'){useSupply(p[2]);return}
  if(p[1]==='shop'){focus='survshop:'+p[2];page=0;render();return}
  if(p[1]==='buy'){buySupply(p[2],p[3]);return}
@@ -1513,7 +1526,7 @@ const _render=render;
 render=function(){if(g){S();if(g.surv.pendingDeath&&!g.fight)doDeath()}_render()};
 
 const _toolbar=toolbar;
-toolbar=function(){let h=_toolbar();if(!g)return h;return h.replace(/<span class="phase-name">День \d+ · /,'<span class="phase-name">'+dateShort()+' · ').replace('<div class="metric hp">♥ ','<div class="metric hp">'+hudImg('hp','♥','needico hpico'))};
+toolbar=function(){let h=_toolbar();if(!g)return h;return h.replace('<div class="brand">','<button class="menubtn" data-do="surv:menu" aria-label="Меню игры">☰</button><div class="brand">').replace(/<span class="phase-name">День \d+ · /,'<span class="phase-name">'+dateShort()+' · ').replace('<div class="metric hp">♥ ','<div class="metric hp">'+hudImg('hp','♥','needico hpico'))};
 
 function needsChips(){
  const s=S();
@@ -1526,6 +1539,8 @@ const _actionsFor=actionsFor;
 actionsFor=function(id){
  if(!g)return _actionsFor(id);
  const s=S();
+ if(id==='survmenu'){const m=[{name:'▶ Продолжить игру',doit:'close',sub:'Вернуться на карту',alt:true},{name:'🆕 Новая игра',doit:'surv:newgame',sub:'Лето, зима или тест главы 2',alt:false}];if(hasBackup())m.push({name:'↩ Вернуть прошлую игру',doit:'surv:restore',sub:backupLabel(),alt:false});return m}
+ if(id==='survmenu-confirm')return [{name:'Да, начать заново',doit:'surv:newgame-yes',sub:'Текущая игра сохранится как «прошлая»',alt:true},{name:'Отмена',doit:'surv:menu',sub:'',alt:false}];
  if(id==='death')return [{name:'Подняться',doit:'surv:wake',sub:'Продолжить с того же района',alt:true}];
  if(String(id).startsWith('survshop:')){
   const spot=id.slice(9),sh=SURV_SHOPS[spot];if(!sh)return [{name:'Назад',doit:'close',sub:'',alt:false}];
@@ -1550,6 +1565,8 @@ actionsFor=function(id){
 
 const _infoFor=infoFor;
 infoFor=function(id){
+ if(id==='survmenu')return 'Сейчас: '+esc(g.name)+' · '+dateText()+' · уровень '+levelInfo().lvl+' · '+g.money+' ₽.';
+ if(id==='survmenu-confirm')return 'Начать новую игру? Текущую можно будет вернуть через «Меню → Вернуть прошлую игру» (хранится одна прошлая игра).';
  if(id==='death'){const d=S().deathInfo||{};return d.text+' Ты потерял сознание от '+(d.cause||'истощения')+'. '+lossText(d)+'. Уровень сохранён. Поешь и согрейся, прежде чем идти дальше.'}
  if(String(id).startsWith('survshop:'))return 'Выбери, что купить. У тебя '+g.money+' ₽, в рюкзаке '+g.inventory.length+'/20.'+(afterDefault()?' После дефолта всё вдвое дороже.':'');
  return _infoFor(id);
@@ -1559,6 +1576,7 @@ const _drawDrawer=drawDrawer;
 drawDrawer=function(){
  let h=_drawDrawer();if(!g||!focus)return h;
  if(focus==='death')h=h.replace('<strong>death</strong>','<strong>☠ Ты очнулся</strong>');
+ else if(focus==='survmenu'||focus==='survmenu-confirm')h=h.replace('<strong>'+focus+'</strong>','<strong>☰ Меню</strong>');
  else if(String(focus).startsWith('survshop:'))h=h.replace('<strong>'+esc(focus)+'</strong>','<strong>🛒 '+esc(SURV_SHOPS[focus.slice(9)]?.title||'Покупки')+'</strong>');
  return h;
 };
@@ -1594,10 +1612,11 @@ viewPanel=function(){
 };
 
 const _showSetup=showSetup;
-showSetup=function(){_showSetup();const b=root.querySelector('[data-do="start2"]');if(b&&!root.querySelector('[data-do="start-winter"]'))b.insertAdjacentHTML('afterend','<button class="go" style="background:#34465a;margin-top:8px" data-do="start-winter">ТЕСТ: НАЧАТЬ ЗИМОЙ ❄️ →</button>')};
+showSetup=function(){_showSetup();const b=root.querySelector('[data-do="start2"]');if(b&&!root.querySelector('[data-do="start-winter"]'))b.insertAdjacentHTML('afterend','<button class="go" style="background:#34465a;margin-top:8px" data-do="start-winter">ТЕСТ: НАЧАТЬ ЗИМОЙ ❄️ →</button>');let has=false;try{has=!!localStorage.getItem(KEY)}catch(e){}if(has&&!root.querySelector('[data-do="surv:cancel-new"]')){const w=root.querySelector('[data-do="start-winter"]');if(w)w.insertAdjacentHTML('afterend','<button class="go" style="background:#4a3a2a;margin-top:8px" data-do="surv:cancel-new">← ВЕРНУТЬСЯ К ТЕКУЩЕЙ ИГРЕ</button>')}};
 
 const _doAction=doAction;
 doAction=function(id){
+ if(!g&&id==='surv:cancel-new'){survMenu(id);return}
  if(String(id).startsWith('surv:')){survAction(id);return}
  if(id==='start-winter'){start();const s=S();s.shift=122;s.score=progressScore();survNote('❄️ Тестовый старт: 1 декабря 1998. На улице мороз — одевайся теплее.');save();render();return}
  const before=g?{fight:!!g.fight}:null;
@@ -1619,7 +1638,7 @@ doAction=function(id){
 };
 
 /* стили режима выживания */
-document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needico{width:15px;height:15px;vertical-align:-3px;margin-right:2px;object-fit:contain}.needico.big{width:22px;height:22px;vertical-align:-6px}.needico.hpico{width:16px;height:16px;margin-right:3px}.faceico{width:100%;height:100%;object-fit:contain}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
+document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needico{width:15px;height:15px;vertical-align:-3px;margin-right:2px;object-fit:contain}.needico.big{width:22px;height:22px;vertical-align:-6px}.needico.hpico{width:16px;height:16px;margin-right:3px}.faceico{width:100%;height:100%;object-fit:contain}.menubtn{flex:0 0 auto;width:34px;height:34px;margin-right:2px;border-radius:8px;background:#2a241be8;border:1px solid #97754b;color:#f9d6a0;font-size:19px;font-weight:900;line-height:1;padding:0}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
 if(g)S();
 
 render();
