@@ -1491,6 +1491,7 @@ function survMenu(id){
  if(id==='surv:cancel-new'){let cur=null;try{cur=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(cur){g=cur;focus=null;view='map';root.dataset.initializedMap='';render()}return true}
  return false;
 }
+function isPlaceHere(id){if(!id)return false;if((g.region||0)===0)return places.some(p=>p.id===id);return !!DISTRICTS[g.region]?.spots.some(x=>x.id===id)}
 function survAction(id){
  const s=S(),p=id.split(':');
  if(survMenu(id))return;
@@ -1620,10 +1621,12 @@ doAction=function(id){
  if(!g&&id==='surv:cancel-new'){survMenu(id);return}
  if(String(id).startsWith('surv:')){survAction(id);return}
  if(id==='start-winter'){start();const s=S();s.shift=122;s.score=progressScore();survNote('❄️ Тестовый старт: 1 декабря 1998. На улице мороз — одевайся теплее.');save();render();return}
- const before=g?{fight:!!g.fight}:null;
+ const before=g?{fight:!!g.fight,focus:focus,region:g.region}:null;
  _doAction(id);
  if(!g||!before)return;
  const s=S();
+ const sid=String(id);
+ if(focus==null&&view==='map'&&before.focus&&!g.fight&&g.region===before.region&&sid!=='close'&&sid!=='city'&&!sid.startsWith('travel')&&!sid.startsWith('dest:')&&isPlaceHere(g.loc)){focus=g.loc;page=0;render()}
  if(String(id).startsWith('world:tea:'))applyFx({warmth:15,energy:10,nerves:5});
  if(before.fight&&!g.fight){
   const top=g.log[0]||'',second=g.log[1]||'';
@@ -1734,7 +1737,7 @@ window.addEventListener('resize',()=>{if(!g)return;const l=isLand();if(l!==root.
 
 document.head.insertAdjacentHTML('beforeend','<style>'+
 '.bottom{grid-template-columns:repeat(6,1fr)}.bottom button em{font-style:normal}.nl-l{display:none}.navico{width:24px;height:24px;object-fit:contain;display:inline-block}.navico.emo{width:auto;height:auto}'+
-'.landbar,.landside{display:none}'+
+'.city-open{display:none!important}'+'.landbar,.landside{display:none}'+
 '.land{--sideW:clamp(190px,27vw,260px);--topH:48px;--navH:50px;--safeL:env(safe-area-inset-left,0px);--safeR:env(safe-area-inset-right,0px)}'+
 '.land .top{height:var(--topH);padding:0 calc(6px + var(--safeR)) 0 calc(6px + var(--safeL));gap:6px}'+
 '.land .top>.brand,.land .top>.metrics,.land .top>.menubtn{display:none}'+
