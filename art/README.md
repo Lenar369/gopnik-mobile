@@ -48,5 +48,5 @@
 | [REQUEST_04_city_map.md](REQUEST_04_city_map.md) | Общая карта города, лето + зима (схема в `reference/city_schema*.jpg`) | ⏳ |
 | [REQUEST_05_scrap_craft.md](REQUEST_05_scrap_craft.md) | Хабар (22 материала) и самодельные вещи (22) для крафта | ⏳ |
 | [REQUEST_06_fighters.md](REQUEST_06_fighters.md) | Аватарки противников (7) и фон драки в дороге (2) | ⏳ |
-| [REQUEST_07_city_venues.md](REQUEST_07_city_venues.md) | Кафе, бар, ресторан, клуб и гостиница: фасады по сезонам, интерьеры круглый год (15 кадров) | ⏳ |
+| [REQUEST_07_city_venues.md](REQUEST_07_city_venues.md) | Кафе, бар, ресторан, клуб и гостиница: фасады по сезонам, интерьеры круглый год (15 кадров) | ✅ 15 из 15 (утверждены; графику улучшим после тестирования) |
 | [REQUEST_08_npc_portraits.md](REQUEST_08_npc_portraits.md) | Портреты знакомых для разговоров (38) | ⏳ |
