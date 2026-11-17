@@ -1,0 +1,418 @@
+[
+  {
+    "path": "art/loot/q5_dumpster.webp",
+    "source": "a_highly_detailed_cinematic_night_scene_of_a_gritt.png",
+    "quality": 89,
+    "bytes": 189716,
+    "kind": "primary",
+    "sha256": "8779cb20e240fb40bf3aee71282de5663401fa9e5a4488b76e915984751512bd"
+  },
+  {
+    "path": "art/loot/market_backrows.webp",
+    "source": "a_detailed_realistic_highly_detailed_1990s_style.png",
+    "quality": 89,
+    "bytes": 249334,
+    "kind": "primary",
+    "sha256": "d5424b0ea707c4f97a2e4398a499183a0df4f21d827207d27b8b9a11578ed271"
+  },
+  {
+    "path": "art/loot/market_backrows_winter.webp",
+    "source": "a_cinematic_realistic_highly_detailed_winter_out.png",
+    "quality": 89,
+    "bytes": 241360,
+    "kind": "primary",
+    "sha256": "a89b5a291d3500028f17fe751e6aa67319bb463fbbc390c84a44abd06e051c7c"
+  },
+  {
+    "path": "art/loot/market_backrows_closed.webp",
+    "source": "a_detailed_cinematic_realistic_scene_a_gritty_we.png",
+    "quality": 89,
+    "bytes": 208714,
+    "kind": "primary",
+    "sha256": "96f5b6e622060f66df8fc27ccce9decc6b7538d1c3f55e5bff20cb9e1a5e47f7"
+  },
+  {
+    "path": "art/loot/market_crates.webp",
+    "source": "a_cinematic_highly_detailed_realistic_scene_of_a.png",
+    "quality": 89,
+    "bytes": 223816,
+    "kind": "primary",
+    "sha256": "27388f10e2a7eb2b206d2d50cb447384af53a2859f524359098af382eae03969"
+  },
+  {
+    "path": "art/loot/station_warehouse.webp",
+    "source": "a_highly_detailed_cinematic_realistic_1990s_era.png",
+    "quality": 89,
+    "bytes": 222630,
+    "kind": "primary",
+    "sha256": "bcffd759750809da5f9a610680e814e54c4ec8b68701eae2cd23dc6928463be3"
+  },
+  {
+    "path": "art/loot/station_wagons.webp",
+    "source": "a_realistic_cinematic_wide_angle_outdoor_scene_of.png",
+    "quality": 89,
+    "bytes": 240574,
+    "kind": "primary",
+    "sha256": "c31cca17eaec94c1a7624b9147dada38d67adc34289ef04ec1c353fcb29100f2"
+  },
+  {
+    "path": "art/loot/station_wagons_winter.webp",
+    "source": "a_wide_cinematic_photo_realistic_winter_railway.png",
+    "quality": 86,
+    "bytes": 239222,
+    "kind": "primary",
+    "sha256": "7a4e716ad9fa88357731dbc076ef1ac86d1c624410073d64044a8cf1d8b13480"
+  },
+  {
+    "path": "art/loot/factory_hall.webp",
+    "source": "a_highly_detailed_realistic_wide_angle_interior_s.png",
+    "quality": 89,
+    "bytes": 208370,
+    "kind": "primary",
+    "sha256": "07fc347515bb2c41667812785a9f8963f6fe14c7a15464ce179abaed4ad964fd"
+  },
+  {
+    "path": "art/loot/factory_scrap.webp",
+    "source": "a_wide_cinematic_highly_detailed_realistic_scene.png",
+    "quality": 86,
+    "bytes": 236696,
+    "kind": "primary",
+    "sha256": "b19f8b8f980875c9c2f854f23f778dd6dca042eadc0213afab42883b5f4591c9"
+  },
+  {
+    "path": "art/loot/factory_boiler.webp",
+    "source": "a_highly_detailed_cinematic_realistic_industrial.png",
+    "quality": 89,
+    "bytes": 192128,
+    "kind": "primary",
+    "sha256": "a6bd1230049d119e75d7cfd3975642d0b10fe0f6935c2b26a5ad72a3910daf8a"
+  },
+  {
+    "path": "art/loot/garage_junkyard.webp",
+    "source": "a_highly_detailed_realistic_photoreal_scene_of_a.png",
+    "quality": 86,
+    "bytes": 224904,
+    "kind": "primary",
+    "sha256": "19b153be439c49abb46472820cd94a1dd6f07e8e2bf05a10e03b000302f9923f"
+  },
+  {
+    "path": "art/loot/garage_junkyard_winter.webp",
+    "source": "a_highly_detailed_realistic_winter_scene_of_a_rus.png",
+    "quality": 86,
+    "bytes": 237818,
+    "kind": "primary",
+    "sha256": "12d263fe389d4d24794165eb7315247509c7887a00839e7ca07e1ba20f6b8fe8"
+  },
+  {
+    "path": "art/loot/garage_abandoned.webp",
+    "source": "a_highly_detailed_cinematic_photo_realistic_deta.png",
+    "quality": 89,
+    "bytes": 206666,
+    "kind": "primary",
+    "sha256": "b8aca381da854be680ebdc2bd9adb6fd296c9c33e346c86aa450e31dc2435b7b"
+  },
+  {
+    "path": "art/loot/river_boathouse.webp",
+    "source": "a_highly_detailed_realistic_atmospheric_scene_of.png",
+    "quality": 89,
+    "bytes": 243348,
+    "kind": "primary",
+    "sha256": "20d7d2366fcb0ee44cae54d1a8076e2e6bd36d38ee1e6e83914c7cf88dfbbef5"
+  },
+  {
+    "path": "art/loot/river_flooded.webp",
+    "source": "a_detailed_cinematic_realistic_photorealistic_sc.png",
+    "quality": 89,
+    "bytes": 208166,
+    "kind": "primary",
+    "sha256": "f4023546890fd798acd2f7abfcc07329bd0f374a2445a8a320b318223c1d974f"
+  },
+  {
+    "path": "art/loot/center_construction.webp",
+    "source": "a_highly_detailed_realistic_illustration_cgi_of_a.png",
+    "quality": 89,
+    "bytes": 249706,
+    "kind": "primary",
+    "sha256": "c8e460efdf580164bffd56ba079e872032850586a3ce5dfb960197d69e287081"
+  },
+  {
+    "path": "art/loot/center_archive_yard.webp",
+    "source": "a_highly_detailed_photorealistic_wide_angle_scen.png",
+    "quality": 86,
+    "bytes": 244462,
+    "kind": "primary",
+    "sha256": "9a5b79cefc77e079041c2f531184b897faec1429095455e979235835139037f3"
+  },
+  {
+    "path": "art/loot/center_archive_yard_winter.webp",
+    "source": "a_detailed_realistic_cinematic_winter_version_of.png",
+    "quality": 86,
+    "bytes": 242714,
+    "kind": "primary",
+    "sha256": "82a8f5a3cfa18b96a2b7db05ed402c7d99009aad71c46119aa9d09e08a57b466"
+  },
+  {
+    "path": "art/loot/alternates/q5_dumpster_alt01.webp",
+    "source": "a_highly_detailed_cinematic_realistic_illustrati.png",
+    "quality": 89,
+    "bytes": 231750,
+    "kind": "alternate",
+    "sha256": "9d8378f167cccc3f740d9b7e0bd61d47c8888b33a448d943be47ef6d12b20219"
+  },
+  {
+    "path": "art/loot/alternates/q5_dumpster_alt02.webp",
+    "source": "a_cinematic_ultra_detailed_realistic_game_art_sc.png",
+    "quality": 89,
+    "bytes": 228592,
+    "kind": "alternate",
+    "sha256": "cf6fdb143ba8f2707c4ee5ca51bc7afea3f3424f894d356d6660a61f7463e00a"
+  },
+  {
+    "path": "art/loot/alternates/market_backrows_alt01.webp",
+    "source": "a_detailed_cinematic_photorealistic_retro_1990s.png",
+    "quality": 89,
+    "bytes": 234126,
+    "kind": "alternate",
+    "sha256": "27094c962912428cdc92ecaf355c97c5cdc9f74159ae378db9764cf858c58865"
+  },
+  {
+    "path": "art/loot/alternates/market_backrows_alt02.webp",
+    "source": "a_single_composite_image_with_two_horizontal_panel.png",
+    "quality": 89,
+    "bytes": 218634,
+    "kind": "alternate",
+    "sha256": "28389fe1147c4d1948ffb2bbfdebc3e9785279aadd4982a31b4a38d668ba9b66"
+  },
+  {
+    "path": "art/loot/alternates/market_backrows_winter_alt01.webp",
+    "source": "a_single_composite_image_split_into_two_horizontal.png",
+    "quality": 89,
+    "bytes": 203288,
+    "kind": "alternate",
+    "sha256": "f2d99f5db9f2d44d28f52f9ed79afbfaddb0f316a07c1a0dbc94c31a7ba5086d"
+  },
+  {
+    "path": "art/loot/alternates/station_warehouse_alt01.webp",
+    "source": "a_highly_detailed_realistic_atmospheric_illustra.png",
+    "quality": 89,
+    "bytes": 212440,
+    "kind": "alternate",
+    "sha256": "1ab44c9d6fe11b83960b850e3cddff86152ef7348ddcf0dd44ce8af3d0bf05a6"
+  },
+  {
+    "path": "art/loot/alternates/station_warehouse_alt02.webp",
+    "source": "a_highly_detailed_realistic_cinematic_game_backgr.png",
+    "quality": 89,
+    "bytes": 220666,
+    "kind": "alternate",
+    "sha256": "3b9ca7e081a7c7a30c63451ec8ff2d9c06574d0ea1094739e0027cf37c7e920a"
+  },
+  {
+    "path": "art/loot/alternates/station_wagons_alt01.webp",
+    "source": "a_realistic_cinematic_highly_detailed_scene_spli.png",
+    "quality": 89,
+    "bytes": 211730,
+    "kind": "alternate",
+    "sha256": "abcd4cacfe4f086d7169ee3ac2562fed0830d8cc7447e717ec0a732aa77e4939"
+  },
+  {
+    "path": "art/loot/alternates/factory_hall_alt01.webp",
+    "source": "a_wide_angle_cinematic_highly_detailed_photoreal.png",
+    "quality": 89,
+    "bytes": 219260,
+    "kind": "alternate",
+    "sha256": "4f2e094348afc6b9082da6167ef5e8716afccb8d653ada3a7eb9fecee513594a"
+  },
+  {
+    "path": "art/loot/alternates/factory_scrap_alt01.webp",
+    "source": "a_highly_detailed_realistic_cinematic_wide_angle.png",
+    "quality": 86,
+    "bytes": 230930,
+    "kind": "alternate",
+    "sha256": "8695ff224f6df45504d87dd9a109d3dcf4ef8e2195a43e878a705f82933f9d4a"
+  },
+  {
+    "path": "art/loot/alternates/factory_scrap_alt02.webp",
+    "source": "a_highly_detailed_realistic_photo_style_scene_of.png",
+    "quality": 86,
+    "bytes": 252792,
+    "kind": "alternate",
+    "sha256": "6df039a30968139ac460e2bdf9b62a3d0d26c1b5fd52eed6d183b731293101a1"
+  },
+  {
+    "path": "art/loot/alternates/factory_scrap_alt03.webp",
+    "source": "a_highly_detailed_realistic_photoreal_cg_style_sc.png",
+    "quality": 83,
+    "bytes": 239294,
+    "kind": "alternate",
+    "sha256": "31ad547463b02d452f6e250a3a55665ab1b1d1259491752412efff76dc76ba0c"
+  },
+  {
+    "path": "art/loot/alternates/factory_scrap_alt04.webp",
+    "source": "a_wide_cinematic_scrapyard_junkyard_scene_in_dayl.png",
+    "quality": 86,
+    "bytes": 248562,
+    "kind": "alternate",
+    "sha256": "0049f45a48053760233cdb939a5b6c1152018ebcb4d27e4349ef5fb2b795086a"
+  },
+  {
+    "path": "art/loot/alternates/factory_scrap_alt05.webp",
+    "source": "a_wide_detailed_realistic_1990s_industrial_scrap.png",
+    "quality": 89,
+    "bytes": 254160,
+    "kind": "alternate",
+    "sha256": "45c81a5070a324b19391cdf69be04eebaccb6b3b58e33ff8c2377317fde45d9d"
+  },
+  {
+    "path": "art/loot/alternates/factory_scrap_alt06.webp",
+    "source": "wide_cinematic_junkyard_scrapyard_scene_in_daylig.png",
+    "quality": 89,
+    "bytes": 210422,
+    "kind": "alternate",
+    "sha256": "2d20adbae5742ba1b8d576ec81c6608b6c846928428cc1b84ac42a17f032333c"
+  },
+  {
+    "path": "art/loot/alternates/factory_boiler_alt01.webp",
+    "source": "a_realistic_cinematic_highly_detailed_scene_of_a.png",
+    "quality": 89,
+    "bytes": 207580,
+    "kind": "alternate",
+    "sha256": "62569969e4f782c5655e0878b8631b630f4583a324f68cd7125bcb50d86f2e0b"
+  },
+  {
+    "path": "art/loot/alternates/factory_boiler_alt02.webp",
+    "source": "a_realistic_detailed_view_of_an_old_soviet_era_in.png",
+    "quality": 89,
+    "bytes": 214862,
+    "kind": "alternate",
+    "sha256": "c55ed0d7d68f98f6fb8ca7930ebeb7b721e475c8d6ded4fb7346faf3122db405"
+  },
+  {
+    "path": "art/loot/alternates/garage_junkyard_alt01.webp",
+    "source": "a_detailed_cinematic_realistic_urban_industrial.png",
+    "quality": 86,
+    "bytes": 232710,
+    "kind": "alternate",
+    "sha256": "5545559aac477eb70e911c9ae1901d8ecb3e2d3fe7a2636271bdff4c97888ea9"
+  },
+  {
+    "path": "art/loot/alternates/garage_junkyard_alt02.webp",
+    "source": "a_highly_detailed_realistic_wide_angle_cinemati.png",
+    "quality": 86,
+    "bytes": 232308,
+    "kind": "alternate",
+    "sha256": "230a6b483785cf5958b989c60b3979b53406c8c9a33a52d8f804054de7b4c78c"
+  },
+  {
+    "path": "art/loot/alternates/garage_abandoned_alt01.webp",
+    "source": "a_highly_detailed_cinematic_photoreal_cgi_interi.png",
+    "quality": 89,
+    "bytes": 235542,
+    "kind": "alternate",
+    "sha256": "3180b9c40fded9363841ba69ca11312a262d8e43f702b34bc9c22ece497835f2"
+  },
+  {
+    "path": "art/loot/alternates/garage_abandoned_alt02.webp",
+    "source": "a_highly_detailed_cinematic_photorealistic_scene.png",
+    "quality": 89,
+    "bytes": 247462,
+    "kind": "alternate",
+    "sha256": "04cee9d879b3debfdcd5b81c9b539ffc2dcba53282294a1df611b8cd5e006c03"
+  },
+  {
+    "path": "art/loot/alternates/river_boathouse_alt01.webp",
+    "source": "a_detailed_cinematic_realistic_digital_photo_ill.png",
+    "quality": 86,
+    "bytes": 221420,
+    "kind": "alternate",
+    "sha256": "b6b5148b9bc368c8626d24b4d8725dae880ab8fac5e1f37560f976604b2e932b"
+  },
+  {
+    "path": "art/loot/alternates/river_flooded_alt01.webp",
+    "source": "a_highly_detailed_cinematic_realistic_gritty_ind.png",
+    "quality": 89,
+    "bytes": 228468,
+    "kind": "alternate",
+    "sha256": "bd8c6659d012e6983b0c3483e6c680f87e592c46e74d457e4fd23e9700e52d82"
+  },
+  {
+    "path": "art/loot/alternates/river_flooded_alt02.webp",
+    "source": "a_highly_detailed_cinematic_realistic_abandoned.png",
+    "quality": 89,
+    "bytes": 239254,
+    "kind": "alternate",
+    "sha256": "6f7546cd6344b378347819a620420970d68f3ca51bf86c8b9268bc8efd62d299"
+  },
+  {
+    "path": "art/loot/alternates/center_construction_alt01.webp",
+    "source": "a_highly_detailed_realistic_cinematic_digital_sc.png",
+    "quality": 89,
+    "bytes": 242702,
+    "kind": "alternate",
+    "sha256": "10ee4195430add2c352faf504506665ea6f9355a55248a5a4dc95b9d45a5713f"
+  },
+  {
+    "path": "art/loot/alternates/center_construction_alt02.webp",
+    "source": "a_highly_detailed_realistic_scene_of_the_same_inte.png",
+    "quality": 89,
+    "bytes": 236842,
+    "kind": "alternate",
+    "sha256": "5f034ac47796c4d7d3c4be167c9b1c7b6b5a41a1a6ddc4dc480aa51d01b4674f"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_alt01.webp",
+    "source": "a_highly_detailed_cinematic_scene_of_a_cluttered_o.png",
+    "quality": 86,
+    "bytes": 245220,
+    "kind": "alternate",
+    "sha256": "136b0d62ecb05fe9123ab5b93f36695124f18fcd3d895f01a9b1b21df11ba791"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_alt02.webp",
+    "source": "a_highly_detailed_realistic_cinematic_urban_cour.png",
+    "quality": 86,
+    "bytes": 247416,
+    "kind": "alternate",
+    "sha256": "f5ce6b26eeb1778ec06bb594b7f0d7ffff05577c44850cbbeec6a6e55944f13c"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_alt03.webp",
+    "source": "a_highly_detailed_realistic_daytime_photo_of_an_o.png",
+    "quality": 86,
+    "bytes": 228814,
+    "kind": "alternate",
+    "sha256": "5d120b14e7722d65b39bd743a4161fde29144d6425aee9056a04c5de87355d7d"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_alt04.webp",
+    "source": "a_realistic_high_detail_urban_archival_courtyard.png",
+    "quality": 86,
+    "bytes": 226240,
+    "kind": "alternate",
+    "sha256": "ae5531f86c267ec049220624dda09dbeedf6112e48af6e9fd8f367fe58e912d0"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_winter_alt01.webp",
+    "source": "a_highly_detailed_realistic_cinematic_scene_of_a.png",
+    "quality": 86,
+    "bytes": 242344,
+    "kind": "alternate",
+    "sha256": "21abf71c3cbfcd91944c28f49c63f4d63c27e24a5dea23216739b869aed66512"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_winter_alt02.webp",
+    "source": "a_highly_detailed_realistic_cinematic_scene_the.png",
+    "quality": 86,
+    "bytes": 226800,
+    "kind": "alternate",
+    "sha256": "f704ace08a9b067b63e179436adadbbe73bf5fbf4d342b5fc8f3d13ae32ff5e0"
+  },
+  {
+    "path": "art/loot/alternates/center_archive_yard_winter_alt03.webp",
+    "source": "a_realistic_cinematic_winter_courtyard_archive_ex.png",
+    "quality": 86,
+    "bytes": 238540,
+    "kind": "alternate",
+    "sha256": "c9664245b3813f346d5dd16ad7799ffd0047a9d02959af47df438c61a3174dfe"
+  }
+]
