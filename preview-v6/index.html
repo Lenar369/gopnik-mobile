@@ -1305,6 +1305,7 @@ const SUP={
  food_stew:{name:'Тушёнка',icon:'🥫',cost:12,fx:{food:40}},
  food_noodles:{name:'Лапша быстрая',icon:'🍜',cost:5,fx:{food:25,warmth:5}},
  food_potato:{name:'Картошка',icon:'🥔',cost:6,fx:{food:30}},
+ food_pasta:{name:'Макароны',icon:'🍝',cost:7,fx:{food:35}},
  food_pickles:{name:'Солёные огурцы',icon:'🥒',cost:10,fx:{food:12,nerves:5}},
  food_sprats:{name:'Шпроты',icon:'🐟',cost:9,fx:{food:25}},
  drink_water:{name:'Вода',icon:'💧',cost:4,fx:{food:2,energy:5}},
@@ -1319,8 +1320,8 @@ const SUP={
  bandage:{name:'Бинт',icon:'🩹',cost:20,fx:{hp:20}}
 };
 const SURV_SHOPS={
- kiosk:{title:'Киоск: продукты',items:['food_bread','food_sausage','food_noodles','food_sprats','drink_water','drink_tea','drink_beer','drink_vodka','cigs','bandage']},
- m_rows:{title:'Ряды: продукты',items:['food_bread','food_potato','food_pickles','food_sausage','food_stew','drink_tea','cigs']},
+ kiosk:{title:'Киоск: продукты',items:['food_bread','food_sausage','food_noodles','food_pasta','food_sprats','drink_water','drink_tea','drink_beer','drink_vodka','cigs','bandage']},
+ m_rows:{title:'Ряды: продукты',items:['food_bread','food_potato','food_pasta','food_pickles','food_sausage','food_stew','drink_tea','cigs']},
  s_station:{title:'Ларёк у вокзала',items:['food_bread','food_noodles','drink_water','drink_beer','cigs']},
  f_warehouse:{title:'Склад: тушёнка по-тихому',items:['food_stew','food_potato']},
  g_gas:{title:'Ларёк на заправке',items:['food_noodles','drink_water','drink_tea','cigs']},
@@ -1591,7 +1592,7 @@ viewPanel=function(){
  const s=S();
  if(view==='bag'){
   const counts={};g.inventory.forEach(x=>{if(SUP[x])counts[x]=(counts[x]||0)+1});
-  const sup=Object.keys(counts).map(x=>'<button class="tile" data-do="surv:use:'+x+'"><b>'+SUP[x].icon+' '+esc(SUP[x].name)+(counts[x]>1?' ×'+counts[x]:'')+'</b><small>Использовать: '+esc(fxText(SUP[x].fx))+'</small></button>').join('');
+  const sup=Object.keys(counts).map(x=>'<button class="tile itemtile" data-do="surv:use:'+x+'">'+artOr(itemPath(x),SUP[x].icon,'itemico')+'<b>'+esc(SUP[x].name)+(counts[x]>1?' ×'+counts[x]:'')+'</b><small>Использовать: '+esc(fxText(SUP[x].fx))+'</small></button>').join('');
   const gear=g.inventory.map((x,i)=>SUP[x]?'':'<button class="tile" data-do="item:'+i+'"><b>'+esc(goods[x]?.name||x)+'</b><small>Надеть · '+esc(goods[x]?.stat||'')+'</small></button>').join('');
   const h='<div class="avatar"><div class="face">'+hudImg('bag','🎒','faceico')+'</div><div><strong>Рюкзак '+g.inventory.length+'/20</strong><div>Еда и лекарства — нажми, чтобы использовать</div></div></div>'+needsBars()+
    '<div class="line"><strong>Припасы</strong></div><div class="tilegrid">'+(sup||'<div class="line">Пусто. Купи еду в киоске, на рынке или в универмаге.</div>')+'</div>'+
@@ -1638,7 +1639,7 @@ doAction=function(id){
 };
 
 /* стили режима выживания */
-document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needico{width:15px;height:15px;vertical-align:-3px;margin-right:2px;object-fit:contain}.needico.big{width:22px;height:22px;vertical-align:-6px}.needico.hpico{width:16px;height:16px;margin-right:3px}.faceico{width:100%;height:100%;object-fit:contain}.menubtn{flex:0 0 auto;width:34px;height:34px;margin-right:2px;border-radius:8px;background:#2a241be8;border:1px solid #97754b;color:#f9d6a0;font-size:19px;font-weight:900;line-height:1;padding:0}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
+document.head.insertAdjacentHTML('beforeend','<style>.needs{display:flex;gap:3px;flex:1;justify-content:center;flex-wrap:nowrap;overflow:hidden}.need{font-size:10.5px;font-weight:800;padding:0 4px;border-radius:6px;background:#2a2620;border:1px solid #5a4a36;color:#f1e3c4;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}.need.low{border-color:#c98a3a;color:#ffc56b}.need.crit{background:#5a1c16;border-color:#e0533f;color:#fff;animation:needpulse 1s infinite}@keyframes needpulse{50%{opacity:.55}}.needico{width:15px;height:15px;vertical-align:-3px;margin-right:2px;object-fit:contain}.needico.big{width:22px;height:22px;vertical-align:-6px}.needico.hpico{width:16px;height:16px;margin-right:3px}.faceico{width:56px;height:56px;object-fit:contain;display:block}.menubtn{flex:0 0 auto;width:34px;height:34px;margin-right:2px;border-radius:8px;background:#2a241be8;border:1px solid #97754b;color:#f9d6a0;font-size:19px;font-weight:900;line-height:1;padding:0}.needline{display:flex;align-items:center;gap:8px}.needline strong{min-width:105px}.needbar{flex:1;height:9px;background:#2b2722;border-radius:5px;overflow:hidden;border:1px solid #4e4030}.needbar i{display:block;height:100%;background:#8fae5a}.needbar i.low{background:#d39b45}.needbar i.crit{background:#d6513e}</style>');
 if(g)S();
 
 
@@ -1651,8 +1652,9 @@ function artOr(p,emo,cls){return ASSET_OK[p]?'<img class="'+cls+'" src="'+p+'" a
 const UI='../art/ui/';
 const NAV6=[['map','🗺️','Карта','Карта','nav_map'],['bag','🎒','Вещи','Инвентарь','nav_bag'],['hero','🧍','Герой','Персонаж','nav_hero'],['quests','📜','Задания','Задания','nav_quests'],['people','👥','Люди','Люди','nav_people'],['log','📖','Журнал','Дневник','nav_log']];
 const PORTRAIT_EMO={ordinary:'🧑',gop:'🧢',thief:'🕶️',frost:'😠'};
-NAV6.forEach(n=>probeAsset(UI+n[4]+'.webp'));probeAsset(UI+'nav_settings.webp');
+NAV6.forEach(n=>probeAsset(UI+n[4]+'.webp'));Object.keys(SUP).forEach(id=>probeAsset(itemPath(id)));probeAsset(UI+'nav_settings.webp');
 Object.keys(PORTRAIT_EMO).forEach(k=>probeAsset(UI+'portrait_'+k+'.webp'));
+function itemPath(id){return '../art/items/'+({bandage:'med_bandage'}[id]||id)+'.webp'}
 const WEEKDAYS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 
 function isLand(){return window.innerWidth>window.innerHeight*1.2&&window.innerWidth>=600}
@@ -1763,7 +1765,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.land .actionsbar{grid-template-columns:1fr;overflow:auto;gap:5px;padding:7px;min-height:0}.land .act{min-height:38px;padding:6px 9px}.land .description{max-height:96px}'+
 '.land .bottom{height:var(--navH);grid-template-columns:repeat(6,1fr);padding:3px calc(5px + var(--safeR)) max(3px,env(safe-area-inset-bottom)) calc(5px + var(--safeL))}'+
 '.land .bottom button{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:800}.land .bottom button span{font-size:19px;margin:0}.land .nl-s{display:none}.land .nl-l{display:inline}'+
-'.peopleline{display:grid;grid-template-columns:1fr auto;gap:0 10px}.peopleline small{grid-column:1;color:#b9aa92;font-size:11.5px}.peopleline span{grid-row:1/3;grid-column:2;align-self:center;font-size:12px;color:#e8d6b0}'+
+'.itemtile{display:flex;flex-direction:column;align-items:flex-start}.itemico{width:46px;height:46px;object-fit:contain;margin:-4px 0 4px -2px;filter:drop-shadow(0 2px 3px #000a)}.itemico.emo{width:auto;height:auto;font-size:26px;margin:0 0 4px}.peopleline{display:grid;grid-template-columns:1fr auto;gap:0 10px}.peopleline small{grid-column:1;color:#b9aa92;font-size:11.5px}.peopleline span{grid-row:1/3;grid-column:2;align-self:center;font-size:12px;color:#e8d6b0}'+
 '</style>');
 
 render();
