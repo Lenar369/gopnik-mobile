@@ -127,7 +127,7 @@ const places=[
 {id:'garage',name:'Гаражи',icon:'🔧',x:902,y:140,text:'Машины, слесарь Валера, следы старой грузовой машины.'},
 {id:'stop',name:'Остановка',icon:'🚌',x:901,y:462,text:'Остановка и расписание. Другие районы появятся позже.'},
 {id:'back',name:'Дальний двор',icon:'🌙',x:196,y:91,text:'Тихие дворы, задний проход и следы неизвестной машины.'}];
-const goods={hat:{name:'Кепка',slot:'Голова',cost:30,stat:'авторитет +1'},sneak:{name:'Кроссовки',slot:'Обувь',cost:60,stat:'ловкость +1'},coat:{name:'Кожанка',slot:'Верх',cost:100,stat:'авторитет +1'},glasses:{name:'Очки',slot:'Аксессуар',cost:40,stat:'смекалка +1'},wrench:{name:'Гаечный ключ',slot:'Инструмент',cost:55,stat:'пригодится в гараже'},bandage:{name:'Бинт',slot:null,cost:20,stat:'+20 HP'}};
+const goods={hat:{name:'Кепка',slot:'Голова',cost:30,stat:'тепло +10%'},sneak:{name:'Кроссовки',slot:'Обувь',cost:60,stat:'удобная обувь'},coat:{name:'Кожанка',slot:'Верх',cost:100,stat:'тепло +25%'},glasses:{name:'Очки',slot:'Аксессуар',cost:40,stat:'солидный вид'},wrench:{name:'Гаечный ключ',slot:'Инструмент',cost:55,stat:'пригодится в гараже'},bandage:{name:'Бинт',slot:null,cost:20,stat:'+20 HP'}};
 const regions=['Пятый квартал','Старый рынок','Вокзальный','Заводской','Гаражный','Речной','Центр города'];
 let g=load(),view='map',focus=null,page=0,message='',noticeAt=0,selectedOrigin='ordinary';let zoom=1,px=0,py=0,viewportW=0,viewportH=0,drag=null,chosenDest=null;
 function load(){
@@ -3479,7 +3479,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '</style>');
 
 /* ===== v6: прокачка — 100 уровней, характеристики, навыки с рангами, умения делом, звания ===== */
-const LVL_MAX=100,STAT_MAX=100;
+const LVL_MAX=100,STAT_MAX=25;
 function xpNeed(n){return Math.round(60*Math.pow(n,1.4))}            // с n на n+1
 const XP_AT=[0,0];for(let n=1;n<LVL_MAX;n++)XP_AT[n+1]=XP_AT[n]+xpNeed(n);
 levelInfo=function(){
@@ -3490,15 +3490,15 @@ levelInfo=function(){
 const TITLES=[[1,'Шкет'],[5,'Пацан'],[10,'Свой'],[18,'Бывалый'],[28,'Уважаемый'],[40,'Авторитет'],[55,'Тёртый калач'],[70,'Хозяин района'],[85,'Легенда района'],[100,'Легенда города']];
 function title(l){let t=TITLES[0][1];TITLES.forEach(([n,s])=>{if(l>=n)t=s});return t}
 function P(){const s=S();if(!s.prog)s.prog={st:[0,0,0,0],train:[0,0,0,0],sk:{},offer:null,picked:0,um:{fight:0,search:0,craft:0,talk:0}};return s.prog}
-function statPointsTotal(l){return 3*(l-1)}
+function statPointsTotal(l){let n=0;for(let i=2;i<=l;i++)n+=(i<=20||i%2===0)?1:0;return n}
 function skillPicksTotal(l){let n=0;for(let i=2;i<=l;i++)if(i<=30?i%3===0:i%5===0)n++;return n}
 function statFree(){const p=P();return statPointsTotal(levelInfo().lvl)-p.st.reduce((a,b)=>a+b,0)}
 function skillFree(){return skillPicksTotal(levelInfo().lvl)-P().picked}
 const STAT_NAMES=['💪 Сила','🏃 Ловкость','🧠 Смекалка','😎 Авторитет'];
-const STAT_HELP=['урон, «наехать», +1,5 кг за каждые 10','меткость, уворот, побег, очки хода, скорость шага','обыск и торг, «заговорить зубы», быстрее крафт','разборки и знакомые, отношения растут быстрее'];
+const STAT_HELP=['урон, «наехать», больше носишь','меткость, уворот, побег, очки хода, скорость шага','обыск и торг, «заговорить зубы», быстрее крафт','разборки и знакомые, отношения растут быстрее'];
 function baseStat(i){return (origins[g.origin]||origins.ordinary||{stats:[2,2,2,2]}).stats[i]||2}
-function statPts(i){const p=P();return Math.min(STAT_MAX,baseStat(i)*10+(p.st[i]||0)+trainLevel(i)*5)}
-stat=function(i){return statPts(i)/10};
+function statPts(i){const p=P();return Math.min(STAT_MAX,baseStat(i)+(p.st[i]||0))}
+stat=function(i){const v=statPts(i);return 2+(v-2)*8/23};   // для формул: 2→2, 25→10
 function trainLevel(i){const t=P().train[i]||0;let l=0,need=6;let left=t;while(left>=need&&l<6){left-=need;l++;need+=6}return l}  // тренировки: до +3
 
 /* ---- навыки ---- */
@@ -3575,7 +3575,7 @@ const _doActionP=doAction;
 doAction=function(id){
  const sid=String(id);
  if(g&&sid.startsWith('pg:')){progAct(sid.split(':'));return}
- if(g&&sid==='train'){const p=P(),i=Math.random()<.5?0:1,l0=trainLevel(i);p.train[i]=(p.train[i]||0)+1;const r=_doActionP(id);if(trainLevel(i)>l0)survNote('🏋️ Тренировки дали плоды: '+STAT_NAMES[i].slice(3)+' +5.');save();return r}
+ 
  return _doActionP(id);
 };
 function progAct(p){
@@ -3598,7 +3598,7 @@ function progPanel(){
  const L=levelInfo(),p=P(),sf=statFree(),kf=skillFree();
  if(kf>0&&!p.offer)makeOffer();
  let h='<div class="line prog-head"><div><b>Уровень '+L.lvl+'</b> · «'+title(L.lvl)+'»'+(L.lvl>=LVL_MAX?' · максимум':'')+'</div><span class="xpbar"><i style="width:'+Math.round(L.progress/L.need*100)+'%"></i></span><small>'+L.progress+' / '+L.need+' опыта до '+(L.lvl+1)+'-го</small></div>';
- h+='<div class="line"><strong>Характеристики</strong>'+(sf>0?' <span class="badge">свободных очков: '+sf+'</span>':'')+'<div class="statgrid">'+[0,1,2,3].map(i=>'<div class="statrow"><b>'+STAT_NAMES[i]+'</b><span class="pips">'+Array.from({length:10},(_,j)=>'<i style="--f:'+Math.max(0,Math.min(1,(statPts(i)-j*10)/10))+'"></i>').join('')+'</span><em>'+statPts(i)+'</em>'+(sf>0&&statPts(i)<STAT_MAX?'<span class="plusw"><button class="plus" data-do="pg:stat:'+i+':1">+1</button>'+(sf>=5?'<button class="plus" data-do="pg:stat:'+i+':5">+5</button>':'')+'</span>':'<span></span>')+'<small>'+STAT_HELP[i]+(trainLevel(i)?' · тренировки +'+trainLevel(i)*5:'')+'</small></div>').join('')+'</div></div>';
+ h+='<div class="line"><strong>Характеристики</strong>'+(sf>0?' <span class="badge">свободных очков: '+sf+'</span>':'')+'<div class="statgrid">'+[0,1,2,3].map(i=>'<div class="statrow"><b>'+STAT_NAMES[i]+'</b><span class="pips">'+Array.from({length:10},(_,j)=>'<i style="--f:'+Math.max(0,Math.min(1,(statPts(i)-j*2.5)/2.5))+'"></i>').join('')+'</span><em>'+statPts(i)+'</em>'+(sf>0&&statPts(i)<STAT_MAX?'<span class="plusw"><button class="plus" data-do="pg:stat:'+i+':1">+1</button>'++'</span>':'<span></span>')+'<small>'+STAT_HELP[i]+'</small></div>').join('')+'</div></div>';
  if(kf>0&&p.offer)h+='<div class="line"><strong>Выбери навык</strong> <span class="badge">'+kf+'</span><div class="skoffer">'+p.offer.map(k=>{const S2=SKILLS[k],r=sk(k)+1;return '<button class="skcard" data-do="pg:pick:'+k+'"><span>'+S2.ico+'</span><b>'+S2.n+' '+'★'.repeat(r)+'</b><small>'+S2.b+' · '+S2.d(r)+'</small></button>'}).join('')+'</div></div>';
  const mine=Object.keys(p.sk).filter(k=>p.sk[k]);
  h+='<div class="line"><strong>Навыки</strong><div class="sklist">'+(mine.length?mine.map(k=>'<span>'+SKILLS[k].ico+' '+SKILLS[k].n+' '+'★'.repeat(p.sk[k])+'<small>'+SKILLS[k].d(p.sk[k])+'</small></span>').join(''):'<small>Пока нет — первый на 3-м уровне, дальше каждые 3 (после 30-го — каждые 5).</small>')+'</div></div>';
