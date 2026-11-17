@@ -2065,7 +2065,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 
 /* ===== v6: правки 17.11 — без левой панели в горизонтали, карта города без окна «Город» ===== */
 function cityBar(){
- const s=S(),t=s.trip;
+ const s=S(),t=s.trip;if(g.fight)return '';
  if(!t&&s.atWild&&WILD[s.atWild])return '<div class="citybar"><span>📍 '+esc(WILD[s.atWild].name)+'</span><button data-do="surv:wpin:'+s.atWild+'">'+WILD[s.atWild].icon+' Осмотреться</button></div>';
  if(!t)return '<div class="citybar"><button data-do="surv:cityclose">↩ В район: '+esc(regions[g.region])+'</button></div>';
  if(t.ev)return '';
@@ -2222,7 +2222,6 @@ function search(k){
  // риск
  const r=Math.random();
  if(r<.08){g.hp=Math.max(1,g.hp-8);s.nerves=clampN(s.nerves-4);announce('🔎 '+P.name+': порезался о ржавое железо, −8 HP. Ничего не нашёл.');save();render();return}
- if(r<.13){s.nerves=clampN(s.nerves-6);announce('🔎 '+P.name+': сторож шуганул тебя. Пришлось уйти с пустыми руками.');save();render();return}
  let rolls=2+Math.floor(Math.random()*3)+(has('crowbar')?1:0)+(light?1:0)-(night&&!light?1:0);
  const pool=[];for(const[id,w]of Object.entries(P.t))for(let i=0;i<w;i++)pool.push(id);
  const got={};let lost=0;
@@ -2283,7 +2282,7 @@ doAction=function(id){
  if(g&&sid.startsWith('surv:drop:')){dropMat(sid.slice(10));return}
  if(g&&sid.startsWith('surv:view:')){view=sid.slice(10);focus=null;page=0;render();return}
  const r=_doActionB(id);
- if(g&&!wasFight&&g.fight){const w=g.equip?.['Оружие'];if(w&&WEAPON[w]){g.fight.hp=Math.max(10,g.fight.hp-WEAPON[w]);announce('🗡️ '+goods[w].name+' в руке — противник сразу осторожнее (−'+WEAPON[w]+' к его здоровью).');save();render()}}
+ // оружие теперь действует в каждом ударе (модуль драк)
  return r;
 };
 // дом: обогреватель, окна, радио, запас топлива
@@ -2476,6 +2475,232 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.drawbanner{display:block;width:100%;aspect-ratio:1032/581;object-fit:cover;border-bottom:1px solid #62482f}'+
 '.land .drawer .drawbanner{max-height:120px}'+
 '</style>');
+
+/* ===== v6: драки — разные противники, оружие, предметы в бою, последствия, уважение района ===== */
+// n — сколько человек, hp — здоровье каждого, dmg — сила удара, acc — меткость, talk — можно договориться (сложность), pay — откуп ₽
+const ENEMY={
+ shpana:{name:'Шпана',icon:'🧢',n:1,hp:40,dmg:[4,8],acc:.7,talk:2,pay:15,run:.65,xp:20,resp:2,loot:{money:[5,20],items:{cigs:2,food_bread:1}},style:[.3,.5,.2]},
+ drunk:{name:'Пьяный мужик',icon:'🍾',n:1,hp:35,dmg:[5,11],acc:.5,talk:1,pay:10,run:.8,xp:15,resp:1,loot:{money:[3,15],items:{drink_vodka:2,cigs:1}},style:[.2,.4,.4]},
+ gop3:{name:'Компания гопников',icon:'🚬',n:3,hp:30,dmg:[3,7],acc:.65,talk:3,pay:30,run:.5,xp:45,resp:5,loot:{money:[15,45],items:{cigs:2,drink_beer:2}},style:[.4,.4,.2]},
+ dogs:{name:'Стая собак',icon:'🐕',n:2,hp:22,dmg:[4,9],acc:.75,talk:0,pay:0,run:.4,xp:25,resp:1,loot:{money:[0,0],items:{}},style:[.6,.3,.1],bite:true},
+ watchman:{name:'Сторож',icon:'🔦',n:1,hp:50,dmg:[6,11],acc:.6,talk:2,pay:20,run:.7,xp:25,resp:0,loot:{money:[10,30],items:{drink_tea:1,food_bread:1}},style:[.2,.6,.2]},
+ bum:{name:'Бродяга',icon:'🧥',n:1,hp:28,dmg:[3,7],acc:.55,talk:1,pay:5,run:.8,xp:12,resp:0,loot:{money:[0,8],mats:{rags:2,bottle:2,can:1,matches:1}},style:[.3,.4,.3]},
+ bratki:{name:'Братки',icon:'🕶️',n:2,hp:60,dmg:[10,17],acc:.75,talk:5,pay:80,run:.35,xp:90,resp:10,loot:{money:[60,120],items:{cigs:2,drink_vodka:1}},style:[.3,.3,.4]}
+};
+const INTENT=[['fast','финтит — частые слабые удары','лучше блок'],['normal','целится в голову','лучше блок'],['heavy','замахивается со всей силы','лучше увернуться']];
+const WEAPON_FX={shiv:{dmg:4,bleed:.35,name:'режет'},pipe_club:{dmg:5},knuckles:{dmg:3,acc:.1},nail_bat:{dmg:7,stun:.3}};
+function stat(i){return (origins[g.origin]||origins.ordinary||{stats:[2,2,2,2]}).stats[i]||2}
+function resp(){const s=S();s.resp=s.resp||{};return s.resp[g.region||0]||0}
+function addResp(n){const s=S();s.resp=s.resp||{};const r=g.region||0;s.resp[r]=Math.max(-20,Math.min(50,(s.resp[r]||0)+n))}
+function injured(){const s=S();return s.injury&&s.injury>absMin()}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function pick(o){const e=[];for(const[k,w]of Object.entries(o||{}))for(let i=0;i<w;i++)e.push(k);return e[Math.floor(Math.random()*e.length)]}
+function nextIntent(E){const r=Math.random(),st=E.style;return r<st[0]?0:r<st[0]+st[1]?1:2}
+
+function startFight(type,opt){
+ const E=ENEMY[type];if(!E||!g)return;
+ const s=S();if(s.trip){s.trip.paused=true;s.trip.ev=null;clearTimeout(tripTimer)}
+ g.fight={type,m:Array(E.n).fill(E.hp),max:E.hp,intent:nextIntent(E),escape:0,bleed:0,stun:0,brave:0,back:opt&&opt.back!==undefined?opt.back:focus,onWin:opt&&opt.onWin||null,story:!!(opt&&opt.story),hp:E.hp*E.n};
+ focus='fight';page=0;view='map';
+ announce(E.icon+' '+(opt&&opt.text||E.name+' — драки не избежать.'));save();render();
+}
+function alive(){return g.fight.m.filter(h=>h>0).length}
+function foeHpText(){const F=g.fight,E=ENEMY[F.type];return F.m.map((h,i)=>(E.n>1?(i+1)+': ':'')+(h>0?h+'/'+F.max:'лежит')).join(' · ')}
+function heroHit(kind){
+ const F=g.fight,E=ENEMY[F.type],s=S();
+ const cost={fast:8,normal:12,heavy:22}[kind],chance={fast:.88,normal:.72,heavy:.52}[kind],pw={fast:[5,9],normal:[9,14],heavy:[15,23]}[kind];
+ if(g.stamina<cost){announceAndRender('Не хватает сил на удар — блокируй или увернись, силы вернутся.');return false}
+ g.stamina-=cost;
+ const w=g.equip?.['Оружие'],W=WEAPON_FX[w]||{};
+ const acc=chance+(W.acc||0)+(stat(1)-2)*.03-(F.brave>0?.08:0);
+ const ti=F.m.findIndex(h=>h>0);
+ if(Math.random()<acc){
+  let d=rnd(pw[0],pw[1])+(W.dmg||0)+(stat(0)-2)*2+(F.brave>0?3:0);
+  if(injured())d=Math.round(d*.7);
+  d=Math.max(1,d);F.m[ti]=Math.max(0,F.m[ti]-d);
+  let t='Ты: '+({fast:'быстрый',normal:'обычный',heavy:'сильный'}[kind])+' удар'+(w?' ('+goods[w].name.toLowerCase()+')':'')+' — '+d+'.';
+  if(F.m[ti]>0&&W.bleed&&Math.random()<W.bleed){F.bleed=3;t+=' Кровь пошла.'}
+  if(F.m[ti]>0&&W.stun&&kind!=='fast'&&Math.random()<W.stun){F.stun=1;t+=' Противник поплыл!'}
+  if(F.m[ti]===0)t+=E.n>1?' Один лёг.':'';
+  announce(t);
+ }else announce('Ты: промах (−'+cost+' сил).');
+ return true;
+}
+function foeTurn(def){
+ const F=g.fight,E=ENEMY[F.type];if(!F)return;
+ if(F.bleed>0){const ti=F.m.findIndex(h=>h>0);if(ti>=0){F.m[ti]=Math.max(1,F.m[ti]-4);F.bleed--;announce('Кровотечение: −4 противнику.')}}
+ if(F.stun>0){F.stun=0;announce(E.name+' приходит в себя и пропускает ход.');F.intent=nextIntent(E);return}
+ const kind=INTENT[F.intent][0];let total=0,parts=[];
+ const n=alive();
+ for(let i=0;i<n;i++){
+  const mult={fast:.7,normal:1,heavy:1.6}[kind];
+  if(Math.random()>E.acc+(kind==='fast'?.1:kind==='heavy'?-.1:0)){parts.push('мимо');continue}
+  let d=Math.round(rnd(E.dmg[0],E.dmg[1])*mult);
+  if(def==='block')d=Math.round(d*(kind==='heavy'?.6:.35));
+  if(def==='dodge'){const ok=Math.random()<(kind==='heavy'?.8:kind==='normal'?.55:.35)+(stat(1)-2)*.04;if(ok){parts.push('увернулся');continue}}
+  total+=d;parts.push('−'+d);
+  if(E.bite&&d>0&&Math.random()<.2){S().injury=absMin()+12*60;parts.push('укус')}
+ }
+ g.hp=Math.max(0,g.hp-total);
+ g.stamina=Math.min(100,g.stamina+(def==='block'?18:def==='dodge'?10:5));
+ if(F.brave>0)F.brave--;
+ announce(E.icon+' '+E.name+' '+INTENT[F.intent][1].split(' — ')[0]+': '+parts.join(', ')+'.'+(total?' У тебя '+g.hp+' HP.':''));
+ F.intent=nextIntent(E);
+}
+function fightEnd(result){
+ const F=g.fight,E=ENEMY[F.type],s=S();g.fight=null;
+ const back=F.back;focus=s.cityMode?null:(back&&back!=='fight'?back:null);page=0;
+ if(result==='win'){
+  let money=rnd(E.loot.money[0],E.loot.money[1]),got=[];
+  if(money){g.money+=money;got.push(money+' ₽')}
+  const it=pick(E.loot.items);if(it&&Math.random()<.6&&g.inventory.length<20){g.inventory.push(it);got.push(supName(it))}
+  if(E.loot.mats){for(let i=0;i<2;i++){const m=pick(E.loot.mats);if(m){addLoot(m);got.push(MAT[m].name)}}}
+  addXP(E.xp,'победа в драке');addResp(E.resp);s.nerves=clampN(s.nerves+5);
+  announce('💪 Отбился: '+E.name+'.'+(got.length?' Добыча: '+got.join(', ')+'.':'')+(E.resp?' Уважение района +'+E.resp+'.':''));
+  if(F.story)g.facts.dispute=true;
+  if(F.onWin&&F.onWin.startsWith('loot:')){const k=F.onWin.slice(5),L=lootState(k);L.ch=Math.min(3,L.ch+1);SEARCH_SAFE=true;try{search(k)}finally{SEARCH_SAFE=false}}
+ }else if(result==='lose'){
+  g.hp=Math.max(g.hp,12);g.stamina=Math.max(g.stamina,20);
+  const lost=Math.round(g.money*.3);g.money-=lost;let item='';
+  if(Math.random()<.4&&g.inventory.length){const i=Math.floor(Math.random()*g.inventory.length);item=anyName(g.inventory[i]);g.inventory.splice(i,1)}
+  s.injury=absMin()+24*60;s.nerves=clampN(s.nerves-15);addResp(-2);advance(40);
+  announce('🤕 Избили. '+(lost?'Забрали '+lost+' ₽':'Денег не нашли')+(item?' и '+item.toLowerCase():'')+'. Ушиб на сутки — удары слабее. Уважение района −2.');
+  if(F.story)g.facts.dispute=true;
+ }else if(result==='run'){s.nerves=clampN(s.nerves-4);addResp(-1);announce('🏃 Ушёл от драки. Уважение района −1.');if(F.story)g.facts.dispute=true}
+ else if(result==='talk'){addResp(1);s.nerves=clampN(s.nerves+2);announce('🗣️ Разошлись миром.');if(F.story)g.facts.dispute=true}
+ else if(result==='pay'){announce('💸 Откупился.');if(F.story)g.facts.dispute=true}
+ save();render();
+}
+function fightAct(a,arg){
+ const F=g.fight;if(!F||!F.type)return;const E=ENEMY[F.type],s=S();
+ if(a==='hit'){if(!heroHit(arg)){return}if(!alive())return fightEnd('win');foeTurn(null)}
+ else if(a==='block'||a==='dodge')foeTurn(a);
+ else if(a==='item'){
+  const i=g.inventory.indexOf(arg);if(i<0)return;g.inventory.splice(i,1);
+  if(arg==='bandage'||arg==='med_bandage'){g.hp=Math.min(100,g.hp+20);announce('Перевязался на ходу: +20 HP.')}
+  else if(arg==='drink_vodka'){F.brave=3;s.nerves=clampN(s.nerves+10);announce('Хлебнул для храбрости: удары сильнее, но мажешь чаще (3 хода).')}
+  else if(arg==='cigs'){g.stamina=Math.min(100,g.stamina+15);s.nerves=clampN(s.nerves+5);announce('Закурил, отдышался: силы +15.')}
+  foeTurn(null);
+ }
+ else if(a==='talk'){
+  const r=resp(),ch=Math.max(.05,Math.min(.9,.35+(stat(3)-E.talk)*.12+(stat(2)-2)*.04+r*.02));
+  if(Math.random()<ch)return fightEnd('talk');
+  announce('Не вышло договориться: «Ты чё, самый умный?»');foeTurn(null);
+ }
+ else if(a==='pay'){if(g.money<E.pay){announceAndRender('Столько денег нет.');return}g.money-=E.pay;return fightEnd('pay')}
+ else if(a==='run'){
+  F.escape++;const ch=Math.min(.95,E.run+(stat(1)-2)*.06+F.escape*.1-(overload()?.25:0));
+  if(Math.random()<ch)return fightEnd('run');
+  announce('Не удалось убежать'+(overload()?' — тяжёлый рюкзак тянет назад':'')+'.');foeTurn(null);
+ }
+ if(g.fight&&g.hp<=0)return fightEnd('lose');
+ if(g.fight&&!alive())return fightEnd('win');
+ save();render();
+}
+let SEARCH_SAFE=false;
+
+/* ---- окно драки ---- */
+const _actionsForF=actionsFor;
+actionsFor=function(id){
+ if(id==='fight'&&g&&!g.fight)return [];
+ if(id!=='fight'||!g||!g.fight||!g.fight.type)return _actionsForF(id);
+ const F=g.fight,E=ENEMY[F.type],a=[];
+ a.push({name:'👊 Быстрый удар',doit:'fx:hit:fast',sub:'−8 сил · точный',alt:false});
+ a.push({name:'🥊 Обычный удар',doit:'fx:hit:normal',sub:'−12 сил',alt:false});
+ a.push({name:'💥 Сильный удар',doit:'fx:hit:heavy',sub:'−22 сил · мажет чаще',alt:false});
+ const hint=INTENT[F.intent][0];
+ a.push({name:'🛡️ Блок',doit:'fx:block',sub:'+18 сил'+(hint!=='heavy'?' · сейчас выгодно':''),alt:hint!=='heavy'});
+ a.push({name:'💨 Увернуться',doit:'fx:dodge',sub:'+10 сил'+(hint==='heavy'?' · сейчас выгодно':''),alt:hint==='heavy'});
+ ['bandage','med_bandage','drink_vodka','cigs'].forEach(x=>{if(g.inventory.includes(x))a.push({name:({bandage:'🩹 Перевязаться',med_bandage:'🩹 Перевязаться',drink_vodka:'🍾 Глотнуть водки',cigs:'🚬 Закурить'})[x],doit:'fx:item:'+x,sub:({bandage:'+20 HP',med_bandage:'+20 HP',drink_vodka:'храбрость на 3 хода',cigs:'+15 сил'})[x]+' · тратит ход',alt:false})});
+ if(E.talk)a.push({name:'🗣️ Договориться',doit:'fx:talk',sub:'Авторитет и уважение района',alt:false});
+ if(E.pay)a.push({name:'💸 Откупиться '+E.pay+' ₽',doit:'fx:pay',sub:g.money>=E.pay?'Без драки':'Не хватает денег',alt:false});
+ a.push({name:'🏃 Убежать',doit:'fx:run',sub:F.type==='dogs'?'От собак трудно':'Ловкость помогает',alt:false});
+ return a;
+};
+const _infoForF=infoFor;
+infoFor=function(id){
+ if(id==='fight'&&g&&!g.fight)return '';
+ if(id!=='fight'||!g||!g.fight||!g.fight.type)return _infoForF(id);
+ const F=g.fight,E=ENEMY[F.type],w=g.equip?.['Оружие'];
+ return E.icon+' '+E.name+': '+foeHpText()+'. Сейчас '+INTENT[F.intent][1]+' ('+INTENT[F.intent][2]+'). Ты: ❤ '+g.hp+' · ⚡ '+g.stamina+(w?' · '+goods[w].name:' · без оружия')+(injured()?' · ушиб':'')+(F.brave>0?' · храбрость':'')+(F.bleed>0?' · у него кровь':'')+'.';
+};
+const _drawDrawerF=drawDrawer;
+drawDrawer=function(){
+ if(!g||focus!=='fight'||!g.fight||!g.fight.type)return _drawDrawerF();
+ const F=g.fight,E=ENEMY[F.type],acts=actionsFor('fight');
+ const bars=F.m.map(h=>'<span class="fbar"><i style="width:'+Math.round(h/F.max*100)+'%"></i></span>').join('');
+ const btn=b=>'<button class="act '+(b.alt?'alt':'')+'" data-do="'+esc(b.doit)+'">'+esc(b.name)+(b.sub?'<small>'+esc(b.sub)+'</small>':'')+'</button>';
+ return '<aside class="drawer fightdrawer"><div class="drawer-head"><strong>'+E.icon+' Драка: '+esc(E.name)+'</strong></div>'+
+  '<div class="fstat"><div><b>'+esc(E.name)+'</b>'+bars+'</div><div><b>Ты</b><span class="fbar me"><i style="width:'+g.hp+'%"></i></span><span class="fbar st"><i style="width:'+g.stamina+'%"></i></span></div></div>'+
+  '<div class="description">'+esc(infoFor('fight'))+'</div><div class="fightgrid">'+acts.map(btn).join('')+'</div></aside>';
+};
+
+/* ---- точки входа ---- */
+const _doActionF=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('fx:')){const p=sid.split(':');fightAct(p[1],p[2]);return}
+ if(g&&sid==='fight'&&!g.fight){startFight('shpana',{story:true,back:'play',text:'Шпана с площадки не хочет расходиться. Драка!'});return}
+ if(g&&sid==='close'&&g.fight&&g.fight.type)return;
+ return _doActionF(id);
+};
+// дорога: собаки и гопники — настоящая драка, новые встречи
+Object.assign(ROAD_EVENTS,{
+ drunk:{title:'🍾 Пьяный у ларька',text:()=>'Мужик в расстёгнутой куртке перегородил дорогу: «Э, братан, займи червонец… Ты чё, не уважаешь?»',opts:[['Дать 10 ₽','drunk-pay','Отстанет'],['Обойти','drunk-fight','Может полезть']]},
+ bratki:{title:'🕶️ Братки у «девятки»',text:()=>'У тонированной «девятки» курят двое в кожанках. Один кивает тебе: «Подойди-ка».',opts:[['Подойти','bratki-go','Опасно'],['Свернуть во дворы','bratki-avoid','+15 мин']]}
+});
+ROAD_EVENTS.dogs.opts=[['Обойти стороной','dogs-around','+20 мин, силы'],['Отогнать','dogs-fight2','Драка со стаей']];
+const _pickRoadEventF=pickRoadEvent;
+pickRoadEvent=function(){const e=_pickRoadEventF();const r=Math.random();if(r<.12)return {k:'drunk'};if(r<.17&&survNight())return {k:'bratki'};return e};
+const _roadAnswerF=roadAnswer;
+roadAnswer=function(a){
+ const s=S(),t=s.trip;
+ const fightNow=(type,txt)=>{if(t)t.ev=null;startFight(type,{back:null,text:txt})};
+ if(a==='dogs-fight2')return fightNow('dogs','Стая кидается на тебя!');
+ if(a==='gop-bold'&&t&&t.ev){if(Math.random()<.5){t.ev=null;s.nerves=clampN(s.nerves+4);announce('Прошёл не оглядываясь — не тронули.');save();render();scheduleWalk();return}return fightNow('gop3','«Э, куда пошёл?» — компания встаёт с корточек.')}
+ if(a==='drunk-pay'){if(g.money<10){announceAndRender('Нет десятки.');return}g.money-=10;t.ev=null;announce('Отдал 10 ₽, мужик полез обниматься. Пошёл дальше.');save();render();scheduleWalk();return}
+ if(a==='drunk-fight'){if(Math.random()<.5){t.ev=null;announce('Обошёл — мужик что-то кричал вслед.');save();render();scheduleWalk();return}return fightNow('drunk','«Ты куда, я с тобой разговариваю!» — мужик хватает за рукав.')}
+ if(a==='bratki-go'){if(resp()>=15){t.ev=null;g.money+=20;addResp(1);announce('«А, это ты. Слышали про тебя». Дали 20 ₽ «на сигареты».');save();render();scheduleWalk();return}return fightNow('bratki','«Чё смотришь? Карманы выворачивай».')}
+ if(a==='bratki-avoid'){t.ev=null;s.mode='foot';try{advance(15)}finally{s.mode=null}announce('Свернул во дворы, обошёл.');save();render();scheduleWalk();return}
+ return _roadAnswerF(a);
+};
+// обыск: вместо «сторож шуганул» — встреча
+const _searchF=search;
+search=function(k){
+ const P=LOOT[k];
+ if(P&&!SEARCH_SAFE&&lootState(k).ch>0&&S().energy>=8&&Math.random()<.14){
+  const type=k.startsWith('wild_')?(k==='wild_dump'||k==='wild_heat'?'bum':Math.random()<.5?'dogs':'bum'):(['q5_attic','q5_basement'].includes(k)?'bum':'watchman');
+  startFight(type,{onWin:'loot:'+k,text:type==='watchman'?'Сторож: «А ну стоять! Чего тут шаришь?»':type==='bum'?'Здесь уже кто-то живёт: «Это моё, вали отсюда!»':'Из темноты выходят собаки.'});
+  return;
+ }
+ return _searchF(k);
+};
+// ночью в районе могут прицепиться (реже, если уважают)
+let lastFocusF=null;
+const _renderF=render;
+render=function(){
+ if(g&&!g.fight&&focus&&focus!==lastFocusF&&view==='map'&&!S().cityMode&&survNight()&&!survIndoor()&&(dspot(focus)||places.some(p=>p.id===focus))){
+  lastFocusF=focus;
+  const ch=.07*Math.max(.2,1-resp()/30);
+  if(Math.random()<ch){startFight(Math.random()<.6?'shpana':'drunk',{text:'Ночью к тебе цепляются: «Есть закурить? А если найду?»'});return}
+ }
+ if(g)lastFocusF=focus;
+ _renderF();
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.fightdrawer{display:flex;flex-direction:column}.fightdrawer .description{max-height:none!important;overflow:visible;flex:none;font-size:12.5px;line-height:1.35;padding-top:4px;padding-bottom:4px}.land .fightdrawer .description{font-size:11.5px}'+
+'.fstat{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 12px 0;font-size:12px}.fstat>div{display:flex;flex-direction:column;gap:3px}'+
+'.fbar{display:block;height:7px;border-radius:4px;background:#0006;overflow:hidden}.fbar i{display:block;height:100%;background:linear-gradient(90deg,#c0392b,#e67e22)}.fbar.me i{background:linear-gradient(90deg,#27ae60,#9bd36a)}.fbar.st i{background:linear-gradient(90deg,#d4a017,#f5d76e)}'+
+'.fightgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;padding:6px 8px 8px;overflow:auto;min-height:0}.fightgrid .act{min-height:38px;padding:5px 7px;font-size:12.5px}.fightgrid .act small{font-size:10px}'+
+'.land .fightgrid{grid-template-columns:1fr 1fr}'+
+'</style>');
+// уважение — в «Персонаже»
+const _viewPanelF=viewPanel;
+viewPanel=function(){
+ let h=_viewPanelF();
+ if(g&&view==='hero'){const s=S(),r=s.resp||{};h=h.replace('</div></section>','<div class="line"><strong>Уважение по районам</strong><div>'+regions.map((n,i)=>n+': '+(r[i]||0)).join(' · ')+'</div>'+(injured()?'<div>🤕 Ушиб — удары слабее</div>':'')+'</div></div></section>')}
+ return h;
+};
 
 render();
 })();</script></body></html>
