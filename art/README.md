@@ -40,7 +40,7 @@
 | Файл | Что | Статус |
 |---|---|---|
 | [REQUEST_01_survival_core.md](REQUEST_01_survival_core.md) | Иконки потребностей, еда, медицина, тепло, экран смерти | ✅ 32 из 32 (все изображения готовы, Claude может внедрять) |
-| [REQUEST_02_loot_places.md](REQUEST_02_loot_places.md) | 17 мест для вылазок за хабаром | 🔄 2 из 17 (подвал и чердак утверждены) |
+| [REQUEST_02_loot_places.md](REQUEST_02_loot_places.md) | 17 мест для вылазок за хабаром | 🔄 16 из 17 (осталась крыша; 52 новых сцены и альтернативы загружены) |
 | [REQUEST_03_ui_landscape.md](REQUEST_03_ui_landscape.md) | Интерфейс для горизонтального экрана: портреты, 6 кнопок меню, рамки (образец в `reference/`; кнопок «Торговля» и «Бои» не делать) | ⏳ |
 | [REQUEST_04_city_map.md](REQUEST_04_city_map.md) | Общая карта города, лето + зима (схема в `reference/city_schema*.jpg`) | ⏳ |
 | [REQUEST_05_scrap_craft.md](REQUEST_05_scrap_craft.md) | Хабар (22 материала) и самодельные вещи (22) для крафта | ⏳ |
