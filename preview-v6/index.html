@@ -1827,7 +1827,7 @@ function absMin(){return (g.day-1)*1440+g.minute}
 
 /* стоимость поездок — по настоящему расстоянию на карте */
 cityCost=function(destination,method){
- const s=S(),from=s.trip?[s.trip.x,s.trip.y]:CITY_XY[g.region||0],km=cityKm(from,CITY_XY[destination]);
+ const from=heroXY(),km=cityKm(from,tgtXY(destination));
  if(method==='foot')return {minutes:Math.round(km*12)+5,cost:0,fuel:0,wear:0,km};
  if(method==='bus')return {minutes:12+Math.round(km*3.2),cost:6+Math.round(km),fuel:0,wear:0,km};
  if(method==='taxi')return {minutes:6+Math.round(km*2.2),cost:20+Math.round(km*4),fuel:0,wear:0,km};
@@ -1856,15 +1856,17 @@ function weatherFx(){const w=weatherNow();return w?'<div class="wxfx wx-'+w+'" a
 /* ---------- экран карты города ---------- */
 function cityOn(){return !!(g&&S().cityMode)}
 function openCity(){const s=S();s.cityMode=true;view='map';focus=s.trip&&s.trip.ev?'trip':null;page=0;root.dataset.initializedMap='';cityFresh=true;save();render()}
-function closeCity(){const s=S();if(s.trip)return;s.cityMode=false;view='map';focus=null;page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';save();render()}
+function closeCity(){const s=S();if(s.trip||s.atWild)return;s.cityMode=false;view='map';focus=null;page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';save();render()}
 let cityFresh=false,tripTimer=0;
-function heroXY(){const s=S();return s.trip?[s.trip.x,s.trip.y]:CITY_XY[g.region||0]}
+function heroXY(){const s=S();return s.trip?[s.trip.x,s.trip.y]:s.atWild&&WILD[s.atWild]?WILD[s.atWild].xy:CITY_XY[g.region||0]}
+function tgtXY(to){return typeof to==='string'?WILD[to.slice(2)].xy:CITY_XY[to]}
+function tgtName(to){return typeof to==='string'?WILD[to.slice(2)].name:regions[to]}
 function cityWorld(){
  const s=S(),[hx,hy]=heroXY(),t=s.trip;
  let h='<img class="mapart cityart" src="'+cityArt()+'" alt="" draggable="false">';
- if(t){const a=[hx*CMS,hy*CMS],b=[CITY_XY[t.to][0]*CMS,CITY_XY[t.to][1]*CMS];
+ if(t){const a=[hx*CMS,hy*CMS],b=[tgtXY(t.to)[0]*CMS,tgtXY(t.to)[1]*CMS];
   h+='<svg class="cityroute" viewBox="0 0 1032 '+CMWH+'"><line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/></svg>'}
- h+=CITY_XY.map((p,i)=>'<button class="pin citypin '+(i===(t?t.to:g.region)?'active':'')+'" data-do="surv:cpin:'+i+'" data-name="'+esc(regions[i])+'" style="left:'+Math.round(p[0]*CMS)+'px;top:'+Math.round(p[1]*CMS)+'px">'+CITY_ICON[i]+'</button>').join('');
+ h+=CITY_XY.map((p,i)=>'<button class="pin citypin '+(i===(t?t.to:s.atWild?-1:g.region)?'active':'')+'" data-do="surv:cpin:'+i+'" data-name="'+esc(regions[i])+'" style="left:'+Math.round(p[0]*CMS)+'px;top:'+Math.round(p[1]*CMS)+'px">'+CITY_ICON[i]+'</button>').join('');
  h+='<div class="cityhero'+(t&&!t.paused?' walking':'')+'" style="left:'+Math.round(hx*CMS+(t?0:30))+'px;top:'+Math.round(hy*CMS-(t?0:14))+'px">🚶</div>';
  return h;
 }
@@ -1888,18 +1890,18 @@ applyMap=function(){
 /* ---------- путь пешком ---------- */
 const STEP_MIN=10;
 function startWalk(d){
- const s=S();d=Number(d);
- if(!(d>=0&&d<=6))return;
- if(!s.trip&&d===g.region){announceAndRender('Ты уже здесь.');return}
+ const s=S();d=String(d).startsWith('w:')?String(d):Number(d);
+ if(typeof d==='number'?!(d>=0&&d<=6):!WILD[d.slice(2)])return;
+ if(!s.trip&&(s.atWild?d==='w:'+s.atWild:d===g.region)){announceAndRender('Ты уже здесь.');return}
  const [x,y]=heroXY();
- s.trip={to:d,x,y,paused:false,ev:null,lastEv:absMin(),from:s.trip?s.trip.from:g.region};
+ s.trip={to:d,x,y,paused:false,ev:null,lastEv:absMin(),from:s.trip?s.trip.from:s.atWild?'w:'+s.atWild:g.region};s.atWild=null;
  s.cityMode=true;view='map';focus=null;page=0;save();render();scheduleWalk();
 }
 function scheduleWalk(){clearTimeout(tripTimer);const s=g&&S();if(!s||!s.trip||s.trip.paused||s.trip.ev)return;tripTimer=setTimeout(walkStep,window.__WALK_MS||WALK_MS)}
 let WALK_MS=650;
 function walkStep(){
  tripTimer=0;if(!g)return;const s=S(),t=s.trip;if(!t||t.paused||t.ev)return;
- const goal=CITY_XY[t.to],dx=goal[0]-t.x,dy=goal[1]-t.y,dist=Math.hypot(dx,dy);
+ const goal=tgtXY(t.to),dx=goal[0]-t.x,dy=goal[1]-t.y,dist=Math.hypot(dx,dy);
  const pxPerStep=STEP_MIN/12/(KM_PX*ROUTE_K)*(s.energy<15?.7:1);   // 5 км/ч с учётом петляния дорог
  s.mode='foot';try{advance(STEP_MIN)}finally{s.mode=null}
  if(!s.trip||s.pendingDeath||g.hp<=0){save();render();return}
@@ -1911,7 +1913,8 @@ function walkStep(){
  save();render();scheduleWalk();
 }
 function arrive(d,how){
- const s=S();clearTimeout(tripTimer);const old=regions[s.trip?.from??g.region];
+ if(typeof d==='string'){arriveWild(d.slice(2),how);return}
+ const s=S();clearTimeout(tripTimer);const old=tgtName(s.trip?.from??g.region);s.atWild=null;
  s.trip=null;s.cityMode=false;g.region=d;g.loc=d===0?'stop':DISTRICTS[d].spots.find(x=>x.role==='travel')?.id||DISTRICTS[d].spots[0].id;
  view='map';focus=null;page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';
  announce('Дошёл: '+old+' → '+regions[d]+' ('+how+').');save();render();
@@ -1924,7 +1927,7 @@ const ROAD_EVENTS={
  dogs:{title:'🐕 Бродячие собаки',text:()=>'У гаражей стая собак. Вожак уже рычит и идёт навстречу.',opts:[['Обойти стороной','dogs-around','+20 мин, силы'],['Отогнать палкой','dogs-fight','Риск укуса']]},
  gop:{title:'🚬 Компания на пустыре',text:()=>'Трое на корточках у теплотрассы: «Слышь, есть закурить?»',opts:[['Угостить сигаретой','gop-cig','Нужны сигареты'],['Отдать 10 ₽','gop-pay','Без проблем'],['Пройти уверенно','gop-bold','Как повезёт']]},
  warm:{title:'🏢 Открытый подъезд',text:()=>'Дверь подъезда подпёрта кирпичом, внутри тепло от батареи.',opts:[['Погреться 20 минут','warm-in','Тепло +'],['Идти дальше','skip','']]},
- ride:{title:'🚗 Попутка',text:t=>'Рядом тормозит «копейка». Водитель: «Куда путь держишь? До района «'+regions[t.to]+'» подкину за 15 ₽».',opts:[['Сесть за 15 ₽','ride-yes','Быстро'],['Отказаться','skip','']]},
+ ride:{title:'🚗 Попутка',text:t=>'Рядом тормозит «копейка». Водитель: «Куда путь держишь? До «'+tgtName(t.to)+'» подкину за 15 ₽».',opts:[['Сесть за 15 ₽','ride-yes','Быстро'],['Отказаться','skip','']]},
  shelter:{title:'☂️ Навес остановки',text:()=>weatherNow()==='snow'?'Метёт так, что не видно дороги. Рядом — пустая остановка с навесом.':'Льёт как из ведра. Рядом — пустая остановка с навесом.',opts:[['Переждать 30 минут','shelter-wait','Тепло тратится медленнее'],['Идти дальше','skip','']]}
 };
 function pickRoadEvent(){
@@ -1962,9 +1965,9 @@ actionsFor=function(id){
  if(id==='cityinfo')return [{name:'↩ Вернуться в район',doit:'surv:cityclose',sub:regions[g.region],alt:true}];
  if(String(id).startsWith('cityd:')){
   const d=+id.slice(6);
-  if(!t&&d===g.region)return [{name:'🚏 Войти в район',doit:'surv:cityclose',sub:'Ты здесь',alt:true}];
+  if(!t&&!s.atWild&&d===g.region)return [{name:'🚏 Войти в район',doit:'surv:cityclose',sub:'Ты здесь',alt:true}];
   const c=cityCost(d,'foot'),a=[{name:'🚶 Идти пешком',doit:'surv:walk:'+d,sub:c.km.toFixed(1)+' км · ~'+c.minutes+' мин · события в пути',alt:true}];
-  if(!t){a.push({name:'🚌 Автобус',doit:'travel:'+d+':bus',sub:cityCost(d,'bus').minutes+' мин · '+cityCost(d,'bus').cost+' ₽',alt:false});
+  if(!t&&!s.atWild){a.push({name:'🚌 Автобус',doit:'travel:'+d+':bus',sub:cityCost(d,'bus').minutes+' мин · '+cityCost(d,'bus').cost+' ₽',alt:false});
    a.push({name:'🚕 Такси',doit:'travel:'+d+':taxi',sub:cityCost(d,'taxi').minutes+' мин · '+cityCost(d,'taxi').cost+' ₽',alt:false});
    if(canCarTravel(d))a.push({name:'🚗 На своей машине',doit:'travel:'+d+':car',sub:cityCost(d,'car').minutes+' мин · '+cityCost(d,'car').fuel+' л',alt:false});}
   a.push({name:'← Назад',doit:'surv:cityback',sub:'',alt:false});
@@ -1972,8 +1975,8 @@ actionsFor=function(id){
  }
  if(id==='trip'&&t){
   if(t.ev){const E=ROAD_EVENTS[t.ev.k];return E.opts.map(([n,k,sub])=>({name:n,doit:'surv:road:'+k,sub,alt:false}))}
-  const a=t.paused?[{name:'▶ Идти дальше',doit:'surv:tripgo',sub:'К: '+regions[t.to],alt:true}]:[{name:'⏸ Остановиться',doit:'surv:trippause',sub:'Поесть, подумать',alt:true}];
-  if(t.to!==t.from)a.push({name:'↩ Повернуть назад',doit:'surv:tripback',sub:'В '+regions[t.from],alt:false});
+  const a=t.paused?[{name:'▶ Идти дальше',doit:'surv:tripgo',sub:'К: '+tgtName(t.to),alt:true}]:[{name:'⏸ Остановиться',doit:'surv:trippause',sub:'Поесть, подумать',alt:true}];
+  if(t.to!==t.from)a.push({name:'↩ Повернуть назад',doit:'surv:tripback',sub:'В '+tgtName(t.from),alt:false});
   return a;
  }
  return _actionsForC(id);
@@ -1987,7 +1990,7 @@ infoFor=function(id){
  if(id==='trip'&&t){
   if(t.ev){const E=ROAD_EVENTS[t.ev.k];return E.text(Object.assign({to:t.to},t.ev))}
   const left=cityCost(t.to,'foot');
-  return (t.paused?'Стоишь у дороги. ':'Идёшь пешком. ')+'До района «'+regions[t.to]+'»: '+left.km.toFixed(1)+' км, ~'+left.minutes+' мин.'+(weatherNow()==='rain'?' 🌧 Дождь.':weatherNow()==='snow'?' 🌨 Метель.':'');
+  return (t.paused?'Стоишь у дороги. ':'Идёшь пешком. ')+'До «'+tgtName(t.to)+'»: '+left.km.toFixed(1)+' км, ~'+left.minutes+' мин.'+(weatherNow()==='rain'?' 🌧 Дождь.':weatherNow()==='snow'?' 🌨 Метель.':'');
  }
  return _infoForC(id);
 };
@@ -2006,7 +2009,7 @@ const _survActionC=survAction;
 survAction=function(id){
  const p=id.split(':'),s=S();
  if(p[1]==='cpin'){const d=+p[2];focus='cityd:'+d;page=0;render();return}
- if(p[1]==='walk'){startWalk(p[2]);return}
+ if(p[1]==='walk'){startWalk(p.slice(2).join(':'));return}
  if(p[1]==='cityclose'){closeCity();return}
  if(p[1]==='cityback'){focus=s.trip&&s.trip.ev?'trip':null;page=0;render();return}
  if(p[1]==='tripgo'&&s.trip){s.trip.paused=false;focus=null;save();render();scheduleWalk();return}
@@ -2023,7 +2026,7 @@ doAction=function(id){
  return _doActionC(id);
 };
 const _doDeathC=doDeath;
-doDeath=function(){const s=S();clearTimeout(tripTimer);s.trip=null;s.cityMode=false;root.dataset.initializedMap='';return _doDeathC.apply(this,arguments)};
+doDeath=function(){const s=S();clearTimeout(tripTimer);s.trip=null;s.atWild=null;s.cityMode=false;root.dataset.initializedMap='';return _doDeathC.apply(this,arguments)};
 
 /* ---------- отрисовка ---------- */
 const _renderC=render;
@@ -2063,10 +2066,11 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 /* ===== v6: правки 17.11 — без левой панели в горизонтали, карта города без окна «Город» ===== */
 function cityBar(){
  const s=S(),t=s.trip;
+ if(!t&&s.atWild&&WILD[s.atWild])return '<div class="citybar"><span>📍 '+esc(WILD[s.atWild].name)+'</span><button data-do="surv:wpin:'+s.atWild+'">'+WILD[s.atWild].icon+' Осмотреться</button></div>';
  if(!t)return '<div class="citybar"><button data-do="surv:cityclose">↩ В район: '+esc(regions[g.region])+'</button></div>';
  if(t.ev)return '';
  const left=cityCost(t.to,'foot'),wx=weatherNow()==='rain'?' 🌧':weatherNow()==='snow'?' 🌨':'';
- return '<div class="citybar trip"><span>'+(t.paused?'⏸':'🚶')+' → <b>'+esc(regions[t.to])+'</b> · '+left.km.toFixed(1)+' км · ~'+left.minutes+' мин'+wx+'</span>'+
+ return '<div class="citybar trip"><span>'+(t.paused?'⏸':'🚶')+' → <b>'+esc(tgtName(t.to))+'</b> · '+left.km.toFixed(1)+' км · ~'+left.minutes+' мин'+wx+'</span>'+
   (t.paused?'<button data-do="surv:tripgo">▶ Идти</button>':'<button data-do="surv:trippause">⏸ Стоп</button>')+
   (t.to!==t.from?'<button data-do="surv:tripback">↩ Назад</button>':'')+'</div>';
 }
@@ -2384,6 +2388,91 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.crafttile .itemico{width:34px;height:34px}.crafttile .itemico.emo{font-size:22px}.crafttile b{font-size:13.5px}.crafttile small{font-size:11px}'+'.land .overlay .tilegrid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}'+
 '.sellbtns{display:flex;gap:5px;margin-top:5px}.sellbtns button{padding:5px 8px;border-radius:7px;border:1px solid #b18b56;background:#3a2c1d;color:#ffe3b4;font-size:12px}'+
 '.line .act{display:inline-block;width:auto;margin-top:6px;padding:7px 12px}'+
+'</style>');
+
+/* ===== v6: места вылазок на карте города (между районами) ===== */
+const WILD={
+ heat:{name:'Теплотрасса за гаражами',icon:'♨️',xy:[500,240],warm:true,fb:'./maps/factory.webp',desc:'Трубы в драной стекловате, от них идёт тепло. Здесь греются бродяги и прячут всякое.',t:{pipe:3,rags:3,bottle:2,can:2,wool:1,matches:1,cigs:1}},
+ sector:{name:'Брошенный дом в частном секторе',icon:'🏚️',xy:[870,170],fb:'../art/loot/q5_attic.webp',desc:'Покосившийся дом за забором, хозяева давно уехали. Чердак и сарай не заперты.',t:{cloth:3,wool:2,planks:3,nails:2,glass:1,food_potato:2,herbs:2}},
+ dachas:{name:'Дачный посёлок',icon:'🏡',xy:[1320,230],desc:'Зимой здесь никого. Летом — сторож и собаки. В сараях — инструмент и заготовки.',t:{planks:3,rope:2,food_potato:3,food_pickles:1,herbs:3,nails:2,tape:1}},
+ camp:{name:'Заброшенный пионерлагерь',icon:'⛺',xy:[150,230],desc:'Облупленные корпуса в лесу, столовая без окон, медпункт с выбитой дверью.',t:{cloth:3,planks:2,glass:2,paper:2,med_pills:1,bandage:1,wool:1}},
+ dump:{name:'Городская свалка',icon:'🗑️',xy:[1120,900],fb:'./maps/garage.webp',desc:'Горы мусора до горизонта, вороньё и дым. Найти можно что угодно — и нарваться тоже.',t:{scrap:4,bottle:3,can:4,plastic:3,battery:2,wire:2,leather:1,glass:2}},
+ bank:{name:'Насыпь у Волги',icon:'🌊',xy:[600,700],fb:'./maps/river.webp',desc:'Железнодорожная насыпь над водой: выброшенные шпалы, обрывки сетей, перевёрнутые лодки.',t:{planks:3,rope:3,coal:2,plastic:2,scrap:1,matches:1}},
+ hospital:{name:'Долгострой больницы',icon:'🏗️',xy:[960,610],fb:'./maps/center.webp',desc:'Бетонный каркас в девять этажей. Строители бросили всё в 1991-м.',t:{brick:4,wire:3,pipe:2,nails:3,plastic:2,spiral:1,tape:1}},
+ bunker:{name:'Старое бомбоубежище',icon:'🚪',xy:[560,800],fb:'../art/loot/q5_basement.webp',indoor:true,desc:'Тяжёлая гермодверь приоткрыта. Внутри сухо и не так холодно: нары, ящики, противогазы.',t:{cloth:2,can:2,food_stew:2,drink_water:2,battery:2,rope:1,med_iodine:1}}
+};
+for(const[k,w]of Object.entries(WILD)){LOOT['wild_'+k]={at:null,name:w.name,t:w.t,cold:!w.indoor&&!w.warm};probeAsset('../art/loot/wild_'+k+'.webp')}
+function wildArt(k){const a='../art/loot/wild_'+k+'.webp';return ASSET_OK[a]?a:WILD[k].fb||null}
+function lootArt(k){if(k.startsWith('wild_'))return wildArt(k.slice(5));const a='../art/loot/'+k+'.webp';return ASSET_OK[a]?a:null}
+
+function arriveWild(k,how){
+ const s=S();clearTimeout(tripTimer);s.trip=null;s.atWild=k;s.cityMode=true;view='map';focus='wild:'+k;page=0;
+ announce('Дошёл: '+WILD[k].icon+' '+WILD[k].name+' ('+how+').');save();render();
+}
+const _survIndoorW=survIndoor;
+survIndoor=function(){const s=S();if(!s.mode&&!s.sleeping&&s.atWild&&WILD[s.atWild])return !!(WILD[s.atWild].indoor||WILD[s.atWild].warm);return _survIndoorW()};
+
+const _cityWorldW=cityWorld;
+cityWorld=function(){
+ const s=S(),t=s.trip;
+ return _cityWorldW()+Object.entries(WILD).map(([k,w])=>{const on=s.atWild===k||t&&t.to==='w:'+k,L=lootState('wild_'+k);
+  return '<button class="pin citypin wildpin '+(on?'active':'')+(L.ch<=0?' empty':'')+'" data-do="surv:wpin:'+k+'" data-name="'+esc(w.name)+'" style="left:'+Math.round(w.xy[0]*CMS)+'px;top:'+Math.round(w.xy[1]*CMS)+'px">'+w.icon+'</button>'}).join('');
+};
+
+const _actionsForW=actionsFor;
+actionsFor=function(id){
+ if(!g||!String(id).startsWith('wild:'))return _actionsForW(id);
+ const k=id.slice(5),w=WILD[k],s=S(),t=s.trip;if(!w)return [];
+ if(s.atWild===k&&!t){
+  const L=lootState('wild_'+k),left=lootLeft('wild_'+k),a=[{name:'🔎 Обыскать',doit:'surv:loot:wild_'+k,sub:(has('crowbar')?'30':'45')+' мин · хабара: '+left+(LOOT['wild_'+k].cold?' · на холоде':''),alt:left!=='пусто'}];
+  if(g.inventory.includes('campfire'))a.push({name:'🔥 Развести костёр',doit:'surv:use:campfire',sub:'Тепло +45 · 30 мин',alt:false});
+  if(w.warm||w.indoor)a.push({name:'💤 Передохнуть час',doit:'surv:wrest',sub:w.warm?'У тёплых труб':'В укрытии',alt:false});
+  a.push({name:'🔨 Мастерить',doit:'surv:view:craft',sub:'Простые рецепты',alt:false});
+  return a;
+ }
+ const c=cityCost('w:'+k,'foot');
+ return [{name:'🚶 Идти сюда',doit:'surv:walk:w:'+k,sub:c.km.toFixed(1)+' км · ~'+c.minutes+' мин · только пешком',alt:true},{name:'← Назад',doit:'surv:cityback',sub:'',alt:false}];
+};
+const _infoForW=infoFor;
+infoFor=function(id){
+ if(!g||!String(id).startsWith('wild:'))return _infoForW(id);
+ const k=id.slice(5),w=WILD[k];if(!w)return '';
+ return w.desc+(S().atWild===k?' Хабара: '+lootLeft('wild_'+k)+'.':' Отсюда '+cityCost('w:'+k,'foot').km.toFixed(1)+' км.');
+};
+const _drawDrawerW=drawDrawer;
+drawDrawer=function(){
+ let h=_drawDrawerW();if(!g||!focus||!String(focus).startsWith('wild:'))return h;
+ const k=focus.slice(5),w=WILD[k];if(!w)return h;
+ h=h.replace('<strong>'+esc(focus)+'</strong>','<strong>'+w.icon+' '+esc(w.name)+'</strong>');
+ const art=wildArt(k);
+ if(art)h=h.replace('</div>','</div><img class="drawbanner" src="'+art+'" alt="" draggable="false">');
+ return h;
+};
+const _survActionW=survAction;
+survAction=function(id){
+ const p=id.split(':'),s=S();
+ if(p[1]==='wpin'){focus='wild:'+p[2];page=0;render();return}
+ if(p[1]==='wrest'&&s.atWild){advance(60);s.energy=clampN(s.energy+8);s.nerves=clampN(s.nerves+2);announce('Передохнул час. Бодрость +8.');save();render();return}
+ return _survActionW(id);
+};
+// обыск: картинка места и находки во весь экран (если картинка есть)
+const _searchW=search;
+search=function(k){
+ const before=g.log[0];_searchW(k);
+ const art=lootArt(k);
+ if(art&&g.log[0]!==before&&String(g.log[0]).startsWith('🔎')){const s=S();s.scene='loot';s.sceneData={img:art,title:'🔎 '+LOOT[k].name,text:String(g.log[0]).replace(/^🔎 [^:]*: /,'')};save();render()}
+};
+SCENES.loot={img:'',title:'',text:()=>'',btn:''};
+const _sceneHtmlW=sceneHtml;
+sceneHtml=function(){
+ const s=S();if(s.scene!=='loot')return _sceneHtmlW();
+ const d=s.sceneData||{};
+ return '<div class="scenecard" role="dialog"><div class="scenebox"><img class="sceneimg" src="'+d.img+'" alt="" draggable="false"><div class="scenetext"><strong>'+esc(d.title||'')+'</strong><p>'+esc(d.text||'')+'</p><button class="act alt" data-do="surv:scene-ok">Забрать</button></div></div></div>';
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.wildpin{width:38px;height:38px;font-size:18px;border-radius:50%;border-style:dashed}.wildpin.empty{filter:grayscale(1) brightness(.7)}'+
+'.drawbanner{display:block;width:100%;aspect-ratio:1032/581;object-fit:cover;border-bottom:1px solid #62482f}'+
+'.land .drawer .drawbanner{max-height:120px}'+
 '</style>');
 
 render();
