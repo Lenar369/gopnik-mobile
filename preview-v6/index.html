@@ -3286,5 +3286,197 @@ battleBg=function(F){
  return _battleBgP(F);
 };
 
+/* ===== v6: разговоры — слухи, поручения, обмен, помощь, отношения ===== */
+const NPC_WANT={1:['plastic','rope','herbs','can','bottle'],2:['rope','planks','coal','paper'],3:['scrap','wire','pipe','spiral','tape'],4:['scrap','battery','tape','leather','glass'],5:['rope','plastic','planks','cloth'],6:['paper','glass','cloth','spirit','herbs']};
+const NPC_GIVE={1:['food_sausage','food_bread','cigs','food_potato'],2:['drink_tea','food_noodles','cigs','food_bread'],3:['food_stew','drink_vodka','food_pasta','drink_water'],4:['cigs','drink_beer','food_stew','bandage'],5:['food_sprats','drink_water','food_potato','cigs'],6:['med_pills','bandage','drink_tea','med_cough']};
+const GREET={cold:['«Чего тебе?»','«А, это ты. Ну?»','«Говори быстрее, дел полно».'],ok:['«Здорово. Как сам?»','«О, привет. Чем обязан?»','«Заходи, рассказывай».'],warm:['«Здорово, родной! Как ты?»','«О, кого я вижу! Садись, чаю налью».','«Свои пришли. Рассказывай».']};
+function NPC(id){const s=S();s.npc=s.npc||{};return s.npc[id]||(s.npc[id]={rel:10,chat:0,job:null,trade:0,deal:0,help:0,debt:0,debtDay:0})}
+function relWord(r){return r>=60?'💚 близкий':r>=40?'🤝 свой':r>=20?'🙂 знакомый':r>=0?'😐 прохладно':'😠 в обиде'}
+function addRel(id,n){const N=NPC(id);N.rel=Math.max(-30,Math.min(100,N.rel+n))}
+function npcRegion(id){return regionForSpot(id)}
+function personOf(id){return dspot(id)?.person||'Знакомый'}
+function daySeed(id){let h=g.day*31;for(const c of id)h=(h*33+c.charCodeAt(0))%100003;return h}
+function talkable(id){const w=cityState();return !!(dspot(id)&&dspot(id).person&&w.met&&w.met[id])}
+function npcAva(id){const a='../art/npc/'+id+'.webp';probeAsset(a);return '<span class="ava big foe npc">'+(ASSET_OK[a]?'<img src="'+a+'" alt="">':'<i>'+['👩','👨','👵','👴','🧔','👱‍♀️','👨‍🦳','👩‍🦰','🧑‍🦱','👨‍🔧'][daySeed(id+'x')%10&&[...id].reduce((h,c)=>h+c.charCodeAt(0),0)%10]+'</i>')+'</span>'}
+
+/* ---- слухи ---- */
+function makeRumor(id){
+ const s=S(),r=npcRegion(id),opts=[];
+ // наводка на хабар: обыск там даст больше
+ const keys=Object.keys(LOOT).filter(k=>lootState(k).ch>0);
+ if(keys.length){const k=keys[daySeed(id)%keys.length],P=LOOT[k];const where=k.startsWith('wild_')?P.name+' (на карте города)':P.name+' — '+regions[regionForSpot(P.at)||0];
+  opts.push({t:'«Слышал, '+where.charAt(0).toLowerCase()+where.slice(1)+' — там недавно никто не шарил. Сходи, пока не растащили».',tip:k})}
+ opts.push({t:'«Ночью в Гаражном братки на «девятке» катаются. Одному лучше не соваться».'});
+ opts.push({t:afterDefault()?'«После дефолта цены скачут каждый день. Бартер сейчас надёжнее рубля».':'«Говорят, к осени рубль грохнется. Запасайся, пока дёшево».'});
+ opts.push({t:winterNow()?'«Морозы обещают. Тёплое найди, а то пропадёшь на улице».':'«Скоро дожди зарядят. Без тёплой одежды до дому не дойдёшь».'});
+ opts.push({t:'«Сторож на заводском складе за бутылку пускает пошарить. Ну, если повезёт».'});
+ opts.push({t:'«На теплотрассе за гаражами бомжи живут. Злые, но там тепло».'});
+ if(g.facts&&!g.facts.end)opts.push({t:'«Про Дамира вашего слышал… Спроси у Гены во дворе — он больше знает».'});
+ return opts[(daySeed(id)>>3)%opts.length];
+}
+// наводка: обыск в указанном месте даёт ещё 2 находки
+const _searchD=search;
+search=function(k){
+ const s=S(),tip=s.tips&&s.tips[k]&&s.tips[k]>=g.day,before=g.log[0];
+ _searchD(k);
+ if(tip&&g.log[0]!==before&&/^🔎/.test(g.log[0])){
+  const P=LOOT[k],pool=[];for(const[id,w]of Object.entries(P.t))for(let i=0;i<w;i++)pool.push(id);
+  const extra=[];for(let i=0;i<2;i++){const id=pool[Math.floor(Math.random()*pool.length)];if(addLoot(id))extra.push(anyIcon(id)+' '+anyName(id))}
+  g.log[0]=g.log[0].replace(/\.(?=[^.]*$)/,'')+' + по наводке: '+extra.join(', ')+'.';delete s.tips[k];
+  if(s.scene==='loot'&&s.sceneData)s.sceneData.text=g.log[0].replace(/^🔎 [^:]*: /,'');
+  save();render();
+ }
+};
+
+/* ---- поручения ---- */
+function newJob(id){
+ const r=npcRegion(id),seed=daySeed(id);
+ if(seed%5<3){const want=NPC_WANT[r]||NPC_WANT[1],m=want[seed%want.length],n=2+seed%3,pay=Math.round(MAT[m].p*n*2.5+10);return {type:'fetch',item:m,n,pay,until:g.day+3}}
+ const w=cityState(),targets=Object.values(DISTRICTS).flatMap(d=>d.spots).filter(x=>x.person&&regionForSpot(x.id)!==r&&x.id!==id);
+ const t=targets[seed%targets.length];const km=cityKm(CITY_XY[r],CITY_XY[regionForSpot(t.id)]);
+ return {type:'deliver',to:t.id,pay:Math.round(10+km*3),until:g.day+3};
+}
+function jobText(id,J){return J.type==='fetch'?'принести: '+MAT[J.item].name+' ×'+J.n+' — '+J.pay+' ₽':'отнести посылку: '+personOf(J.to)+' ('+dspot(J.to).name+', '+regions[regionForSpot(J.to)]+') — '+J.pay+' ₽'}
+function parcelsFor(id){const s=S();return (s.parcels||[]).filter(p=>p.to===id)}
+
+/* ---- обмен ---- */
+function offers(id){
+ const r=npcRegion(id),N=NPC(id),want=NPC_WANT[r]||NPC_WANT[1],give=NPC_GIVE[r]||NPC_GIVE[1],seed=daySeed(id);
+ const disc=(N.deal===g.day?1:0)+(N.rel>=40?1:0);
+ return [0,1,2].map(i=>{const m=want[(seed+i*7)%want.length],it=give[(seed+i*3)%give.length];const n=Math.max(1,2+((seed>>i)%2)+(afterDefault()?0:1)-disc);return {i,m,n,it}});
+}
+
+/* ---- действия ---- */
+function dlgOpen(id){const s=S();if(!talkable(id))return;const N=NPC(id);s.dlg={id,sub:'main',line:(GREET[N.rel>=40?'warm':N.rel>=15?'ok':'cold'])[daySeed(id)%3]};save();render()}
+function dlgSay(t){S().dlg.line=t}
+function dlgAct(a,arg){
+ const s=S(),D=s.dlg;if(!D)return;const id=D.id,N=NPC(id),name=personOf(id);
+ if(a==='bye'){s.dlg=null;save();render();return}
+ if(a==='back'){D.sub='main';save();render();return}
+ if(a==='news'){
+  if(N.chat===g.day){dlgSay('«Да я ж тебе уже всё рассказал сегодня. Завтра заходи».');save();render();return}
+  N.chat=g.day;advance(10);const R=makeRumor(id);dlgSay(R.t);addRel(id,1);
+  if(R.tip){s.tips=s.tips||{};s.tips[R.tip]=g.day+2;announce('📌 Наводка ('+name+'): '+LOOT[R.tip].name+' — обыск там даст больше (2 дня).')}
+  save();render();return;
+ }
+ if(a==='job'){
+  if(N.job&&N.job.until<g.day){N.job=null;addRel(id,-5);dlgSay('«Ты ж обещал… Ладно, проехали».')}
+  if(!N.job){D.offer=newJob(id);D.sub='job';dlgSay('«Есть одно дело: '+jobText(id,D.offer)+'. Возьмёшься?»')}
+  else{D.sub='job';dlgSay('«Ну что, как там наше дело? Напоминаю: '+jobText(id,N.job)+'»')}
+  save();render();return;
+ }
+ if(a==='take'&&D.offer){N.job=D.offer;D.offer=null;if(N.job.type==='deliver'){s.parcels=s.parcels||[];s.parcels.push({from:id,to:N.job.to,until:N.job.until,pay:N.job.pay})}dlgSay('«Договорились. Срок — три дня»'+(N.job.type==='deliver'?'. Вот посылка, не потеряй.':'.'));announce('📋 Поручение: '+name+' — '+jobText(id,N.job)+'.');save();render();return}
+ if(a==='refuse'){D.offer=null;D.sub='main';addRel(id,-1);dlgSay('«Ну смотри, как знаешь».');save();render();return}
+ if(a==='turnin'&&N.job&&N.job.type==='fetch'){
+  const J=N.job,have=(B().mats[J.item]||0)+(atHome()?0:0);if(have<J.n){dlgSay('«Пока не хватает: '+MAT[J.item].name+' '+have+'/'+J.n+'».');save();render();return}
+  take(J.item,J.n);g.money+=J.pay;addRel(id,8);addXP(10,'поручение');N.job=null;D.sub='main';dlgSay('«Вот это дело! Держи '+J.pay+' ₽. Обращайся ещё».');announce('✅ Поручение выполнено ('+name+'): +'+J.pay+' ₽.');save();render();return;
+ }
+ if(a==='deliver'){
+  const P=parcelsFor(id)[0];if(!P)return;s.parcels=s.parcels.filter(x=>x!==P);
+  const late=P.until<g.day,pay=late?Math.round(P.pay/2):P.pay;g.money+=pay;addRel(id,5);addRel(P.from,late?2:6);addXP(10,'доставка');
+  const N2=NPC(P.from);if(N2.job&&N2.job.type==='deliver'&&N2.job.to===id)N2.job=null;
+  dlgSay(late?'«Долго ты… Ну ладно, держи '+pay+' ₽».':'«О, посылка! Наконец-то. Держи '+pay+' ₽ за труды».');announce('📦 Посылка доставлена: +'+pay+' ₽.');save();render();return;
+ }
+ if(a==='trade'){D.sub='trade';dlgSay(N.rel>=40?'«Для своих — по-свойски. Смотри, что есть».':'«Давай меняться. Деньги сейчас — бумага».');save();render();return}
+ if(a==='swap'){
+  const o=offers(id)[+arg];if(!o)return;if(N.trade===g.day+'-'+o.i){dlgSay('«Это я тебе уже отдал сегодня».');save();render();return}
+  if((B().mats[o.m]||0)<o.n){dlgSay('«Не, так не пойдёт. Нужно: '+MAT[o.m].name+' ×'+o.n+'».');save();render();return}
+  if(g.inventory.length>=20){dlgSay('«Рюкзак-то у тебя полный».');save();render();return}
+  take(o.m,o.n);g.inventory.push(o.it);N.trade=g.day+'-'+o.i;addRel(id,2);advance(5);dlgSay('«По рукам!»');announce('🔁 Обмен: '+MAT[o.m].name+' ×'+o.n+' → '+supName(o.it)+'.');save();render();return;
+ }
+ if(a==='haggle'){
+  if(N.deal===g.day||N.haggled===g.day){dlgSay('«Всё, я и так тебе скинул. Не наглей».');save();render();return}
+  N.haggled=g.day;const ch=Math.min(.85,.3+(Math.max(stat(2),stat(3))-2)*.1+N.rel/200);
+  if(Math.random()<ch){N.deal=g.day;dlgSay('«Ладно, уговорил… Каждого товара на штуку меньше».')}else{addRel(id,-3);dlgSay('«Ты меня за лоха держишь? Цены — как есть».')}
+  save();render();return;
+ }
+ if(a==='help'){
+  if(N.rel<40){dlgSay('«Мы с тобой не настолько близки».');save();render();return}
+  D.sub='help';dlgSay('«Чем помочь-то?»');save();render();return;
+ }
+ if(a==='feed'){if(N.help>=g.day-1&&N.help){dlgSay('«Вчера ж кормил… Совесть имей».');save();render();return}N.help=g.day;advance(30);applyFx({food:40,warmth:15,nerves:5});addRel(id,-2);D.sub='main';dlgSay('«Садись, ешь. Горячее».');announce('🍲 Накормили ('+name+'): сытость +40, тепло +15.');save();render();return}
+ if(a==='loan'){if(N.debt){dlgSay('«Ты мне ещё прошлое не вернул».');save();render();return}N.debt=30;N.debtDay=g.day+5;g.money+=30;addRel(id,-3);D.sub='main';dlgSay('«Держи тридцатку. Через пять дней вернёшь».');announce('💵 Долг 30 ₽ ('+name+') — вернуть до '+N.debtDay+'-го дня.');save();render();return}
+ if(a==='repay'){if(!N.debt)return;if(g.money<N.debt){dlgSay('«Денег-то нет, вижу. Ладно, жду».');save();render();return}g.money-=N.debt;N.debt=0;addRel(id,6);dlgSay('«Вот это по-нашему. Спасибо».');announce('💵 Долг возвращён ('+name+').');save();render();return}
+}
+// просроченные долги портят отношения
+const _advanceD=advance;
+advance=function(m){const r=_advanceD.apply(this,arguments);if(g){const s=S();for(const[id,N]of Object.entries(s.npc||{}))if(N.debt&&N.debtDay<g.day&&!N.debtWarn){N.debtWarn=true;N.rel=Math.max(-30,N.rel-20);survNote('😠 Долг не вернул вовремя ('+personOf(id)+'). Отношения испорчены.')}}return r};
+
+/* ---- экран разговора ---- */
+function dlgBg(id){const k=Object.keys(LOOT).find(k=>LOOT[k].at===id);const v=k?lootVariants(k)[0]:null;return v||districtArtSrc(npcRegion(id))}
+function dlgHtml(){
+ const s=S(),D=s.dlg;if(!D||!talkable(D.id))return '';
+ const id=D.id,N=NPC(id),sp=dspot(id),name=personOf(id),btn=(a,ico,t,sub,dis,cls)=>'<button class="bbtn talk'+(cls?' '+cls:'')+'" data-do="dl:'+a+'"'+(dis?' disabled':'')+'>'+ico+'<b>'+t+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</button>';
+ let opts='';
+ if(D.sub==='main'){
+  parcelsFor(id).forEach(P=>{opts+=btn('deliver','📦','Отдать посылку','от '+personOf(P.from)+(P.until<g.day?' · опоздал':''),false,'hot')});
+  if(N.job&&N.job.type==='fetch')opts+=btn('turnin','✅','Сдать поручение',MAT[N.job.item].name+' '+(B().mats[N.job.item]||0)+'/'+N.job.n,(B().mats[N.job.item]||0)<N.job.n,'hot');
+  opts+=btn('news','🗞️','Что нового?',N.chat===g.day?'сегодня уже говорили':'слух дня, наводки');
+  opts+=btn('job','📋','Есть работа?',N.job?'взято: '+(N.job.type==='fetch'?'принести':'доставить'):'поручение за деньги');
+  opts+=btn('trade','🔁','Махнёмся?','хабар на еду и вещи');
+  opts+=btn('help','🤝','Выручи',N.rel>=40?'накормит или займёт':'нужно «свой» (40+)',N.rel<40);
+  if(N.debt)opts+=btn('repay','💵','Вернуть долг',N.debt+' ₽ · до '+N.debtDay+'-го дня',g.money<N.debt);
+ }else if(D.sub==='job'){
+  if(D.offer)opts+=btn('take','🤝','Возьмусь',jobText(id,D.offer))+btn('refuse','🙅','Не, не возьмусь','отношения чуть хуже');
+  else if(N.job&&N.job.type==='fetch')opts+=btn('turnin','✅','Сдать',MAT[N.job.item].name+' '+(B().mats[N.job.item]||0)+'/'+N.job.n,(B().mats[N.job.item]||0)<N.job.n,'hot');
+  opts+=btn('back','↩️','Назад','');
+ }else if(D.sub==='trade'){
+  offers(id).forEach(o=>{const have=B().mats[o.m]||0,done=N.trade===g.day+'-'+o.i;opts+=btn('swap:'+o.i,anyIcon(o.it),supName(o.it),done?'уже поменялись':'за: '+MAT[o.m].name+' ×'+o.n+' (у тебя '+have+')',done||have<o.n)});
+  opts+=btn('haggle','🗣️','Сторговаться',N.deal===g.day?'уже скинул':'Смекалка/Авторитет · −1 к цене',N.deal===g.day||N.haggled===g.day);
+  opts+=btn('back','↩️','Назад','');
+ }else if(D.sub==='help'){
+  opts+=btn('feed','🍲','Накормить','сытость +40, тепло +15')+btn('loan','💵','Занять 30 ₽','вернуть за 5 дней',!!N.debt)+btn('back','↩️','Назад','');
+ }
+ return '<div class="battle talkph dlgph" style="--bg:url(\''+dlgBg(id)+'\')">'+
+  '<div class="btop"><b>💬 '+esc(name)+'</b><span>'+esc(sp.name)+' · '+relWord(N.rel)+'</span><button class="bsound" data-do="dl:bye">✕</button></div>'+
+  '<div class="tfield"><div class="tside">'+avatar('hero','big')+'<b>Ты</b></div>'+
+  '<div class="tmid"><div class="tlabel">Отношения: '+relWord(N.rel)+'</div><div class="tbar rel"><i style="width:'+Math.max(0,N.rel)+'%"></i><u style="left:40%"></u></div><div class="bubble">'+esc(D.line||'')+'</div></div>'+
+  '<div class="tside">'+npcAva(id)+'<b>'+esc(name)+'</b></div></div>'+
+  '<div class="blog">'+(g.log||[]).slice(0,2).map((t,i)=>'<div class="'+(i?'':'new')+'">'+esc(t)+'</div>').join('')+'</div>'+
+  '<div class="bacts"><div class="trow">'+opts+'</div><div class="brow small"><button class="bbtn sm" data-do="dl:bye">👋<small>Пока</small></button></div></div></div>';
+}
+const _renderD=render;
+render=function(){_renderD();if(g&&!g.fight&&S().dlg&&!root.querySelector('.setup'))root.insertAdjacentHTML('beforeend',dlgHtml())};
+const _doActionD=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('dl:')){const p=sid.split(':');dlgAct(p[1],p[2]);return}
+ if(g&&sid.startsWith('surv:talk:')){dlgOpen(sid.slice(10));return}
+ const wasMet=g?Object.assign({},cityState().met||{}):{};
+ const r=_doActionD(id);
+ if(g){const met=cityState().met||{};Object.keys(met).forEach(k=>{if(met[k]&&!wasMet[k])NPC(k)})}
+ return r;
+};
+const _actionsForD=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForD(id);if(!g||typeof id!=='string'||g.fight)return a;
+ if(talkable(id)){const N=NPC(id),hot=parcelsFor(id).length||(N.job&&N.job.type==='fetch'&&(B().mats[N.job.item]||0)>=N.job.n);
+  a.unshift({name:'💬 Поговорить: '+personOf(id),doit:'surv:talk:'+id,sub:(hot?'📦 есть дело · ':'')+relWord(N.rel),alt:!!hot})}
+ return a;
+};
+// знакомые в разборке: чем лучше отношения, тем вернее
+known=function(){
+ const w=cityState(),s=S(),names=[];
+ Object.keys(w.met||{}).forEach(id=>{const p=dspot(id);if(p&&p.person)names.push({n:p.person,r:regionForSpot(id),rel:NPC(id).rel})});
+ const rel=g.relations||{},yard={zoya:'тётя Зоя',sanya:'Санёк',valera:'Валера',gena:'Гена Рыжий',boris:'Борис'};
+ Object.entries(rel).forEach(([k,v])=>{if(v>0&&yard[k])names.push({n:yard[k],r:0,rel:20+v*10})});
+ return names.filter(x=>x.rel>=0).sort((a,b)=>(b.r===(g.region||0))-(a.r===(g.region||0))||b.rel-a.rel);
+};
+const _talkOptsD=talkOpts;
+talkOpts=function(){const o=_talkOptsD(),k=known();const n=o.find(x=>x.id==='name');if(n&&k[0])n.p=Math.min(.95,n.p+Math.max(0,k[0].rel-20)/200);return o};
+// «Люди»: отношения, поручения, посылки, долги
+const _peoplePanelD=peoplePanel;
+peoplePanel=function(){
+ let h=_peoplePanelD();const s=S();
+ h=h.replace(/<div class="line peopleline"><b>([^<]*)<\/b><small>([^<]*)<\/small><span>🙂 знакомый<\/span><\/div>/g,(m,n,d)=>{const id=Object.keys(cityState().met||{}).find(k=>personOf(k)===n.replace(/&quot;/g,'"'));if(!id)return m;const N=NPC(id);return '<div class="line peopleline"><b>'+n+'</b><small>'+d+(N.job?' · 📋 '+esc(jobText(id,N.job)):'')+(N.debt?' · 💵 долг '+N.debt+' ₽':'')+'</small><span>'+relWord(N.rel)+' ('+N.rel+')</span></div>'});
+ const P=s.parcels||[];
+ if(P.length)h=h.replace('<div class="panel-body">','<div class="panel-body"><div class="line"><strong>📦 Посылки</strong>'+P.map(p=>'<div>'+esc(personOf(p.from))+' → '+esc(personOf(p.to))+' ('+esc(dspot(p.to).name)+', '+esc(regions[regionForSpot(p.to)])+') · до '+p.until+'-го дня · '+p.pay+' ₽</div>').join('')+'</div>');
+ return h;
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.dlgph{z-index:190}.tbar.rel{background:#3a3027}.tbar.rel i{background:linear-gradient(90deg,#c08a3e,#6fd36a);border-right:none;box-shadow:none}.ava.npc{border-color:#c9a46a;background:radial-gradient(circle at 40% 35%,#4a4032,#1a1610)}'+
+'.dlgph .bubble{font-weight:600;font-size:13.5px}.dlgph .bubble:after{right:auto;left:-14px;border-left-color:transparent;border-right-color:#f3e3c0}'+
+'</style>');
+
 render();
 })();</script></body></html>
