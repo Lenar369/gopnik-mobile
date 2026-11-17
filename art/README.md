@@ -38,4 +38,4 @@
 |---|---|---|
 | [REQUEST_01_survival_core.md](REQUEST_01_survival_core.md) | Иконки потребностей, еда, медицина, тепло, экран смерти | 🔄 6 из 32 (HUD готов) |
 | [REQUEST_02_loot_places.md](REQUEST_02_loot_places.md) | 17 мест для вылазок за хабаром | ⏳ |
-| [REQUEST_03_ui_landscape.md](REQUEST_03_ui_landscape.md) | Интерфейс для горизонтального экрана: портреты, иконки меню, рамки (образец в `reference/`) | ⏳ |
+| [REQUEST_03_ui_landscape.md](REQUEST_03_ui_landscape.md) | Интерфейс для горизонтального экрана: портреты, 6 кнопок меню, рамки (образец в `reference/`; кнопок «Торговля» и «Бои» не делать) | ⏳ |
