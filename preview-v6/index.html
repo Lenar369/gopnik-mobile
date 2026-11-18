@@ -3663,5 +3663,149 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.citybar span{border:6px solid transparent!important;border-image:url(../art/ui/ui_plate.webp) 22 fill stretch!important;background:none!important}'+
 '</style>');
 
+/* ===== v6: заведения (заказ 07) — кафе, бар, ресторан, клуб, гостиница ===== */
+const VENUE_DIR='../art/venues/';
+// часы: [открытие, закрытие] в часах; закрытие после полуночи — >24
+const VTYPE={
+ cafe:{name:'Кафе',icon:'☕',open:[8,21]},
+ bar:{name:'Бар',icon:'🍺',open:[16,26]},
+ restaurant:{name:'Ресторан',icon:'🍽️',open:[12,24]},
+ club:{name:'Клуб',icon:'🎶',open:[20,29]},
+ hotel:{name:'Гостиница',icon:'🏨',open:[0,24]}
+};
+['cafe','bar','restaurant','club','hotel'].forEach(t=>['summer','winter','interior'].forEach(v=>probeAsset(VENUE_DIR+t+'_'+v+'.webp')));
+// новые места на картах районов
+places.push({id:'q5_cafe',name:'Кафе',icon:'☕',x:470,y:470,text:'Маленькое кафе в первом этаже панельки. Пирожки, чай, обеды.'});
+DISTRICTS[2].spots.push(SP('s_bar','Бар','🍺',430,300,'Бар у вокзала: проводники, приезжие, мутные личности.','','Бармен'));
+DISTRICTS[4].spots.push(SP('g_bar','Бар','🍺',620,280,'Бар у гаражей: шофёры, слесари и кто-то с «девяткой» у входа.','','Барменша'));
+DISTRICTS[6].spots.push(SP('c_rest','Ресторан','🍽️',360,330,'Ресторан со швейцаром. Сюда ходят «деловые» и чиновники.','','Метрдотель'));
+DISTRICTS[5].spots.push(SP('w_club','Клуб','🎶',380,330,'Ночной клуб в бывшем ДК речников. Музыка, охрана, братва.','','Охранник'));
+const VENUES={q5_cafe:'cafe',c_cafe:'cafe',s_bar:'bar',g_bar:'bar',c_rest:'restaurant',w_club:'club',hotel:'hotel'};
+(function(){const c=dspot('c_cafe');if(c){c.name='Кафе у площади';c.icon='☕'}const h=dspot('hotel');if(h)h.icon='🏨'})();
+['q5_cafe','s_bar','g_bar','c_rest','w_club'].forEach(id=>SURV_INDOOR.add(id));
+function vHour(){return g.minute/60}
+function vOpen(id){const T=VTYPE[VENUES[id]],h=vHour();const[a,b]=T.open;return b<=24?(h>=a&&h<b):(h>=a||h<b-24)}
+function vHours(id){const[a,b]=VTYPE[VENUES[id]].open;return a===0&&b===24?'круглосуточно':a+':00–'+(b%24)+':00'}
+function vFacade(id){const t=VENUES[id],k=VENUE_DIR+t+'_'+(winterNow()?'winter':'summer')+'.webp';return ASSET_OK[k]?k:null}
+function vInterior(id){const k=VENUE_DIR+VENUES[id]+'_interior.webp';return ASSET_OK[k]?k:vFacade(id)}
+function vPrice(n){return Math.round(n*(afterDefault()?1.6:1))}
+function decent(){const e=g.equip||{};return ['coat','downjacket'].includes(e['Верх'])}
+
+/* ---- окно места: фасад, часы, «Войти» ---- */
+const _actionsForV=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForV(id);if(!g||!VENUES[id]||g.fight)return a;
+ const open=vOpen(id),T=VTYPE[VENUES[id]];
+ a=a.filter(x=>!/^(world:meal|surv:meal)/.test(x.doit||''));
+ a.unshift(open?{name:'🚪 Войти: '+T.name.toLowerCase(),doit:'vn:enter:'+id,sub:vHours(id)+(VENUES[id]==='club'?' · вход '+vPrice(15)+' ₽':''),alt:true}:{name:'🔒 Закрыто',doit:'vn:wait:'+id,sub:'Работает '+vHours(id)+' · подождать до открытия',alt:false});
+ return a;
+};
+const _infoForV=infoFor;
+infoFor=function(id){
+ if(g&&id==='q5_cafe')return places.find(p=>p.id==='q5_cafe').text+' Часы: '+vHours(id)+'.';
+ return _infoForV(id);
+};
+const _drawDrawerV=drawDrawer;
+drawDrawer=function(){
+ let h=_drawDrawerV();if(!g||!focus||!VENUES[focus])return h;
+ const f=vFacade(focus);if(f&&!/drawbanner/.test(h))h=h.replace('</div>','</div><div class="vbanner"><img class="drawbanner" src="'+f+'" alt="" draggable="false">'+(vOpen(focus)?'':'<span class="vclosed">ЗАКРЫТО</span>')+'</div>');
+ return h;
+};
+
+/* ---- интерьер ---- */
+function vMenu(id){
+ const t=VENUES[id],s=S(),o=[];
+ const it=(k,ico,n,sub,dis)=>o.push({k,ico,n,sub,dis:!!dis});
+ if(t==='cafe'){
+  it('meal','🍲','Горячий обед',vPrice(22)+' ₽ · сытость +45, тепло +20',g.money<vPrice(22));
+  it('pie','🥟','Чай с пирожком',vPrice(7)+' ₽ · сытость +15, бодрость +10',g.money<vPrice(7));
+  it('sit','🪑','Посидеть в тепле','30 мин · бесплатно, если что-то взял',!s.vBought);
+ }else if(t==='bar'){
+  it('beer','🍺','Кружка пива',vPrice(9)+' ₽ · нервы +10',g.money<vPrice(9));
+  it('shot','🥃','Сто грамм',vPrice(12)+' ₽ · нервы +15, тепло +10',g.money<vPrice(12));
+  it('listen','👂','Послушать разговоры','30 мин · слух с наводкой'+(s.vListen===g.day+':'+id?' (уже сегодня)':''),s.vListen===g.day+':'+id);
+  it('cards','🃏','Сыграть в карты',vPrice(20)+' ₽ на кону · Смекалка',g.money<vPrice(20));
+ }else if(t==='restaurant'){
+  it('dinner','🍷','Ужин из трёх блюд',vPrice(65)+' ₽ · сытость +80, тепло +30, нервы +15',g.money<vPrice(65));
+  it('coffee','☕','Кофе с десертом',vPrice(25)+' ₽ · бодрость +20, нервы +8',g.money<vPrice(25));
+  it('errand','💼','Поручение «деловых»','2 ч · '+vPrice(70)+' ₽ · раз в день'+(s.vErrand===g.day?' (уже сегодня)':''),s.vErrand===g.day);
+ }else if(t==='club'){
+  it('dance','💃','Танцевать','1 ч · нервы +25, бодрость −10');
+  it('cocktail','🍸','Коктейль',vPrice(18)+' ₽ · нервы +15',g.money<vPrice(18));
+  it('bratva','🕶️','Подсесть к братве','Авторитет · уважение или драка');
+ }else if(t==='hotel'){
+  o.push({act:'world:sleep:hotel:morning',ico:'🛏️',n:'Ночлег до утра','sub':'30 ₽'+(nightRestAvailable()?'':' · только вечером и ночью'),dis:!nightRestAvailable()||g.money<30});
+  o.push({act:'world:sleep:hotel:eight',ico:'🕗',n:'Кровать на 8 часов',sub:'30 ₽ · полное восстановление',dis:g.money<30});
+  it('buffet','🥪','Буфет',vPrice(12)+' ₽ · сытость +25, тепло +10',g.money<vPrice(12));
+ }
+ return o;
+}
+function vAct(k){
+ const s=S(),V=s.venue;if(!V)return;const id=V.id,t=VENUES[id];
+ const pay=n=>{n=vPrice(n);if(g.money<n){V.say='Денег не хватает.';save();render();return false}g.money-=n;s.vBought=true;return true};
+ const eat=(fx,min,txt)=>{const r=applyFx(fx);advance(min);V.say=txt+' ('+r+').';announce(VTYPE[t].icon+' '+txt+'.');save();render()};
+ if(k==='leave'){s.venue=null;s.vBought=false;
+  if((t==='bar'||t==='club')&&survNight()&&Math.random()<.12){save();render();startFight(Math.random()<.5?'drunk':'gop3',{back:id,text:'У выхода к тебе цепляются: «Слышь, ты чё там так смотрел?»'});return}
+  save();render();return}
+ if(k==='meal'){if(pay(22))eat({food:45,warmth:20,nerves:3},30,'Горячий обед');return}
+ if(k==='pie'){if(pay(7))eat({food:15,energy:10,warmth:8},15,'Чай с пирожком');return}
+ if(k==='sit'){advance(30);applyFx({warmth:15,nerves:3});V.say='Посидел в тепле, отогрелся.';save();render();return}
+ if(k==='beer'){if(pay(9))eat({nerves:10,energy:-3},15,'Кружка пива');return}
+ if(k==='shot'){if(pay(12))eat({nerves:15,warmth:10,energy:-4},10,'Сто грамм');return}
+ if(k==='listen'){s.vListen=g.day+':'+id;advance(30);const keys=Object.keys(LOOT).filter(x=>lootState(x).ch>0);const tip=keys[Math.floor(Math.random()*keys.length)];
+  if(tip){s.tips=s.tips||{};s.tips[tip]=g.day+2;V.say='За соседним столом шепчутся: «'+LOOT[tip].name+' — там никто не шарил, можно поживиться».';announce('📌 Наводка из бара: '+LOOT[tip].name+' — обыск там даст больше (2 дня).')}else V.say='Ничего интересного не услышал.';
+  save();render();return}
+ if(k==='cards'){const st=vPrice(20);if(g.money<st)return;advance(40);const ch=.35+(stat(2)-2)*.05;if(Math.random()<ch){g.money+=st;V.say='Повезло — выиграл '+st+' ₽.';announce('🃏 Выиграл в карты '+st+' ₽.')}else{g.money-=st;S().nerves=clampN(S().nerves-5);V.say='Проиграл '+st+' ₽. Мухлевали, похоже.';announce('🃏 Проиграл в карты '+st+' ₽.')}save();render();return}
+ if(k==='dinner'){if(pay(65))eat({food:80,warmth:30,nerves:15},60,'Ужин из трёх блюд');return}
+ if(k==='coffee'){if(pay(25))eat({energy:20,nerves:8},20,'Кофе с десертом');return}
+ if(k==='errand'){s.vErrand=g.day;advance(120);const m=vPrice(70);g.money+=m;addXP(12,'поручение');V.say='Отвёз конверт по адресу, вопросов не задавал. Заплатили '+m+' ₽.';announce('💼 Поручение «деловых»: +'+m+' ₽.');save();render();return}
+ if(k==='dance'){advance(60);applyFx({nerves:25,energy:-10});V.say='Оттанцевал час. Голова гудит, на душе легче.';save();render();return}
+ if(k==='cocktail'){if(pay(18))eat({nerves:15,energy:-2},15,'Коктейль');return}
+ if(k==='bratva'){advance(20);const ch=Math.min(.85,.25+(stat(3)-2)*.08+resp()*.02);
+  if(Math.random()<ch){addResp(3);g.money+=vPrice(15);V.say='«Нормальный пацан». Налили, дали '+vPrice(15)+' ₽ «на такси». Уважение растёт.';announce('🕶️ Братва приняла за своего: уважение района +3.');save();render()}
+  else{s.venue=null;save();render();startFight('bratki',{back:id,text:'«Ты кто такой вообще? Пошли выйдем».'})}return}
+ if(k==='buffet'){if(pay(12))eat({food:25,warmth:10},20,'Буфет гостиницы');return}
+}
+function vEnter(id){
+ if(!vOpen(id)){announceAndRender('Закрыто. Работает '+vHours(id)+'.');return}
+ const s=S();
+ if(VENUES[id]==='restaurant'&&!decent()){announceAndRender('Швейцар у двери: «В таком виде не положено». Нужна кожанка или пуховик.');return}
+ if(VENUES[id]==='club'){const p=vPrice(15);if(s.vClub!==g.day){if(g.money<p){announceAndRender('Вход '+p+' ₽ — денег нет.');return}g.money-=p;s.vClub=g.day}}
+ s.venue={id,say:{cafe:'Пахнет пирожками и котлетами. Свободный столик у окна.',bar:'Накурено, по телевизору футбол. Бармен кивает: «Чего налить?»',restaurant:'Белые скатерти, тихая музыка. Официант оглядывает тебя с ног до головы.',club:'Музыка бьёт в грудь, мигают огни. Охранник провожает взглядом.',hotel:'Администратор поднимает глаза от журнала: «Номер нужен?»'}[VENUES[id]]};
+ s.vBought=false;advance(2);save();render();
+}
+function venueHtml(){
+ const s=S(),V=s.venue;if(!V||!VENUES[V.id])return '';
+ const id=V.id,T=VTYPE[VENUES[id]],name=(dspot(id)||places.find(p=>p.id===id)||{}).name||T.name;
+ const opts=vMenu(id).map(o=>'<button class="bbtn talk" data-do="'+(o.act||'vn:do:'+o.k)+'"'+(o.dis?' disabled':'')+'>'+o.ico+'<b>'+o.n+'</b><small>'+esc(o.sub||'')+'</small></button>').join('');
+ const p=dspot(id)?.person,met=p&&cityState().met&&cityState().met[id];
+ return '<div class="battle talkph vnph" style="--bg:url(\''+(vInterior(id)||'')+'\')">'+
+  '<div class="btop"><b>'+T.icon+' '+esc(name)+'</b><span>'+vHours(id)+' · '+g.money+' ₽</span><button class="bsound" data-do="vn:do:leave">✕</button></div>'+
+  '<div class="vnmid"><div class="bubble">'+esc(V.say||'')+'</div></div>'+
+  '<div class="blog">'+(g.log||[]).slice(0,2).map((t,i)=>'<div class="'+(i?'':'new')+'">'+esc(t)+'</div>').join('')+'</div>'+
+  '<div class="bacts"><div class="trow">'+opts+'</div><div class="brow small">'+(met?'<button class="bbtn sm" data-do="vn:talk:'+id+'">💬<small>'+esc(p)+'</small></button>':'')+'<button class="bbtn sm" data-do="vn:do:leave">🚪<small>Выйти</small></button></div></div></div>';
+}
+const _renderV=render;
+render=function(){_renderV();if(g&&!g.fight&&S().venue&&!S().dlg&&!root.querySelector('.setup'))root.insertAdjacentHTML('beforeend',venueHtml())};
+const _doActionV=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('vn:')){const p=sid.split(':');
+  if(p[1]==='enter')return vEnter(p[2]);
+  if(p[1]==='do')return vAct(p[2]);
+  if(p[1]==='talk')return dlgOpen(p[2]);
+  if(p[1]==='wait'){const[a]=VTYPE[VENUES[p[2]]].open,now=g.minute,then=(a%24)*60;advance(then<=now?1440-now+then:then-now);announce('Дождался открытия.');save();render();return}
+ }
+ const inVenue=g&&S().venue&&sid.startsWith('world:sleep:');
+ const r=_doActionV(id);
+ if(inVenue&&g){S().venue=null;save();render()}
+ return r;
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.vbanner{position:relative}.vclosed{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-8deg);padding:4px 14px;border:3px solid #e2533c;color:#ff7a62;font:900 22px Arial;letter-spacing:2px;background:#000a;border-radius:6px}'+
+'.vbanner .drawbanner{object-position:center 20%}.vnph{z-index:185}.vnph:before{filter:brightness(.72) saturate(.95)!important;inset:0!important}.vnmid{display:flex;align-items:flex-end;justify-content:center;padding:10px 16px;min-height:0}.vnph .bubble{max-width:520px}.vnph .bubble:after{display:none}'+
+'@media (orientation:landscape) and (max-height:500px){.battle.vnph{grid-template-columns:minmax(0,1fr) minmax(280px,40%)}.battle.vnph .vnmid{grid-column:1;grid-row:2}.battle.vnph .blog{grid-column:1;grid-row:3}.battle.vnph .bacts{grid-column:2;grid-row:2/4}}'+
+'</style>');
+
 render();
 })();</script></body></html>
