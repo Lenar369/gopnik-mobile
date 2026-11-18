@@ -4091,5 +4091,108 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.copph{z-index:195}'+
 '</style>');
 
+/* ===== v6: участковый и события милиции ===== */
+places.push({id:'q5_police',name:'Опорный пункт',icon:'👮',x:560,y:120,text:'Опорный пункт милиции в первом этаже девятиэтажки. Участковый Сафин принимает по вечерам — а бывает, и днём.'});
+SURV_INDOOR.add('q5_police');
+const UCH={id:'q5_police',name:'Опорный пункт',icon:'👮',person:'Участковый Сафин',desc:'Опорный пункт милиции.',x:560,y:120};
+const _dspotU=dspot;dspot=function(id){return id==='q5_police'?UCH:_dspotU(id)};
+const _dlgBgU=dlgBg;dlgBg=function(id){if(id==='q5_police'){const im=document.querySelector('#world .mapart');return im?im.src:''}return _dlgBgU(id)};
+function uchRel(){return NPC('q5_police').rel}
+function U(){const s=S();s.uch=s.uch||{job:null,last:0,wit:-99};return s.uch}
+// поручения участкового
+const UJOBS=[
+ {k:'cellar',title:'Присмотреть за подвалом дома №12',at:'house12',night:true,text:'«Жильцы жалуются: в подвале дома №12 по ночам кто-то шастает. Глянь вечерком, кто там. Только аккуратно».',act:'🔦 Заглянуть в подвал (по просьбе Сафина)',foe:'bum'},
+ {k:'market',title:'Узнать, кто ворует с рынка',at:'m_side',text:'«С рынка тащат ящики. Задние ряды — их место. Посмотри, кто там крутится, и расскажи мне».',act:'👀 Проследить за задними рядами',foe:'shpana'},
+ {k:'witness',title:'Найти свидетеля',at:'s_station',text:'«На привокзальной площади неделю назад машину вскрыли. Поспрашивай у вокзала — может, кто видел».',act:'🗣️ Расспросить про вскрытую машину',foe:null},
+ {k:'garage',title:'Проверить гаражи',at:'garage',text:'«У Валеры в гаражах опять чужие. Сходи глянь, кто такие, — по-тихому».',act:'🔍 Проверить чужих у гаражей',foe:'gop3'}
+];
+function ujob(){return U().job}
+function ujText(){const J=ujob();if(!J)return '';const D=UJOBS.find(x=>x.k===J.k);return D.title+(J.step==='report'?' — вернись к Сафину с докладом.':' — '+((dspot(D.at)||places.find(p=>p.id===D.at)||{}).name||D.at)+(D.night?', ночью':'')+'.')}
+const _dlgActU=dlgAct;
+dlgAct=function(a,arg){
+ const s=S(),D=s.dlg;if(!D||D.id!=='q5_police')return _dlgActU(a,arg);
+ const u=U();
+ if(a==='uj'){if(u.job){D.line=u.job.step==='report'?'«Ну, рассказывай».':'«Ты ещё не сделал, о чём я просил: '+ujText()+'»';save();render();return}
+  if(u.last===g.day){D.line='«На сегодня всё. Заходи завтра».';save();render();return}
+  const J=UJOBS[(g.day+(U().done||0))%UJOBS.length];D.sub='uj';D.offerU=J.k;D.line=J.text;save();render();return}
+ if(a==='ujyes'&&D.offerU){u.job={k:D.offerU,step:'go'};D.offerU=null;D.sub='main';D.line='«Добро. Жду с докладом».';announce('🚔 Поручение участкового: '+ujText());save();render();return}
+ if(a==='ujrep'&&u.job&&u.job.step==='report'){const d=UJOBS.find(x=>x.k===u.job.k);u.job=null;u.last=g.day;u.done=(u.done||0)+1;addRel('q5_police',10);S().heat=Math.max(0,(S().heat||0)-15);g.money+=25;addResp(-2);addXP(25,'поручение участкового');D.line='«Молодец. Вот, держи на сигареты. И если что — говори, что от меня».';announce('🚔 Доклад участковому: +25 ₽, внимание милиции −15, уважение района −2.');save();render();return}
+ if(a==='wit'){if(!canWitness()){D.line='«А что ты видел-то? Ничего. Вот и не морочь голову».';save();render();return}U().wit=g.day;S().heat=Math.max(0,(S().heat||0)-15);g.money+=30;addRel('q5_police',5);addResp(-1);D.line='«Записал. Спасибо, гражданин. Вот, за беспокойство».';announce('📝 Дал показания как свидетель: +30 ₽, внимание −15.');save();render();return}
+ return _dlgActU(a,arg);
+};
+function canWitness(){const u=U();return S().lastFightDay>=g.day-2&&u.wit<g.day-2}
+const _fightEndU=fightEnd;fightEnd=function(r){_fightEndU(r);if(g)S().lastFightDay=g.day};
+const _dlgHtmlU=dlgHtml;
+dlgHtml=function(){
+ const s=S(),D=s.dlg;if(!D||D.id!=='q5_police')return _dlgHtmlU();
+ if(D.sub==='uj'){D.sub='main';let h=_dlgHtmlU();D.sub='uj';return h.replace(/<div class="trow">[\s\S]*?<\/div><div class="brow small">/,'<div class="trow"><button class="bbtn talk hot" data-do="dl:ujyes">🚔<b>Сделаю</b><small>отношения с милицией лучше, уважение района чуть ниже</small></button><button class="bbtn talk" data-do="dl:back">🙅<b>Не моё</b><small>отказаться</small></button></div><div class="brow small">')}
+ let h=_dlgHtmlU();const u=U();
+ const extra=(u.job&&u.job.step==='report'?'<button class="bbtn talk hot" data-do="dl:ujrep">📋<b>Доложить</b><small>'+esc(UJOBS.find(x=>x.k===u.job.k).title)+'</small></button>':'<button class="bbtn talk" data-do="dl:uj">🚔<b>Поручение участкового</b><small>'+(u.job?'взято':'внимание −15, деньги')+'</small></button>')+
+  '<button class="bbtn talk" data-do="dl:wit"'+(canWitness()?'':' disabled')+'>📝<b>Дать показания</b><small>'+(canWitness()?'видел драку — расскажи':'нужно что-то видеть (драка за 2 дня)')+'</small></button>';
+ return h.replace('<div class="trow">','<div class="trow">'+extra);
+};
+// место участкового: познакомиться
+const _actionsForU=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForU(id);if(!g||typeof id!=='string'||g.fight)return a;
+ if(id==='q5_police'&&!(cityState().met||{}).q5_police)a.unshift({name:'🤝 Познакомиться с участковым',doit:'uc:meet',sub:'Участковый Сафин',alt:true});
+ const J=ujob();if(J&&J.step==='go'){const D2=UJOBS.find(x=>x.k===J.k);if(D2.at===id)a.unshift(D2.night&&!survNight()?{name:D2.act,doit:'uc:wait',sub:'Только ночью — подождать до 21:00',alt:false}:{name:D2.act,doit:'uc:do',sub:'Поручение участкового',alt:true})}
+ return a.filter(x=>!(id==='q5_police'&&x.doit==='surv:trouble'));
+};
+// патруль: сослаться на участкового; облава; проверка на вокзале; рейд в клубе
+const _copActU=copAct;
+copAct=function(a){
+ const s=S(),C=s.cop;if(!C)return;
+ if(a==='uch'){if(C.uched){C.line='«Да хоть на министра ссылайся».';save();render();return}C.uched=true;const ch=Math.max(.05,.45+uchRel()/200-heat()/300);if(Math.random()<ch){s.cop=null;S().heat=Math.max(0,heat()-5);announce('👮 «От Сафина, говоришь? Ладно, иди». Отпустили.');if(s.trip&&s.trip.paused)s.trip.paused=false;save();render();if(s.trip)scheduleWalk();return}C.line='«Сафин мне не начальник. Пройдём».';C.must=true;save();render();return}
+ if(C.kind==='raid'){
+  if(a==='hide'){const ch=.4+(stat(1)-2)*.07;if(Math.random()<ch){s.cop=null;announce('🙈 Пересидел облаву под прилавком.');save();render();return}return copJail('Нашли под прилавком.')}
+  if(a==='dump'){const m=B().mats,n=Object.values(m).reduce((x,y)=>x+y,0);B().mats={};s.cop=null;announce('🧺 Скинул хабар ('+n+' шт.) и стоял как ни при чём — отпустили.');save();render();return}
+  if(a==='calm'){if(heat()<30&&Math.random()<.85){s.cop=null;announce('👮 Проверили — чист. Отпустили.');save();render();return}return copJail('«А ты-то нам и нужен».')}
+ }
+ if(C.kind==='clubraid'){
+  if(a==='wall'){if(heat()<60&&Math.random()<.8){s.cop=null;advance(60);announce('🧱 Час у стены, обыскали и отпустили.');save();render();return}return copJail('Пробили по картотеке — в ориентировке.')}
+  if(a==='kitchen'){const ch=.45+(stat(1)-2)*.07;if(Math.random()<ch){s.cop=null;addHeat(10,'ушёл от рейда');announce('🏃 Ушёл через кухню во двор.');save();render();return}return copJail('Перехватили у чёрного хода.')}
+ }
+ return _copActU(a);
+};
+const _copHtmlU=copHtml;
+copHtml=function(){
+ const s=S(),C=s.cop;let h=_copHtmlU();
+ const btn=(a,ico,t,sub,dis)=>'<button class="bbtn talk" data-do="cp:'+a+'"'+(dis?' disabled':'')+'>'+ico+'<b>'+t+'</b><small>'+esc(sub)+'</small></button>';
+ if(C.kind==='raid')h=h.replace(/<div class="trow">[\s\S]*?<\/div><\/div><\/div>$/,'<div class="trow">'+btn('hide','🙈','Спрятаться под прилавком','Ловкость')+btn('dump','🧺','Скинуть хабар','потеряешь весь хабар, но отпустят')+btn('calm','😐','Стоять спокойно',heat()<30?'чистых отпускают':'ты на заметке — рискованно')+btn('bribe','💸','Дать на лапу',bribe()+' ₽',g.money<bribe())+'</div></div></div>').replace('<b>👮 Патруль</b>','<b>🚨 Облава на рынке</b>');
+ else if(C.kind==='clubraid')h=h.replace(/<div class="trow">[\s\S]*?<\/div><\/div><\/div>$/,'<div class="trow">'+btn('wall','🧱','Встать к стене',heat()<60?'час — и отпустят':'пробьют по картотеке')+btn('kitchen','🏃','Уйти через кухню','Ловкость · внимание +10')+btn('bribe','💸','Дать на лапу',bribe()+' ₽',g.money<bribe())+'</div></div></div>').replace('<b>👮 Патруль</b>','<b>🚨 Рейд в клубе</b>');
+ else if((cityState().met||{}).q5_police&&uchRel()>=30)h=h.replace('<div class="trow">','<div class="trow">'+btn('uch','👮','Сослаться на участкового','«Я от Сафина» · отношения '+uchRel(),C.uched));
+ return h;
+};
+function copEvent(kind,line,name){const s=S();if(g.fight||s.cop||s.dlg||s.scene)return false;if(s.venue&&kind!=='clubraid')return false;s.venue=null;s.cop={name:name||'Капитан Мухаметзянов',line,where:kind,tries:0,kind};save();render();return true}
+const _renderU=render;
+render=function(){
+ if(g&&!g.fight&&!S().cop&&view==='map'&&focus&&!S().cityMode){
+  const s=S(),h=g.minute/60;s.ev=s.ev||{};
+  if((g.region||0)===1&&h>=10&&h<17&&s.ev.raid!==g.day&&dspot(focus)&&Math.random()<.12){s.ev.raid=g.day;if(copEvent('raid','«Всем оставаться на местах! Проверка документов и товара!» — рынок оцепили.','Капитан Мухаметзянов'))return}
+  if((g.region||0)===2&&h>=18&&h<20&&s.ev.station!==g.day&&dspot(focus)&&focus!=='hotel'){s.ev.station=g.day;if(Math.random()<.7&&copMeet('station'))return}
+ }
+ _renderU();
+};
+const _vActU=vAct;
+vAct=function(k){
+ const V=S().venue;
+ if(V&&VENUES[V.id]==='club'&&k!=='leave'&&survNight()&&S().ev?.club!==g.day&&Math.random()<.15){S().ev=S().ev||{};S().ev.club=g.day;copEvent('clubraid','Музыка смолкла. «Милиция! Все к стене, руки на стену!»','Майор Гайнутдинов');return}
+ return _vActU(k);
+};
+const _doActionU=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid==='uc:meet'){const w=cityState();w.met=w.met||{};w.met.q5_police=true;NPC('q5_police');advance(15);announce('🤝 Знакомство: участковый Сафин. «Порядок на районе — это и твоё дело, понял?»');save();render();return}
+ if(g&&sid==='uc:wait'){const now=g.minute,then=21*60;advance(then<=now?1440-now+then:then-now);announceAndRender('Стемнело.');return}
+ if(g&&sid==='uc:do'){const J=ujob();if(!J)return;const D2=UJOBS.find(x=>x.k===J.k);advance(30);
+  if(D2.foe&&Math.random()<.55){J.step='report';startFight(D2.foe,{text:'Тебя заметили.'});return}
+  J.step='report';announce('📋 '+({cellar:'В подвале ночует бродяга — вещей чужих нет.',market:'Ящики уносит шпана с соседнего двора — запомнил их.',witness:'Билетёрша видела «девятку» без номеров — запомнил.',garage:'У гаражей чужие — перекупщики запчастей.'})[J.k]+' Доложи участковому.');save();render();return}
+ return _doActionU(id);
+};
+// «Задания»: поручение участкового
+const _viewPanelU=viewPanel;
+viewPanel=function(){let h=_viewPanelU();if(g&&view==='quests'&&ujob()){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>🚔 Поручение участкового</strong><div class="bqline"><small>'+esc(ujText())+'</small></div></div>'+h.slice(i+24)}return h};
+
 render();
 })();</script></body></html>
