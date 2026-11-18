@@ -3808,5 +3808,156 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '@media (orientation:landscape) and (max-height:500px){.battle.vnph{grid-template-columns:minmax(0,1fr) minmax(280px,40%)}.battle.vnph .vnmid{grid-column:1;grid-row:2}.battle.vnph .blog{grid-column:1;grid-row:3}.battle.vnph .bacts{grid-column:2;grid-row:2/4}}'+
 '</style>');
 
+/* ===== v6: серьёзные дела — «Груз с вагона», «Долг Ильдара», «Метель» ===== */
+MAT.crate={name:'Ящик тушёнки',icon:'📦',w:6,p:10};
+Object.assign(goods,{
+ army_flask:{name:'Армейская фляга',slot:'Аксессуар',cost:0,stat:'тепло +12% · уникальная'},
+ ildar_bar:{name:'Монтировка Ильдара',slot:'Инструмент',cost:0,stat:'обыск быстрее и +1 находка · уникальная'},
+ sheepskin:{name:'Тулуп сторожа',slot:'Верх',cost:0,stat:'тепло +50% · уникальная'}
+});
+Object.assign(WARM_GEAR,{army_flask:.12,sheepskin:.5});
+Object.assign(GICON,{army_flask:'🫗',ildar_bar:'🪛',sheepskin:'🧥'});
+ENEMY.brigade={name:'Бригада',one:'Браток',icon:'🕶️',n:3,hp:55,dmg:[8,14],acc:.72,talk:5,pay:150,run:.3,xp:150,resp:12,loot:{money:[80,150],items:{cigs:2,drink_vodka:1}},style:[.3,.3,.4]};
+FOE_MIN.brigade=12;FOE_EMO.brigade='🕴️';
+const _foeLevelQ=foeLevel;foeLevel=function(t){const l=_foeLevelQ(t);return t==='brigade'?Math.max(l,levelInfo().lvl+3):l};
+const _hasQ=has;has=function(id){return _hasQ(id)||(id==='crowbar'&&_hasQ('ildar_bar'))};
+
+const BQ={
+ wagon:{giver:'s_bar',lvl:8,title:'Груз с вагона',ico:'🚃',
+  pitch:'«Слушай сюда. На сортировке в тупике стоит вагон с тушёнкой, накладные потеряли. Ночью туда братки собираются. Успеешь первым — твоё. Только до шести утра, потом облава».'},
+ debt:{giver:'g_mech',lvl:12,title:'Долг Ильдара',ico:'🔧',
+  pitch:'«Беда, брат. Мне долг повесили — 300 рублей за три дня, иначе бокс сожгут. Денег нет. Поможешь — век не забуду».'},
+ storm:{giver:'c_med',lvl:10,title:'Метель',ico:'🌨️',winter:true,
+  pitch:'«Семёныч, сторож дачного посёлка, звонил с последнего телефона: без еды, без лекарств, ногу подвернул. А метель на двое суток. Отнесёшь ему поесть, лекарство и тёплое — и выведи в город».'}
+};
+function Q(){const s=S();s.bq=s.bq||{};return s.bq}
+function qOpen(k){const q=Q()[k];return q&&!q.done&&!q.fail}
+function qStage(k){return qOpen(k)?Q()[k].st:null}
+function bqFor(id){return Object.keys(BQ).find(k=>BQ[k].giver===id)}
+function bqCan(k){const B2=BQ[k],N=NPC(B2.giver);if(Q()[k])return {ok:false,why:Q()[k].done?'уже сделано':Q()[k].fail?'провалено':'в работе'};if(levelInfo().lvl<B2.lvl)return {ok:false,why:'нужен '+B2.lvl+'-й уровень'};if(N.rel<40)return {ok:false,why:'нужно «свой» (40+)'};if(B2.winter&&!winterNow())return {ok:false,why:'только зимой'};return {ok:true}}
+function bqStart(k){
+ const q={st:'go',t0:absMin()};
+ if(k==='wagon'){q.left=6;q.home=0;const now=g.minute;q.raid=absMin()+((now<6*60?6*60:30*60)-now)+(now>=21*60||now<6*60?0:0)}
+ if(k==='debt'){q.until=g.day+3}
+ if(k==='storm'){q.until=absMin()+48*60;S().weather={kind:'snow',until:q.until}}
+ Q()[k]=q;announce('🔥 Серьёзное дело: '+BQ[k].ico+' «'+BQ[k].title+'». Смотри «Задания».');
+}
+function bqDone(k,txt,xp){const q=Q()[k];q.done=true;q.st='done';addXP(xp||150,'серьёзное дело');addRel(BQ[k].giver,15);announce('🏆 «'+BQ[k].title+'» — выполнено. '+txt);save();render()}
+function bqFail(k,txt){const q=Q()[k];q.fail=true;q.st='fail';addRel(BQ[k].giver,-25);announce('💀 «'+BQ[k].title+'» — провалено. '+txt);save();render()}
+function giveUnique(id){if(g.inventory.length<20)g.inventory.push(id);else B().stash.items.push(id)}
+function bqHint(k){
+ const q=Q()[k];if(!q)return '';if(q.done)return '✅ выполнено';if(q.fail)return '❌ провалено';
+ if(k==='wagon'){if(q.st==='go')return 'Ночью (21:00–6:00) дойди до Перрона на Вокзальном — там тупик с вагонами.'+(absMin()<q.raid?' Облава через '+Math.max(0,Math.round((q.raid-absMin())/60))+' ч.':'');
+  if(q.st==='crates')return 'Таскай ящики (6 кг каждый) домой, в ящик-кладовку, и разгрузи дома. В вагоне осталось: '+q.left+'. Дома уже: '+q.home+'.'+(absMin()<q.raid?' До облавы ~'+Math.max(0,Math.round((q.raid-absMin())/60))+' ч.':' Облава была — вагон опечатан.')}
+ if(k==='debt'){if(q.st==='go')return 'Собери 300 ₽ и отдай Ильдару (Бокс Ильдара) — или узнай в баре Гаражного, кто давит. Срок: до конца '+q.until+'-го дня.';if(q.st==='clue')return 'Бригада собирается на Стоянке в Гаражном. Иди разбираться — или всё же отдай 300 ₽. Срок: до конца '+q.until+'-го дня.'}
+ if(k==='storm'){const left=Math.max(0,Math.round((q.until-absMin())/60));if(q.st==='go')return 'Собери: 2 еды, лекарство или бинт, тёплую вещь (в рюкзаке) — и иди на Дачный посёлок (карта города). Метель! Осталось ~'+left+' ч.';if(q.st==='escort')return 'Выведи Семёныча в любой район — он идёт медленно. Осталось ~'+left+' ч.'}
+ return '';
+}
+// проверки времени
+const _advanceQ=advance;
+advance=function(m){
+ const r=_advanceQ.apply(this,arguments);if(!g)return r;const s=S(),q=Q();
+ if(qOpen('wagon')&&!q.wagon.raided&&absMin()>=q.wagon.raid){q.wagon.raided=true;if(q.wagon.st==='go'){bqFail('wagon','Не успел до облавы — вагон опечатан.')}else{q.wagon.left=0;survNote('🚨 На сортировке облава. В вагон больше не пролезть — довези то, что успел.')}}
+ if(qOpen('debt')&&g.day>q.debt.until){bqFail('debt','Ночью бокс Ильдара подожгли. Он тебя не простит.')}
+ if(qOpen('storm')){if(absMin()>=q.storm.until){bqFail('storm','Семёныча нашли только после метели… поздно.')}else if(!s.weather||s.weather.kind!=='snow'||s.weather.until<q.storm.until)s.weather={kind:'snow',until:q.storm.until}}
+ return r;
+};
+const _walkMultQ=walkMult;walkMult=function(){return _walkMultQ()*(qStage('storm')==='escort'?.5:1)};
+const _arriveQ=arrive;
+arrive=function(d,how){_arriveQ(d,how);if(qStage('storm')==='escort'&&typeof d==='number'){giveUnique('sheepskin');bqDone('storm','Семёныч в тепле. Отдал тебе свой тулуп: «Носи, сынок».',200)}};
+// драки по делу
+const _fightEndQ=fightEnd;
+fightEnd=function(res){
+ const tag=g.fight&&g.fight.quest;_fightEndQ(res);
+ if(!tag)return;const ok=res==='win'||res==='talk'||res==='pay';
+ if(tag==='wagon'){if(ok){Q().wagon.st='crates';announce('Путь к вагону свободен. Внутри — ящики с тушёнкой.')}else announce('К вагону не пробился. Можно попробовать ещё раз, пока ночь.')}
+ if(tag==='debt'){if(ok){giveUnique('ildar_bar');S().ildarFree=true;addResp(8);bqDone('debt','Бригада отстала от Ильдара. Он дал тебе свою монтировку и обещал чинить машину бесплатно.',220)}else announce('Бригада не отступила. Срок идёт — можно вернуться или собрать деньги.')}
+ save();render();
+};
+// действия в местах
+const _actionsForQ=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForQ(id);if(!g||typeof id!=='string'||g.fight)return a;
+ const q=Q(),add=x=>a.unshift(x);
+ if(id==='s_platform'&&qStage('wagon')==='go')add(survNight()?{name:'🚃 Пробраться к вагону',doit:'bq:wagon:go',sub:'Сторож и собаки',alt:true}:{name:'🚃 Вагон — только ночью',doit:'bq:wagon:wait',sub:'Ждать до 21:00',alt:false});
+ if(id==='s_platform'&&qStage('wagon')==='crates'){
+  if(q.wagon.left>0&&!q.wagon.raided){add({name:'📞 Сдать братков',doit:'bq:wagon:snitch',sub:'+60 ₽ · уважение −5 · конец дела',alt:false});add({name:'🙋 Позвать знакомого',doit:'bq:wagon:friend',sub:'Унесёт 4, половина — ему',alt:false});add({name:'📦 Взять ящик ('+q.wagon.left+')',doit:'bq:wagon:take',sub:'6 кг · '+carryW()+'/'+carryMax()+' кг',alt:true})}
+ }
+ if(id==='home'&&(g.region||0)===0&&qStage('wagon')==='crates'&&((B().mats.crate||0)>0))add({name:'📦 Разгрузить ящики тушёнки',doit:'bq:wagon:unload',sub:'С собой: '+B().mats.crate,alt:true});
+ if(id==='g_mech'&&qOpen('debt'))add({name:'💵 Отдать 300 ₽ за Ильдара',doit:'bq:debt:pay',sub:g.money>=300?'Дело закрыто':'У тебя '+g.money+' ₽',alt:g.money>=300});
+ if(id==='g_park'&&qStage('debt')==='clue')add({name:'🕶️ Разобраться с бригадой',doit:'bq:debt:fight',sub:'Трое, сильнее тебя',alt:true});
+ if(id==='wild:dachas'&&S().atWild==='dachas'&&qStage('storm')==='go')add({name:'🏚️ Найти Семёныча',doit:'bq:storm:find',sub:'Отдать еду, лекарство, тёплое',alt:true});
+ return a;
+};
+function stormKit(){
+ const inv=g.inventory,food=inv.filter(x=>SUP[x]&&SUP[x].fx&&SUP[x].fx.food>0),med=inv.filter(x=>/^med_|^bandage$|^compress$/.test(x)),warm=inv.filter(x=>WARM_GEAR[x]&&goods[x]);
+ return {food,med,warm,ok:food.length>=2&&med.length>=1&&warm.length>=1};
+}
+function bqAct(k,a){
+ const q=Q()[k];if(!q)return;
+ if(k==='wagon'){
+  if(a==='wait'){const now=g.minute,then=21*60;advance(then<=now?1440-now+then:then-now);announceAndRender('Стемнело.');return}
+  if(a==='go'){startFight(Math.random()<.5?'watchman':'dogs',{text:'У вагона не пусто.'});if(g.fight)g.fight.quest='wagon';save();render();return}
+  if(a==='take'){if(q.left<=0)return;if(carryW()+6>carryMax()+6){announceAndRender('Больше не унести — сначала отнеси домой.');return}q.left--;addLoot('crate');advance(10);announce('Взял ящик тушёнки. '+(overload()?'⚖️ Перегруз — идти будет тяжело.':''));save();render();return}
+  if(a==='friend'){const k2=known().find(x=>x.rel>=40);if(!k2){announceAndRender('Позвать некого — нужен близкий знакомый (40+).');return}const n=Math.min(4,q.left);q.left-=n;const mine=Math.floor(n/2);B().stash.mats.crate=(B().stash.mats.crate||0)+mine;q.home+=mine;advance(30);announce('🙋 '+k2.n+' унёс '+n+' ящ., половина ('+mine+') — уже у тебя в кладовке.');save();render();return}
+  if(a==='snitch'){g.money+=60;addResp(-5);bqDone('wagon','Сдал братков. 60 ₽ в кармане, но в районе косо смотрят.',80);return}
+  if(a==='unload'){const s2=B(),n=s2.mats.crate||0;delete s2.mats.crate;q.home+=n;for(let i=0;i<n*4;i++)s2.stash.items.push('food_stew');advance(15);announce('📦 Разгрузил '+n+' ящ.: +'+n*4+' банок тушёнки в кладовке.');
+   if(q.left<=0||q.raided){if(q.home>=3)giveUnique('army_flask');bqDone('wagon','Всего вывез '+q.home+' ящ.'+(q.home>=3?' В последнем ящике — армейская фляга.':''),100+q.home*20)}else{save();render()}return}
+ }
+ if(k==='debt'){
+  if(a==='pay'){if(g.money<300){announceAndRender('Не хватает: нужно 300 ₽.');return}g.money-=300;giveUnique('ildar_bar');S().ildarFree=true;bqDone('debt','Ильдар расплатился твоими деньгами. Подарил монтировку и обещал чинить машину бесплатно.',150);return}
+  if(a==='fight'){startFight('brigade',{text:'«Это ты за Ильдара впрягаешься? Ну давай поговорим».'});if(g.fight)g.fight.quest='debt';save();render();return}
+ }
+ if(k==='storm'&&a==='find'){
+  const kit=stormKit();if(!kit.ok){announceAndRender('Не хватает: '+[kit.food.length<2?'еды ('+kit.food.length+'/2)':'',kit.med.length<1?'лекарства или бинта':'',kit.warm.length<1?'тёплой вещи в рюкзаке':''].filter(Boolean).join(', ')+'.');return}
+  [kit.food[0],kit.food[1],kit.med[0],kit.warm[0]].forEach(x=>{const i=g.inventory.indexOf(x);if(i>=0)g.inventory.splice(i,1)});
+  advance(40);q.st='escort';announce('🏚️ Семёныч отогрелся и поел. Теперь выведи его в город — он еле идёт.');save();render();return;
+ }
+}
+// бар Гаражного — улика
+const _vActQ=vAct;
+vAct=function(k){
+ const V=S().venue;
+ if(k==='listen'&&V&&V.id==='g_bar'&&qStage('debt')==='go'){Q().debt.st='clue';S().vListen=g.day+':g_bar';advance(30);V.say='За стойкой хвастаются: «Ильдара дожмём. Бригада по вечерам на Стоянке собирается».';announce('📌 Улика: бригада, что давит на Ильдара, собирается на Стоянке в Гаражном.');save();render();return}
+ return _vActQ(k);
+};
+// бесплатный ремонт у Ильдара
+const _doActionQ=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('bq:')){const p=sid.split(':');bqAct(p[1],p[2]);return}
+ if(g&&sid==='world:mobileRepair'&&S().ildarFree&&g.region===4){const m0=g.money;const r=_doActionQ(id);if(g.money<m0){g.money=m0;g.log[0]+=' Ильдар денег не взял.';save();render()}return r}
+ return _doActionQ(id);
+};
+// Монтировка Ильдара: +1 находка
+const _searchQ=search;
+search=function(k){const before=g.log[0];_searchQ(k);if(!g.fight&&has('ildar_bar')&&g.log[0]!==before&&/^🔎/.test(g.log[0])){const ex=extraFinds(k,1);if(ex.length){g.log[0]=g.log[0].replace(/\.(?=[^.]*$)/,'')+' + монтировка: '+ex.join(', ')+'.';const s=S();if(s.scene==='loot'&&s.sceneData)s.sceneData.text=g.log[0].replace(/^🔎 [^:]*: /,'');save();render()}}};
+// разговор: «🔥 Есть серьёзное дело»
+const _dlgActQ=dlgAct;
+dlgAct=function(a,arg){
+ const s=S(),D=s.dlg;if(!D)return _dlgActQ(a,arg);const k=bqFor(D.id);
+ if(a==='bq'&&k){const c=bqCan(k);if(!c.ok){D.line='«Есть одно дело, но… не сейчас» ('+c.why+').';save();render();return}D.sub='bq';D.line=BQ[k].pitch;save();render();return}
+ if(a==='bqyes'&&k&&bqCan(k).ok){bqStart(k);D.sub='main';D.line='«Я в тебе не сомневался. Не подведи».';save();render();return}
+ if(a==='bqno'){D.sub='main';D.line='«Ну, как знаешь».';save();render();return}
+ return _dlgActQ(a,arg);
+};
+const _dlgHtmlQ=dlgHtml;
+dlgHtml=function(){
+ const s=S(),D=s.dlg;if(!D)return '';const k=bqFor(D.id);
+ if(D.sub==='bq'){D.sub='main';let h=_dlgHtmlQ();D.sub='bq';return h.replace(/<div class="trow">[\s\S]*?<\/div><div class="brow small">/,'<div class="trow"><button class="bbtn talk hot" data-do="dl:bqyes">🔥<b>Берусь</b><small>'+esc(BQ[k].title)+' · опасно</small></button><button class="bbtn talk" data-do="dl:bqno">🙅<b>Не моё</b><small>отказаться</small></button></div><div class="brow small">')}
+ let h=_dlgHtmlQ();
+ if(k&&D.sub==='main'&&!Q()[k]){const c=bqCan(k);h=h.replace('<div class="trow">','<div class="trow"><button class="bbtn talk'+(c.ok?' hot':'')+'" data-do="dl:bq">🔥<b>Есть серьёзное дело?</b><small>'+(c.ok?esc(BQ[k].title):'пока нет: '+c.why)+'</small></button>')}
+ return h;
+};
+// вкладка «Задания»
+const _viewPanelQ=viewPanel;
+viewPanel=function(){
+ let h=_viewPanelQ();if(!g||view!=='quests')return h;
+ const q=Q(),ks=Object.keys(q);
+ const block='<div class="line"><strong>🔥 Серьёзные дела</strong>'+(ks.length?ks.map(k=>'<div class="bqline"><b>'+BQ[k].ico+' '+esc(BQ[k].title)+'</b><small>'+esc(bqHint(k))+'</small></div>').join(''):'<div><small>Пока нет. Спроси «Есть серьёзное дело?» у близких знакомых: бармен у вокзала (8 ур.), Ильдар (12 ур.), медсестра в Центре (10 ур., зимой).</small></div>')+'</div>';
+ const i=h.indexOf('<div class="panel-body">');return i<0?h:h.slice(0,i+24)+block+h.slice(i+24);
+};
+document.head.insertAdjacentHTML('beforeend','<style>.bqline{display:flex;flex-direction:column;margin-top:5px;padding:6px 8px;border-radius:8px;background:#0004;border:1px solid #8e3a24}.bqline small{color:#e8d6b4}</style>');
+
 render();
 })();</script></body></html>
