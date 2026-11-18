@@ -1816,7 +1816,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 
 /* ===== v6: общая карта города, ходьба по карте, события в дороге, погода ===== */
 const CMW=1536,CMH=1024,CMS=1032/1536,CMWH=Math.round(CMH*CMS);           // мир карты 1032×688
-const CITY_XY=[[720,280],[770,660],[1010,390],[280,350],[700,890],[420,545],[680,540]]; // координаты районов на схеме 1536×1024
+const CITY_XY=[[700,190],[900,640],[1110,360],[210,240],[690,860],[250,520],[590,450]];   // по нарисованной карте art/maps/city_*.webp // координаты районов на схеме 1536×1024
 const KM_PX=20/1536,ROUTE_K=1.35;
 const CITY_ICON=['🏠','🛒','🚉','🏭','🚙','⚓','🏛️'];
 function cityKm(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])*KM_PX*ROUTE_K}
@@ -1881,6 +1881,7 @@ const _applyMapC=applyMap;
 applyMap=function(){
  if(!cityOn())return _applyMapC();
  const v=document.getElementById('maphost'),w=document.getElementById('world');if(!v||!w)return;
+ const cov=Math.max(v.clientWidth/1032,v.clientHeight/CMWH);if(zoom<cov)zoom=cov;if(zoom>cov*4)zoom=cov*4;
  const ww=1032*zoom,wh=CMWH*zoom;
  px=ww>v.clientWidth?Math.min(0,Math.max(v.clientWidth-ww,px)):(v.clientWidth-ww)/2;
  py=wh>v.clientHeight?Math.min(0,Math.max(v.clientHeight-wh,py)):(v.clientHeight-wh)/2;
@@ -2391,14 +2392,14 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 
 /* ===== v6: места вылазок на карте города (между районами) ===== */
 const WILD={
- heat:{name:'Теплотрасса за гаражами',icon:'♨️',xy:[500,240],warm:true,fb:'./maps/factory.webp',desc:'Трубы в драной стекловате, от них идёт тепло. Здесь греются бродяги и прячут всякое.',t:{pipe:3,rags:3,bottle:2,can:2,wool:1,matches:1,cigs:1}},
- sector:{name:'Брошенный дом в частном секторе',icon:'🏚️',xy:[870,170],fb:'../art/loot/q5_attic.webp',desc:'Покосившийся дом за забором, хозяева давно уехали. Чердак и сарай не заперты.',t:{cloth:3,wool:2,planks:3,nails:2,glass:1,food_potato:2,herbs:2}},
- dachas:{name:'Дачный посёлок',icon:'🏡',xy:[1320,230],desc:'Зимой здесь никого. Летом — сторож и собаки. В сараях — инструмент и заготовки.',t:{planks:3,rope:2,food_potato:3,food_pickles:1,herbs:3,nails:2,tape:1}},
- camp:{name:'Заброшенный пионерлагерь',icon:'⛺',xy:[150,230],desc:'Облупленные корпуса в лесу, столовая без окон, медпункт с выбитой дверью.',t:{cloth:3,planks:2,glass:2,paper:2,med_pills:1,bandage:1,wool:1}},
- dump:{name:'Городская свалка',icon:'🗑️',xy:[1120,900],fb:'./maps/garage.webp',desc:'Горы мусора до горизонта, вороньё и дым. Найти можно что угодно — и нарваться тоже.',t:{scrap:4,bottle:3,can:4,plastic:3,battery:2,wire:2,leather:1,glass:2}},
- bank:{name:'Насыпь у Волги',icon:'🌊',xy:[600,700],fb:'./maps/river.webp',desc:'Железнодорожная насыпь над водой: выброшенные шпалы, обрывки сетей, перевёрнутые лодки.',t:{planks:3,rope:3,coal:2,plastic:2,scrap:1,matches:1}},
- hospital:{name:'Долгострой больницы',icon:'🏗️',xy:[960,610],fb:'./maps/center.webp',desc:'Бетонный каркас в девять этажей. Строители бросили всё в 1991-м.',t:{brick:4,wire:3,pipe:2,nails:3,plastic:2,spiral:1,tape:1}},
- cellar:{name:'Подвал старой пятиэтажки',icon:'🧱',xy:[560,800],fb:'../art/loot/q5_basement.webp',warm:true,desc:'Тёплый подвал: трубы отопления, сухо даже зимой. Ящики, старые вещи жильцов, а иногда чьи-то заначки.',t:{pipe:2,rags:3,cloth:2,can:2,food_stew:1,food_potato:2,drink_water:1,rope:1,spirit:1}}
+ heat:{name:'Теплотрасса за гаражами',icon:'♨️',xy:[880,800],warm:true,fb:'./maps/factory.webp',desc:'Трубы в драной стекловате, от них идёт тепло. Здесь греются бродяги и прячут всякое.',t:{pipe:3,rags:3,bottle:2,can:2,wool:1,matches:1,cigs:1}},
+ sector:{name:'Брошенный дом в частном секторе',icon:'🏚️',xy:[1290,560],fb:'../art/loot/q5_attic.webp',desc:'Покосившийся дом за забором, хозяева давно уехали. Чердак и сарай не заперты.',t:{cloth:3,wool:2,planks:3,nails:2,glass:1,food_potato:2,herbs:2}},
+ dachas:{name:'Дачный посёлок',icon:'🏡',xy:[1420,820],desc:'Зимой здесь никого. Летом — сторож и собаки. В сараях — инструмент и заготовки.',t:{planks:3,rope:2,food_potato:3,food_pickles:1,herbs:3,nails:2,tape:1}},
+ camp:{name:'Заброшенный пионерлагерь',icon:'⛺',xy:[330,50],desc:'Облупленные корпуса в лесу, столовая без окон, медпункт с выбитой дверью.',t:{cloth:3,planks:2,glass:2,paper:2,med_pills:1,bandage:1,wool:1}},
+ dump:{name:'Городская свалка',icon:'🗑️',xy:[120,950],fb:'./maps/garage.webp',desc:'Горы мусора до горизонта, вороньё и дым. Найти можно что угодно — и нарваться тоже.',t:{scrap:4,bottle:3,can:4,plastic:3,battery:2,wire:2,leather:1,glass:2}},
+ bank:{name:'Насыпь у Волги',icon:'🌊',xy:[520,660],fb:'./maps/river.webp',desc:'Железнодорожная насыпь над водой: выброшенные шпалы, обрывки сетей, перевёрнутые лодки.',t:{planks:3,rope:3,coal:2,plastic:2,scrap:1,matches:1}},
+ hospital:{name:'Долгострой больницы',icon:'🏗️',xy:[1335,195],fb:'./maps/center.webp',desc:'Бетонный каркас в девять этажей. Строители бросили всё в 1991-м.',t:{brick:4,wire:3,pipe:2,nails:3,plastic:2,spiral:1,tape:1}},
+ cellar:{name:'Подвал старой пятиэтажки',icon:'🧱',xy:[830,560],fb:'../art/loot/q5_basement.webp',warm:true,desc:'Тёплый подвал: трубы отопления, сухо даже зимой. Ящики, старые вещи жильцов, а иногда чьи-то заначки.',t:{pipe:2,rags:3,cloth:2,can:2,food_stew:1,food_potato:2,drink_water:1,rope:1,spirit:1}}
 };
 for(const[k,w]of Object.entries(WILD)){LOOT['wild_'+k]={at:null,name:w.name,t:w.t,cold:!w.indoor&&!w.warm};probeAsset('../art/loot/wild_'+k+'.webp')}
 function migrateWild(){const s=g&&S();if(s&&s.atWild==='bunker')s.atWild='cellar';if(s&&s.trip&&s.trip.to==='w:bunker')s.trip.to='w:cellar';if(s&&s.trip&&s.trip.from==='w:bunker')s.trip.from='w:cellar'}

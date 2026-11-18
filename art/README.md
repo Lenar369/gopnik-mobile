@@ -50,3 +50,4 @@
 | [REQUEST_06_fighters.md](REQUEST_06_fighters.md) | Аватарки противников (7) и фон драки в дороге (2) | ⏳ |
 | [REQUEST_07_city_venues.md](REQUEST_07_city_venues.md) | Кафе, бар, ресторан, клуб и гостиница: фасады по сезонам, интерьеры круглый год (15 кадров) | ✅ 15 из 15 (утверждены; графику улучшим после тестирования) |
 | [REQUEST_08_npc_portraits.md](REQUEST_08_npc_portraits.md) | Портреты знакомых для разговоров (38) | ⏳ |
+| [REQUEST_09_outskirts.md](REQUEST_09_outskirts.md) | Окраины города: север, юг, восток — лето и зима (6) | ⏳ |
