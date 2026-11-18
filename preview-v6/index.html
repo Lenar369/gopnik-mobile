@@ -3262,8 +3262,11 @@ function lootVariants(k){
 }
 function pickOne(list,seed){if(!list.length)return null;return list[Math.abs(seed)%list.length]}
 // места на карте города — подходящие кадры из готового
+['dachas','sector','camp','bank','heat','dump','hospital'].forEach(k=>{probeAsset(LOOT_DIR+'wild_'+k+'_winter.webp')});
+['q5_dumpster','market_crates','factory_scrap','center_construction'].forEach(k=>probeAsset(LOOT_DIR+k+'_winter.webp'));
 const WILD_ART={heat:['factory_boiler_alt02','factory_boiler_alt01'],sector:['q5_attic'],dachas:['river_boathouse_alt01'],camp:['factory_hall_alt01'],dump:['factory_scrap_alt06','factory_scrap_alt03','factory_scrap_alt05'],bank:['station_wagons_alt01'],hospital:['center_construction_alt02','center_construction_alt01'],cellar:['q5_basement']};
 function wildVariants(k){
+ const ownW=LOOT_DIR+'wild_'+k+'_winter.webp';if(winterNow()&&ASSET_OK[ownW])return [ownW];
  const own=LOOT_DIR+'wild_'+k+'.webp';if(ASSET_OK[own])return [own];
  return (WILD_ART[k]||[]).map(n=>LOOT_DIR+(LOOT_ALTS.includes(n)?'alternates/':'')+n+'.webp').filter(u=>ASSET_OK[u]);
 }
@@ -4193,6 +4196,118 @@ doAction=function(id){
 // «Задания»: поручение участкового
 const _viewPanelU=viewPanel;
 viewPanel=function(){let h=_viewPanelU();if(g&&view==='quests'&&ujob()){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>🚔 Поручение участкового</strong><div class="bqline"><small>'+esc(ujText())+'</small></div></div>'+h.slice(i+24)}return h};
+
+/* ===== v6: правки после теста 18.11 — экран места, аватар на карте, «Карта», задания, названия, метки, зима ===== */
+// --- 1. метки: карты районов обрезаны снизу (полоса-дефект) → координаты меток пересчитаны
+(function(){
+ const T={1:[1.0759,39],2:[1.0759,39],3:[1.0901,46],4:[1.0901,46]};
+ for(const[r,[k,off]]of Object.entries(T))DISTRICTS[r].spots.forEach(p=>{p.x=Math.round(Math.max(40,Math.min(992,p.x*k-off)));p.y=Math.round(Math.min(545,p.y*k))});
+ const R={w_boat:[735,300],w_cafe:[900,235],w_fish:[520,415],w_club:[470,100],w_watch:[985,370]};
+ DISTRICTS[5].spots.forEach(p=>{if(R[p.id]){p.x=R[p.id][0];p.y=R[p.id][1]}});
+})();
+WILD_ART.bank=['river_flooded_alt02','river_flooded'];
+
+// --- 2. экран места: в окне — маленькая картинка, текст и «Войти»; внутри — картинка на весь экран и все действия
+function isPlace(id){if(!id||typeof id!=='string')return false;if(id.startsWith('wild:'))return S().atWild===id.slice(5);return places.some(p=>p.id===id)||!!dspot(id)}
+function placeName(id){if(id.startsWith('wild:'))return WILD[id.slice(5)].name;return (places.find(p=>p.id===id)||dspot(id)||{}).name||id}
+function placeIcon(id){if(id.startsWith('wild:'))return WILD[id.slice(5)].icon;return (places.find(p=>p.id===id)||dspot(id)||{}).icon||'📍'}
+function placeArt(id){
+ if(id.startsWith('wild:'))return wildArt(id.slice(5));
+ if(VENUES[id])return vFacade(id);
+ const k=Object.keys(LOOT).find(k=>LOOT[k].at===id);if(k){const v=lootVariants(k);if(v.length)return v[0]}
+ return null;
+}
+function placeRegionName(id){if(id.startsWith('wild:'))return 'Окраины города';return regions[regionForSpot(id)]}
+const _drawDrawerX=drawDrawer;
+drawDrawer=function(){
+ if(!g||!focus||g.fight||view!=='map'||!isPlace(focus)||S().place===focus)return _drawDrawerX();
+ const img=placeArt(focus);
+ return '<aside class="drawer pdrawer"><div class="drawer-head"><strong>'+placeIcon(focus)+' '+esc(placeName(focus))+'</strong><button class="drawer-close" data-do="close" aria-label="Закрыть">×</button></div>'+
+  '<div class="pbody">'+(img?'<img class="pthumb" src="'+img+'" alt="" draggable="false">':'')+'<div class="description">'+esc(infoFor(focus))+'</div></div>'+
+  '<div class="actionsbar"><button class="act alt penter" data-do="pl:enter">🚪 Войти<small>'+actionsFor(focus).length+' действий внутри</small></button></div></aside>';
+};
+function placeHtml(){
+ const id=S().place,img=placeArt(id)||(g.region?districtArtSrc(g.region):''),acts=actionsFor(id).filter(b=>b.doit&&b.doit!=='close');
+ return '<section class="overlay placeov"><div class="pimg" style="background-image:url(\''+img+'\')"></div>'+
+  '<header class="phead"><b>'+placeIcon(id)+' '+esc(placeName(id))+'</b><small>'+esc(placeRegionName(id))+'</small><button class="pexit" data-do="pl:exit">🗺️ На карту</button></header>'+
+  '<div class="pdesc">'+esc(infoFor(id))+'</div>'+
+  '<div class="plog">'+(g.log||[]).slice(0,2).map((t,i)=>'<div class="'+(i?'':'new')+'">'+esc(t)+'</div>').join('')+'</div>'+
+  '<div class="pacts">'+acts.map(b=>'<button class="act '+(b.alt?'alt':'')+'" data-do="'+esc(b.doit)+'">'+esc(b.name)+(b.sub?'<small>'+esc(b.sub)+'</small>':'')+'</button>').join('')+'</div></section>';
+}
+
+// --- 3. «Карта» внизу: если ничего не открыто — общая карта города; подпись светлая
+root.addEventListener('click',e=>{
+ const b=e.target.closest('[data-nav="map"]');if(!b||!g)return;
+ const s=S();s.place=null;
+ if(view==='map'&&!focus&&!s.cityMode&&!g.fight&&!s.venue&&!s.dlg&&!s.cop){e.stopPropagation();openCity()}
+},true);
+
+// --- 4. задания: только взятые
+worldQuestPanel=function(){
+ const w=cityState();let list='';
+ Object.entries(CQUESTS).forEach(([r,entries])=>entries.forEach((q,i)=>{const st=w.quests[r+'-'+i]||0;if(st===1||st===2){const at=st===1?q.find:q.back;list+='<div class="quest-mini">○ <b>'+esc(q.title)+'</b> · '+esc(regions[r])+' · '+(st===1?'ищи: ':'вернись: ')+esc(citySpotName(at))+'</div>'}}));
+ let done=0;Object.values(w.quests||{}).forEach(v=>{if(v===3)done++});
+ return '<div class="line"><strong>Основной сюжет</strong><div>'+esc(worldMainTask())+'</div></div>'+
+  '<div class="line"><strong>Взятые задания</strong>'+(list||'<div><small>Нет взятых. Задания дают люди в районах — кнопка «Начать: …» в месте.</small></div>')+(done?'<div><small>Выполнено: '+done+'</small></div>':'')+'</div>';
+};
+
+// --- 5. зима на картах районов: свои зимние картинки (если нарисованы) или «зимний» фильтр со снегом
+const MAPW={1:'market',2:'station',3:'factory',4:'garage',5:'river',6:'center'};
+Object.values(MAPW).concat(['yard']).forEach(n=>probeAsset('../art/maps/'+n+'_winter.webp'));
+const _districtArtSrcX=districtArtSrc;
+districtArtSrc=function(id){const n=MAPW[id];if(n&&winterNow()&&ASSET_OK['../art/maps/'+n+'_winter.webp'])return '../art/maps/'+n+'_winter.webp';return _districtArtSrcX(id)};
+function needWinterTint(){if(!winterNow()||S().cityMode)return false;const n=(g.region||0)===0?'yard':MAPW[g.region];return !ASSET_OK['../art/maps/'+n+'_winter.webp']}
+
+// --- отрисовка
+let lastPlaceFocus=null;
+const _renderX=render;
+render=function(){
+ if(g){const s=S();
+  if(focus!==lastPlaceFocus&&focus&&isPlace(focus)&&s.place&&s.place!==focus)s.place=null;
+  if(s.place&&s.placeRegion!==(g.region||0))s.place=null;
+  if(s.cityMode&&s.place&&!String(s.place).startsWith('wild:'))s.place=null;
+  lastPlaceFocus=focus;
+ }
+ _renderX();
+ if(!g||root.querySelector('.setup'))return;
+ const s=S(),host=document.getElementById('maphost');
+ if(host&&view==='map'){
+  if((g.region||0)===0&&!s.cityMode&&winterNow()&&ASSET_OK['../art/maps/yard_winter.webp']){const im=host.querySelector('.mapart');if(im)im.src='../art/maps/yard_winter.webp'}
+  host.classList.toggle('wintint',needWinterTint());
+  if(needWinterTint()&&!host.querySelector('.wxfx'))host.insertAdjacentHTML('beforeend','<div class="wxfx wx-snow lite" aria-hidden="true"></div>');
+  const title=s.cityMode?(s.atWild?'🗺️ Город · '+WILD[s.atWild].name:'🗺️ Карта города'):'📍 '+(regions[g.region||0])+(focus&&isPlace(focus)?' · '+placeName(focus):'');
+  host.insertAdjacentHTML('beforeend','<div class="maptitle">'+esc(title)+'</div>');
+ }
+ if(s.place&&focus===s.place&&view==='map'&&!g.fight&&!s.venue&&!s.dlg&&!s.cop&&!s.scene){root.insertAdjacentHTML('beforeend',placeHtml())}
+};
+const _doActionX=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid==='pl:enter'&&isPlace(focus)){const s=S();s.place=focus;s.placeRegion=g.region||0;advance(2);save();render();return}
+ if(g&&sid==='pl:exit'){S().place=null;focus=null;page=0;save();render();return}
+ return _doActionX(id);
+};
+// аватар героя на карте города
+const _cityWorldX=cityWorld;
+cityWorld=function(){return _cityWorldX().replace(/(<div class="cityhero[^>]*>)🚶<\/div>/,(m,a)=>a+avatar('hero','hc')+'</div>')};
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.pdrawer .pbody{display:flex;gap:9px;align-items:flex-start;padding:8px 12px 0}.pthumb{width:118px;height:68px;object-fit:cover;border-radius:7px;border:2px solid #b18b56;flex:0 0 auto;box-shadow:0 2px 6px #000a}.pdrawer .description{padding:0!important;max-height:none!important;overflow:visible!important;font-size:12.5px;line-height:1.4}'+
+'.penter{display:flex;flex-direction:column;align-items:center;width:100%;font-size:15px;font-weight:800}.penter small{font-weight:500}'+
+'.pdrawer{display:flex!important;flex-direction:column}.pdrawer .pbody{flex:1 1 auto;min-height:0;overflow:auto}.pdrawer .actionsbar{flex:none}.land .pdrawer .pbody{flex-direction:column}.land .pdrawer .pthumb{width:100%;height:96px}'+
+'.placeov{display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);background:#100d0a!important;z-index:30}'+
+'.pimg{position:absolute;inset:0;background:center/cover no-repeat;filter:brightness(.62);z-index:0}.placeov>*:not(.pimg){position:relative;z-index:1}'+
+'.phead{display:flex;align-items:center;gap:8px;padding:8px 12px;background:linear-gradient(#000c,transparent)}.phead b{font-size:17px;color:#ffe9c2;text-shadow:0 2px 4px #000}.phead small{flex:1;color:#e2cfa9;text-shadow:0 1px 3px #000}'+
+'.pexit{padding:7px 12px;border-radius:10px;border:1px solid #9fc79a;background:linear-gradient(#3f5a45,#26382b);color:#eaf6e2;font-weight:800;font-size:13px}'+
+'.pdesc{margin:0 12px;padding:8px 11px;border-radius:10px;background:#000a;color:#f1e3c4;font-size:13px;line-height:1.45;max-width:640px}'+
+'.plog{align-self:end;padding:6px 12px;font-size:12px;color:#d9ccb3;text-shadow:0 1px 2px #000}.plog .new{color:#fff;font-weight:700}'+
+'.pacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-auto-rows:minmax(54px,auto);gap:6px;padding:8px;max-height:46dvh;overflow:auto;background:#0b0907e6;border-top:1px solid #6e5232}.pacts .act{min-height:46px;margin:0}'+
+'.land .placeov{grid-template-columns:minmax(0,1fr) minmax(280px,40%);grid-template-rows:auto 1fr auto}.land .phead{grid-column:1/-1}.land .pdesc{grid-column:1;grid-row:2;align-self:start;margin-top:4px}.land .plog{grid-column:1;grid-row:3}.land .pacts{grid-column:2;grid-row:2/4;max-height:none;border-top:0;border-left:1px solid #6e5232;align-content:start;grid-template-columns:1fr 1fr}'+
+'.cityhero{background:none!important;width:auto!important;height:auto!important;transform:translate(-50%,-50%)!important}.ava.hc{width:46px;height:46px;border-width:3px;box-shadow:0 0 0 3px #ffd27a88,0 4px 10px #000}.ava.hc i{font-size:26px}'+
+'.bottom button.on{color:#fff4d8!important;text-shadow:0 1px 2px #000,0 0 6px #000!important}.bottom button.on em,.bottom button.on span{color:#fff4d8!important}'+
+'.maptitle{position:absolute;z-index:5;left:8px;bottom:8px;max-width:60%;padding:4px 11px;opacity:.92;border-radius:9px;background:#1b1712e6;border:1px solid #b18b56;color:#ffe9c2;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 3px 10px #0009}'+
+'.wintint .mapart{filter:saturate(.45) brightness(1.12) contrast(.92) hue-rotate(-8deg)!important}.wintint .world:after{content:"";position:absolute;inset:0;background:linear-gradient(#e8f2ff40,#ffffff26);pointer-events:none}.wx-snow.lite{opacity:.45}'+
+'</style>');
 
 render();
 })();</script></body></html>
