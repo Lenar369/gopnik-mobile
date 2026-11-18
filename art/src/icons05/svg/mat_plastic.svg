@@ -1,0 +1,6 @@
+<ellipse cx="128" cy="222" rx="100" ry="12" fill="#000" opacity="0.3" filter="url(#blur4)"/><path d="M36 170 C30 130 60 96 100 100 C120 70 170 66 196 92 C230 100 236 150 214 180 C190 208 70 212 36 170z" fill="#dfe6e6" opacity=".7"/>
+<path d="M60 168 C56 140 80 118 110 124 C130 104 170 104 184 126 C204 136 204 166 188 180 C160 196 80 196 60 168z" fill="#c4cfd0" opacity=".7"/>
+<path d="M60 130 l30 20 l-10 20 M110 104 l10 30 l30 -6 l20 26 M170 96 l-10 30 M196 120 l-20 20 l10 30 M90 186 l20 -26 l30 10 l10 22 M50 160 l30 -4" stroke="#fff" stroke-width="3" fill="none" opacity=".8"/>
+<path d="M70 140 l24 12 M120 130 l26 0 M150 166 l20 -10 M100 170 l16 -14" stroke="#8a9a9c" stroke-width="2.5" fill="none" opacity=".6"/>
+<path d="M36 170 C30 130 60 96 100 100 C120 70 170 66 196 92 C230 100 236 150 214 180 C190 208 70 212 36 170z" fill="url(#sh)" opacity=".6"/>
+<path d="M196 92 l20 -24 l10 6 l-18 24" fill="#e8eeee" opacity=".6"/>

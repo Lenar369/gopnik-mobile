@@ -1,0 +1,11 @@
+<ellipse cx="128" cy="210" rx="104" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<path d="M40 176 L196 176 C222 176 230 150 214 140" stroke="#5a5a58" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M70 196 L214 160 C236 154 240 128 222 120" stroke="#6a6a68" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M60 172 v-24 M100 170 v-26 M150 172 v-30 M180 172 v-26 M90 192 v-26 M140 180 v-28 M190 168 v-28" stroke="#6a4a2a" stroke-width="8"/>
+<polygon points="40,140 176,104 222,126 86,162" fill="#9b7a50"/>
+<polygon points="40,140 86,162 86,172 40,150" fill="#6a4a2a"/><polygon points="86,162 222,126 222,136 86,172" fill="#5a3e22"/>
+<path d="M62 134 L108 156 M94 125 L140 147 M126 117 L172 139 M158 108 L204 130" stroke="#4a3018" stroke-width="3"/>
+<polygon points="40,140 176,104 222,126 86,162" fill="url(#grain)"/>
+<polygon points="40,140 176,104 222,126 86,162" fill="url(#sh)"/>
+<circle cx="70" cy="140" r="2.5" fill="#2a2622"/><circle cx="190" cy="118" r="2.5" fill="#2a2622"/></g>
+<path d="M216 126 C240 110 230 70 200 60 C180 54 170 70 186 80" stroke="#9c7f50" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M216 126 C240 110 230 70 200 60 C180 54 170 70 186 80" stroke="#6b5232" stroke-width="6" fill="none" stroke-dasharray="3 4"/>

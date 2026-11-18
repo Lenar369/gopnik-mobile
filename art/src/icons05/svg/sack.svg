@@ -1,0 +1,8 @@
+<ellipse cx="128" cy="222" rx="92" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><path d="M60 90 C36 120 34 190 70 212 C100 226 160 226 190 212 C224 190 220 120 196 90 C180 78 150 70 128 70 C104 70 76 78 60 90z" fill="#d4dcdc" opacity=".82"/>
+<path d="M80 110 C70 140 74 180 96 200 C120 210 150 210 170 196 C190 170 186 130 174 110z" fill="#7a6a54" opacity=".45"/>
+<path d="M100 130 l10 20 l18 -10 M150 120 l-10 30 l22 14 M90 180 l30 6 M160 186 l-20 -10" stroke="#5a4a34" stroke-width="5" opacity=".35" fill="none"/>
+<path d="M70 120 l20 30 l-10 30 M120 96 l10 30 M180 110 l-14 26 l12 30 M110 200 l20 -20 l30 10" stroke="#fff" stroke-width="3" fill="none" opacity=".8"/>
+<path d="M60 90 C36 120 34 190 70 212 C100 226 160 226 190 212 C224 190 220 120 196 90 C180 78 150 70 128 70 C104 70 76 78 60 90z" fill="url(#sh)" opacity=".7"/>
+<path d="M100 74 C110 56 146 56 156 74 L150 82 C140 70 116 70 106 82z" fill="#e8eeee" opacity=".85"/><path d="M108 60 l-12 -22 l12 4 l6 -10 l6 24 M148 60 l8 -24 l4 10 l10 -6 l-12 24" fill="#e8eeee" opacity=".8"/>
+<g filter="url(#tex)"><path d="M100 76 Q128 92 156 76" stroke="#9c7f50" stroke-width="9" fill="none"/>
+<path d="M156 78 C220 60 236 150 196 200" stroke="#9c7f50" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M156 78 C220 60 236 150 196 200" stroke="#6b5232" stroke-width="9" fill="none" stroke-dasharray="3 5"/></g>

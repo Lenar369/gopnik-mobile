@@ -1,0 +1,11 @@
+<ellipse cx="128" cy="222" rx="88" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<path d="M84 50 C80 40 96 30 128 30 C160 30 176 40 172 50" stroke="#9c7f50" stroke-width="9" fill="none"/>
+<path d="M58 74 C58 54 80 46 128 46 C176 46 198 54 198 74 L204 196 C204 212 190 218 128 218 C66 218 52 212 52 196z" fill="url(#plaidR)"/>
+<path d="M58 74 C58 54 80 46 128 46 C176 46 198 54 198 74 L204 196 C204 212 190 218 128 218 C66 218 52 212 52 196z" fill="url(#sh)"/>
+<path d="M56 72 C56 52 80 44 128 44 C176 44 200 52 200 72 L196 120 C170 128 86 128 60 120z" fill="#6e4426"/>
+<path d="M60 116 C86 124 170 124 196 116" stroke="#d9b98a" stroke-width="2.5" fill="none" stroke-dasharray="6 5"/>
+<path d="M56 72 C56 52 80 44 128 44 C176 44 200 52 200 72 L196 120 C170 128 86 128 60 120z" fill="url(#sh)"/>
+<rect x="84" y="148" width="88" height="50" rx="6" fill="#6e4426"/><path d="M88 152 h80 v42 h-80z" fill="none" stroke="#d9b98a" stroke-width="2" stroke-dasharray="5 4"/>
+<path d="M128 120 v28" stroke="#9c7f50" stroke-width="7"/><circle cx="128" cy="150" r="6" fill="#8a8680"/>
+<path d="M52 80 C30 100 30 170 50 196 M204 80 C226 100 226 170 206 196" stroke="#9c7f50" stroke-width="10" fill="none" stroke-linecap="round"/>
+<path d="M52 80 C30 100 30 170 50 196 M204 80 C226 100 226 170 206 196" stroke="#6b5232" stroke-width="10" fill="none" stroke-dasharray="3 5"/></g>

@@ -1,0 +1,7 @@
+<ellipse cx="128" cy="222" rx="96" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g transform="rotate(-26 128 128)"><g filter="url(#rust)">
+<rect x="26" y="102" width="186" height="50" rx="5" fill="#77726a"/>
+<rect x="26" y="102" width="186" height="50" rx="5" fill="url(#cylv)"/>
+<rect x="172" y="92" width="40" height="70" rx="5" fill="#827c73"/><rect x="172" y="92" width="40" height="70" rx="5" fill="url(#cylv)"/>
+<path d="M180 94 v66 M188 94 v66 M196 94 v66 M204 94 v66" stroke="#4e4a44" stroke-width="2"/></g>
+<ellipse cx="28" cy="127" rx="11" ry="25" fill="#4a4540"/><ellipse cx="28" cy="127" rx="6" ry="18" fill="#141210"/>
+<path d="M214 94 l8 4 v58 l-8 6z" fill="#3a3632"/></g>

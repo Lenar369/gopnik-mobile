@@ -1,0 +1,7 @@
+<ellipse cx="128" cy="222" rx="56" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><path d="M106 70 h44 v20 c18 6 28 18 28 36 v84 c0 8 -6 12 -14 12 h-72 c-8 0 -14 -4 -14 -12 v-84 c0 -18 10 -30 28 -36z" fill="#9fb8b4" opacity=".55"/>
+<path d="M82 136 h92 v74 c0 8 -6 12 -14 12 h-64 c-8 0 -14 -4 -14 -12z" fill="#dfeff0" opacity=".6"/>
+<path d="M106 70 h44 v20 c18 6 28 18 28 36 v84 c0 8 -6 12 -14 12 h-72 c-8 0 -14 -4 -14 -12 v-84 c0 -18 10 -30 28 -36z" fill="url(#cyl)"/>
+<rect x="100" y="34" width="56" height="40" rx="6" fill="#3a3a3a"/><rect x="100" y="34" width="56" height="40" rx="6" fill="url(#cyl)"/><path d="M104 42 h48 M104 50 h48 M104 58 h48 M104 66 h48" stroke="#222" stroke-width="2"/>
+<rect x="90" y="140" width="76" height="52" rx="3" fill="#e8e2cc"/><rect x="90" y="140" width="76" height="52" rx="3" fill="url(#cyl)" opacity=".6"/>
+<path d="M118 152 h20 v8 h8 v12 h-8 v8 h-20 v-8 h-8 v-12 h8z" fill="#b8352c" transform="translate(-3 0)"/>
+<path d="M90 106 c4 -10 10 -14 16 -16 v100" stroke="#fff" stroke-width="5" opacity=".45" fill="none"/>

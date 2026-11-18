@@ -1,0 +1,9 @@
+<ellipse cx="128" cy="222" rx="96" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g transform="rotate(-36 128 128)"><g filter="url(#rust)">
+<rect x="112" y="40" width="30" height="196" rx="4" fill="#6f6a62"/><rect x="112" y="40" width="30" height="196" rx="4" fill="url(#cyl)"/>
+<path d="M112 46 L112 26 C112 6 86 -4 70 10 L60 20 L74 30 L82 22 C92 16 100 20 100 30 L104 48z" fill="#8a857c"/>
+<path d="M60 20 L74 30 L78 26 L64 16z" fill="#c8c2b8"/>
+<path d="M142 46 L142 20 L132 4 L122 4 L126 20 L124 46z" fill="#7a756c"/>
+<path d="M120 50 v180" stroke="#d0ccc2" stroke-width="2" opacity=".5"/>
+<path d="M112 70 h30 M112 72 h30" stroke="#3a3632" stroke-width="2" opacity=".6"/></g>
+<ellipse cx="127" cy="236" rx="15" ry="5" fill="#2a2622"/>
+<g filter="url(#tex)"><rect x="110" y="170" width="34" height="50" rx="3" fill="#2a2622"/><path d="M110 180 l34 -6 M110 194 l34 -6 M110 208 l34 -6" stroke="#111" stroke-width="3"/></g></g>

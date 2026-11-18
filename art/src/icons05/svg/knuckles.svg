@@ -1,0 +1,7 @@
+<ellipse cx="128" cy="222" rx="96" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#rust)">
+<path d="M28 100 C28 76 46 66 70 66 L186 66 C210 66 228 78 228 100 C228 122 212 134 192 134 L176 134 L176 150 C176 176 80 176 80 150 L80 134 L64 134 C44 134 28 122 28 100z" fill="#8a8680"/>
+<path d="M28 100 C28 76 46 66 70 66 L186 66 C210 66 228 78 228 100 C228 122 212 134 192 134 L176 134 L176 150 C176 176 80 176 80 150 L80 134 L64 134 C44 134 28 122 28 100z" fill="url(#sh)"/>
+<ellipse cx="62" cy="100" rx="19" ry="18" fill="#1a1816"/><ellipse cx="105" cy="98" rx="20" ry="19" fill="#1a1816"/><ellipse cx="150" cy="98" rx="20" ry="19" fill="#1a1816"/><ellipse cx="194" cy="100" rx="19" ry="18" fill="#1a1816"/>
+<path d="M44 74 h168" stroke="#d6d2ca" stroke-width="3" opacity=".6"/><path d="M90 160 q38 10 76 0" stroke="#4a4640" stroke-width="3" fill="none"/></g>
+<path d="M80 150 C80 176 176 176 176 150" stroke="#3a3632" stroke-width="4" fill="none"/>
+<path d="M84 138 h88 v14 h-88z" fill="#1f4f9a"/><path d="M84 141 h88" stroke="#6b94dc" stroke-width="3" opacity=".6"/>

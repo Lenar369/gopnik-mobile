@@ -1,0 +1,7 @@
+<ellipse cx="128" cy="222" rx="72" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g transform="rotate(-38 128 128)">
+<g filter="url(#rust)"><polygon points="128,6 146,40 144,132 112,132 110,40" fill="#8d8a84"/><polygon points="128,6 128,132 112,132 110,40" fill="#b9b6ae"/>
+<path d="M128 10 L128 128" stroke="#e8e6e0" stroke-width="2" opacity=".7"/></g>
+<rect x="104" y="128" width="48" height="12" rx="3" fill="#3f3b36"/>
+<g filter="url(#tex)"><rect x="110" y="138" width="36" height="100" rx="8" fill="#1f4f9a"/>
+<path d="M110 150 l36 -6 M110 166 l36 -6 M110 182 l36 -6 M110 198 l36 -6 M110 214 l36 -6 M110 230 l36 -6" stroke="#0c2c66" stroke-width="3"/>
+<rect x="114" y="140" width="8" height="96" rx="4" fill="#6b94dc" opacity=".55"/></g></g>

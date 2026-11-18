@@ -1,0 +1,9 @@
+<ellipse cx="128" cy="222" rx="100" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<path d="M64 40 L132 40 L136 140 C176 144 214 160 220 196 L220 210 L50 210 L52 150z" fill="#3a2e24"/>
+<path d="M60 70 Q100 80 136 66 L136 110 Q96 124 56 112z" fill="#8a8680"/><path d="M60 70 Q100 80 136 66" stroke="#5a5650" stroke-width="3" fill="none"/>
+<path d="M54 120 Q96 136 138 120 L140 150 Q96 164 52 150z" fill="url(#plaidR)"/>
+<path d="M136 150 C170 152 200 166 212 186 L210 198 Q150 206 70 200 L56 168 Q100 176 136 150z" fill="#d6dcdc" opacity=".75"/>
+<path d="M150 160 l20 24 M170 164 l10 26 M120 176 l30 20 M90 184 l20 14" stroke="#fff" stroke-width="2.5" opacity=".8"/>
+<path d="M64 40 L132 40 L136 140 C176 144 214 160 220 196 L220 210 L50 210 L52 150z" fill="url(#sh)"/>
+<rect x="46" y="206" width="178" height="12" rx="3" fill="#1c1814"/>
+</g><g transform="rotate(4 97.0 102.0)"><rect x="56" y="96" width="82" height="12" fill="#1f4f9a"/><rect x="56" y="96" width="82" height="4.0" fill="#5b88d4" opacity=".55"/><rect x="56" y="104.4" width="82" height="3.5999999999999996" fill="#0c2c66" opacity=".7"/></g><g transform="rotate(30 182.0 174.0)"><rect x="150" y="168" width="64" height="12" fill="#1f4f9a"/><rect x="150" y="168" width="64" height="4.0" fill="#5b88d4" opacity=".55"/><rect x="150" y="176.4" width="64" height="3.5999999999999996" fill="#0c2c66" opacity=".7"/></g><g transform="rotate(-6 109.0 182.0)"><rect x="64" y="176" width="90" height="12" fill="#1f4f9a"/><rect x="64" y="176" width="90" height="4.0" fill="#5b88d4" opacity=".55"/><rect x="64" y="184.4" width="90" height="3.5999999999999996" fill="#0c2c66" opacity=".7"/></g>

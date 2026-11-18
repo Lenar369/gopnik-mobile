@@ -1,0 +1,9 @@
+<ellipse cx="128" cy="222" rx="104" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<path d="M84 52 L108 46 Q128 58 148 46 L172 52 L222 86 L230 162 L200 168 L192 110 L190 214 L66 214 L64 110 L56 168 L26 162 L34 86z" fill="url(#knitBrown)"/>
+<rect x="64" y="104" width="128" height="34" fill="url(#diam)"/>
+<path d="M30 140 l28 4 M226 140 l-28 4" stroke="#8f2d2a" stroke-width="12"/>
+<path d="M66 196 h124 v18 h-124z M28 154 l30 4 l-2 12 l-30 -6z M228 154 l-30 4 l2 12 l30 -6z" fill="#5f432b"/>
+<path d="M66 200 h124 M66 206 h124" stroke="#000" stroke-opacity=".25" stroke-width="2"/>
+<path d="M108 46 Q128 66 148 46 Q128 60 108 46z" fill="#3a2a1a"/>
+<path d="M150 170 l14 -6 l6 10 l-12 8z" fill="#2a1f14"/>
+<path d="M84 52 L108 46 Q128 58 148 46 L172 52 L222 86 L230 162 L200 168 L192 110 L190 214 L66 214 L64 110 L56 168 L26 162 L34 86z" fill="url(#sh)"/></g>

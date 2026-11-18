@@ -1,0 +1,6 @@
+<ellipse cx="128" cy="222" rx="100" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<g transform="rotate(-18 128 140)"><rect x="40" y="70" width="140" height="100" fill="url(#news)"/><rect x="40" y="70" width="140" height="18" fill="#c8c0aa"/><rect x="48" y="74" width="80" height="10" fill="#7a7464"/></g>
+<g transform="rotate(-4 128 140)"><rect x="52" y="86" width="150" height="104" fill="url(#news)"/><rect x="52" y="86" width="150" height="18" fill="#cec6b0"/><rect x="60" y="90" width="90" height="10" fill="#6e6858"/><rect x="150" y="112" width="44" height="34" fill="#9a958a"/></g>
+<g transform="rotate(10 128 140)"><rect x="62" y="104" width="148" height="100" fill="url(#news)"/><rect x="62" y="104" width="148" height="18" fill="#d6ceb8"/><rect x="70" y="108" width="70" height="10" fill="#6a6454"/><rect x="70" y="130" width="50" height="40" fill="#a39e92"/>
+<path d="M136 104 v100" stroke="#8a8474" stroke-width="2"/><path d="M62 104 l20 -6 l-6 12z" fill="#bdb5a0"/></g>
+</g>

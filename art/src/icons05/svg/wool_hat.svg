@@ -1,0 +1,10 @@
+<ellipse cx="128" cy="222" rx="84" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<path d="M48 160 C44 90 86 50 128 50 C170 50 212 90 208 160z" fill="url(#knitGray)"/>
+<rect x="48" y="104" width="160" height="26" fill="url(#diam)" transform="skewY(0)"/>
+<path d="M48 160 C44 90 86 50 128 50 C170 50 212 90 208 160z" fill="url(#sh)"/>
+<path d="M40 158 h176 v44 c-50 10 -126 10 -176 0z" fill="#55575c"/>
+<path d="M48 160 v40 M60 160 v42 M72 160 v43 M84 160 v44 M96 160 v44 M108 160 v44 M120 160 v45 M132 160 v45 M144 160 v44 M156 160 v44 M168 160 v44 M180 160 v43 M192 160 v42 M204 160 v40" stroke="#000" stroke-opacity=".3" stroke-width="3"/>
+<path d="M40 158 h176 v44 c-50 10 -126 10 -176 0z" fill="url(#sh)"/>
+<path d="M150 76 l30 10 l-6 26 l-30 -8z" fill="url(#knitRed)"/><path d="M150 76 l30 10 l-6 26 l-30 -8z" fill="none" stroke="#d8cfb0" stroke-width="2" stroke-dasharray="4 4"/>
+<circle cx="128" cy="44" r="22" fill="#7a7c80"/><circle cx="128" cy="44" r="22" fill="url(#sh)"/><path d="M114 36 l10 8 M130 30 l4 12 M140 44 l-10 4 M118 52 l8 -6" stroke="#4a4c50" stroke-width="2"/>
+<path d="M60 200 l-4 8 M64 202 l2 8" stroke="#55575c" stroke-width="3"/></g>

@@ -1,0 +1,7 @@
+<ellipse cx="128" cy="222" rx="96" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<path d="M38 90 C70 60 150 54 210 74 C224 110 216 160 226 190 C180 210 100 214 46 198 C56 170 30 130 38 90z" fill="#6e4426"/>
+<path d="M38 90 C70 60 150 54 210 74 C224 110 216 160 226 190 C180 210 100 214 46 198 C56 170 30 130 38 90z" fill="url(#sh)"/>
+<path d="M52 96 C80 74 150 70 198 86 C208 116 204 158 210 180 C170 196 104 198 60 186 C66 160 46 126 52 96z" fill="none" stroke="#d9b98a" stroke-width="2.5" stroke-dasharray="7 6"/>
+<path d="M80 120 q40 -10 90 6 M70 150 q50 14 110 -4" stroke="#4a2a14" stroke-width="3" fill="none" opacity=".6"/>
+<path d="M210 74 l-22 26 l14 6 l-8 18 l20 -4" fill="#4a2c16"/><path d="M100 130 q20 -8 50 2" stroke="#b07a4a" stroke-width="3" fill="none" opacity=".5"/>
+<ellipse cx="140" cy="168" rx="20" ry="8" fill="#8a5a34" opacity=".5"/></g>

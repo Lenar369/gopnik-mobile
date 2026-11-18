@@ -1,0 +1,13 @@
+<ellipse cx="128" cy="222" rx="100" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g transform="rotate(-6 128 178)"><g filter="url(#tex)"><rect x="30.0" y="162" width="196" height="26" rx="2" fill="#8a6a45"/><rect x="30.0" y="162" width="196" height="26" fill="url(#grain)"/>
+<rect x="30.0" y="188" width="196" height="9" fill="#000" opacity=".35"/>
+<path d="M50.0 162 h60 l-6 10 l-14 -2 l-8 12 l-20 -4 l-12 10z M138 162 h40 l-4 8 l-18 4 l-10 -6z" fill="#5f7f86"/>
+<rect x="30.0" y="162" width="196" height="26" fill="url(#sh)"/><circle cx="208.0" cy="175" r="2.5" fill="#3a3632"/></g>
+<polygon points="226.0,162 232.0,166 232.0,193 226.0,197" fill="#9a7a52"/></g><g transform="rotate(-14 128 146)"><g filter="url(#tex)"><rect x="38.0" y="130" width="180" height="26" rx="2" fill="#9b7a50"/><rect x="38.0" y="130" width="180" height="26" fill="url(#grain)"/>
+<rect x="38.0" y="156" width="180" height="9" fill="#000" opacity=".35"/>
+<path d="M58.0 130 h60 l-6 10 l-14 -2 l-8 12 l-20 -4 l-12 10z M138 130 h40 l-4 8 l-18 4 l-10 -6z" fill="#7a8a5a"/>
+<rect x="38.0" y="130" width="180" height="26" fill="url(#sh)"/><circle cx="200.0" cy="143" r="2.5" fill="#3a3632"/></g>
+<polygon points="218.0,130 224.0,134 224.0,161 218.0,165" fill="#9a7a52"/></g><g transform="rotate(-2 128 116)"><g filter="url(#tex)"><rect x="43.0" y="100" width="170" height="26" rx="2" fill="#7d5d3c"/><rect x="43.0" y="100" width="170" height="26" fill="url(#grain)"/>
+<rect x="43.0" y="126" width="170" height="9" fill="#000" opacity=".35"/>
+<path d="M63.0 100 h60 l-6 10 l-14 -2 l-8 12 l-20 -4 l-12 10z M138 100 h40 l-4 8 l-18 4 l-10 -6z" fill="#6a8a9a"/>
+<rect x="43.0" y="100" width="170" height="26" fill="url(#sh)"/><circle cx="195.0" cy="113" r="2.5" fill="#3a3632"/></g>
+<polygon points="213.0,100 219.0,104 219.0,131 213.0,135" fill="#9a7a52"/></g>

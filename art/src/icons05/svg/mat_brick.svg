@@ -1,0 +1,6 @@
+<ellipse cx="128" cy="222" rx="92" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<polygon points="40,120 150,92 220,120 110,152" fill="#c4634a"/><polygon points="40,120 110,152 110,210 40,176" fill="#9a4632"/><polygon points="110,152 220,120 220,176 110,210" fill="#7d3726"/>
+<polygon points="176,108 220,120 220,152 196,142 184,122" fill="#d99a82"/><polygon points="196,142 220,152 220,176 202,168" fill="#b8826c"/>
+<ellipse cx="96" cy="124" rx="16" ry="6" fill="#6a2b1e"/><ellipse cx="140" cy="113" rx="16" ry="6" fill="#6a2b1e"/>
+<path d="M50 128 l20 8 M120 170 l30 -10 M150 180 l40 -12" stroke="#5e2618" stroke-width="2" opacity=".6"/>
+<path d="M40 120 L150 92" stroke="#e8a088" stroke-width="2" opacity=".6"/><path d="M60 182 l20 6 l-4 8z" fill="#c9c2b0" opacity=".6"/></g>

@@ -1,0 +1,9 @@
+<ellipse cx="128" cy="222" rx="84" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g opacity=".55" filter="url(#soft)"><path d="M110 70 c-12 -14 12 -22 0 -38 c-10 -14 8 -22 2 -34" stroke="#f0f0f0" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M136 74 c-10 -12 10 -20 0 -32 c-8 -12 6 -18 2 -28" stroke="#f0f0f0" stroke-width="5" fill="none" stroke-linecap="round"/></g><g filter="url(#tex)">
+<path d="M186 110 C230 108 236 180 184 178" stroke="#e8e6de" stroke-width="16" fill="none"/><path d="M186 110 C230 108 236 180 184 178" stroke="#1f4f9a" stroke-width="3" fill="none" transform="translate(0 7)"/>
+<path d="M54 92 L58 196 C60 214 196 214 198 196 L202 92z" fill="#ecebe4"/>
+<path d="M54 92 L58 196 C60 214 196 214 198 196 L202 92z" fill="url(#cyl)"/>
+<path d="M150 150 l14 6 l-4 16 l-12 -4z M80 180 l10 2 l-2 8 z" fill="#1c1c1c"/>
+<path d="M70 120 l14 6 M70 140 l18 2" stroke="#3a7a3a" stroke-width="5" opacity=".7"/>
+<path d="M90 110 h12 l6 14 l-10 10 h-12 l-4 -12z" fill="#b8352c" opacity=".85"/></g>
+<ellipse cx="128" cy="92" rx="74" ry="20" fill="#1f4f9a"/><ellipse cx="128" cy="94" rx="66" ry="15" fill="#7a5a1c"/><ellipse cx="128" cy="94" rx="66" ry="15" fill="#c48a2a" opacity=".4"/>
+<ellipse cx="108" cy="94" rx="8" ry="3" fill="#5a7a2a" transform="rotate(20 108 94)"/><ellipse cx="146" cy="96" rx="7" ry="2.5" fill="#6a8a3a" transform="rotate(-30 146 96)"/><ellipse cx="128" cy="90" rx="6" ry="2" fill="#4a6a22"/>

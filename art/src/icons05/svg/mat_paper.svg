@@ -1,0 +1,7 @@
+<ellipse cx="128" cy="222" rx="100" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#tex)">
+<polygon points="34,118 150,92 222,124 106,152" fill="#d4ccb6"/>
+<polygon points="34,118 106,152 106,200 34,166" fill="#b9b19b"/><polygon points="106,152 222,124 222,172 106,200" fill="#a39b86"/>
+<path d="M34 126 L106 160 M34 134 L106 168 M34 142 L106 176 M34 150 L106 184 M34 158 L106 192 M106 160 L222 132 M106 168 L222 140 M106 176 L222 148 M106 184 L222 156 M106 192 L222 164" stroke="#7a7464" stroke-width="1.2"/>
+<g transform="matrix(1 .46 -1.1 .5 0 0) translate(156 26)" fill="#8d887c"><rect x="0" y="0" width="60" height="12"/><rect x="0" y="18" width="26" height="4"/><rect x="32" y="18" width="28" height="4"/><rect x="0" y="26" width="26" height="4"/><rect x="32" y="26" width="28" height="4"/><rect x="0" y="34" width="26" height="4"/><rect x="32" y="34" width="28" height="4"/><rect x="0" y="44" width="60" height="18" fill="#a8a294"/></g>
+<path d="M70 102 L178 152 L178 186 M192 108 L84 158 L84 194" stroke="#8a6a3c" stroke-width="4" fill="none"/>
+<path d="M126 128 l-8 -14 m8 14 l12 -12" stroke="#8a6a3c" stroke-width="3"/></g>

@@ -1,0 +1,10 @@
+<ellipse cx="128" cy="222" rx="72" ry="12" fill="#000" opacity="0.4" filter="url(#blur4)"/><g filter="url(#rust)">
+<path d="M76 70 L180 70 L184 96 L172 120 L182 150 L178 200 L78 200 L72 160 L84 128 L74 100z" fill="#9a9a96"/>
+<path d="M76 70 L180 70 L184 96 L172 120 L182 150 L178 200 L78 200 L72 160 L84 128 L74 100z" fill="url(#cyl)"/>
+<path d="M84 128 L120 118 L172 120 M74 100 L130 108 L184 96 M72 160 L128 150 L182 150" stroke="#5a5a56" stroke-width="2.5" fill="none" opacity=".7"/>
+<path d="M84 128 L120 124 L172 120" stroke="#e6e6e0" stroke-width="2" fill="none" opacity=".5"/>
+<path d="M78 84 h100 M78 186 h100" stroke="#6f6f6a" stroke-width="3"/>
+<ellipse cx="128" cy="200" rx="50" ry="12" fill="#6a6a66"/></g>
+<ellipse cx="128" cy="70" rx="52" ry="14" fill="#c8c8c2"/><ellipse cx="128" cy="71" rx="46" ry="10" fill="#4a4844"/>
+<path d="M98 66 q30 -12 64 0" stroke="#e8e8e2" stroke-width="2" fill="none" opacity=".6"/>
+<path d="M150 64 l18 -22 l8 4 l-14 22z" fill="#b6b6b0"/>
