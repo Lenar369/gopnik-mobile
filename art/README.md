@@ -52,4 +52,4 @@
 | [REQUEST_08_npc_portraits.md](REQUEST_08_npc_portraits.md) | Портреты знакомых для разговоров (38) | ⏳ 25 из 38 (Старый рынок — 6, Гаражный район — 7, Вокзал — 6, Ремзавод — 6; загружены в `art/npc/`) |
 | [REQUEST_09_outskirts.md](REQUEST_09_outskirts.md) | Окраины города: север, юг, восток — лето и зима (6) | ⏳ |
 | [REQUEST_10_winter_and_outskirts_places.md](REQUEST_10_winter_and_outskirts_places.md) | Зимние карты районов (7), зимние места вылазок (4), новые дачи/дом/лагерь/насыпь лето+зима (8) | ⏳ |
-| [REQUEST_11_weapons.md](REQUEST_11_weapons.md) | Самодельное оружие (4): заточка, труба, кастет, бита | 🤔 пользователь думает |
+| [REQUEST_11_weapons.md](REQUEST_11_weapons.md) | Снаряжение для драк (4) в игровом мультяшном стиле: заточка, труба, кастет, дубина | ⏳ |
