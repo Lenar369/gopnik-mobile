@@ -3959,5 +3959,137 @@ viewPanel=function(){
 };
 document.head.insertAdjacentHTML('beforeend','<style>.bqline{display:flex;flex-direction:column;margin-top:5px;padding:6px 8px;border-radius:8px;background:#0004;border:1px solid #8e3a24}.bqline small{color:#e8d6b4}</style>');
 
+/* ===== v6: милиция — внимание, патрули, взятки, обезьянник ===== */
+ENEMY.police={name:'Наряд ППС',one:'Милиционер',icon:'👮',n:2,hp:70,dmg:[9,15],acc:.8,talk:0,pay:0,run:.4,xp:60,resp:4,loot:{money:[0,0],items:{}},style:[.2,.5,.3]};
+FOE_MIN.police=6;FOE_EMO.police='👮';
+const _foeLevelC=foeLevel;foeLevel=function(t){const l=_foeLevelC(t);return t==='police'?Math.max(l,levelInfo().lvl+2):l};
+DISTRICTS[6].spots.push(SP('c_police','Отделение милиции','🚓',640,200,'Районное отделение. Дежурный, решётка «обезьянника», запах хлорки и табака.','','Дежурный'));
+SURV_INDOOR.add('c_police');
+const GUARDED=new Set(['station_wagons','station_warehouse','factory_scrap','market_crates','center_archive_yard','garage_junkyard']);
+function heat(){return Math.round(S().heat||0)}
+function addHeat(n,why){const s=S(),h0=s.heat||0;s.heat=Math.max(0,Math.min(100,h0+n));if(n>0&&Math.floor(h0/30)<Math.floor(s.heat/30))survNote('🚨 Милиция обратила на тебя внимание'+(s.heat>=90?' — ты в розыске!':s.heat>=60?' — ты в ориентировке.':'.')+(why?' ('+why+')':''))}
+function heatWord(){const h=heat();return h>=90?'в розыске':h>=60?'в ориентировке':h>=30?'присматриваются':'тихо'}
+
+/* ---- откуда растёт ---- */
+const _advanceC2=advance;
+advance=function(m){const r=_advanceC2.apply(this,arguments);if(g&&m>0&&S().heat){const home=atHome();S().heat=Math.max(0,S().heat-m/60*(8/24)*(home?2:1))}return r};
+const _searchC=search;
+search=function(k){const before=g.log[0];_searchC(k);if(!g.fight&&GUARDED.has(k)&&g.log[0]!==before&&/^🔎/.test(g.log[0]))addHeat(5,'лазил на охраняемый объект')};
+const _startFightC=startFight;
+startFight=function(type,opt){_startFightC(type,opt);if(g.fight){g.fight.dayPublic=!survNight()&&!S().cityMode&&!S().atWild}};
+const _fightEndC=fightEnd;
+fightEnd=function(res){
+ const F=g.fight,t=F&&F.type,pub=F&&F.dayPublic;_fightEndC(res);
+ if(!t||t==='police')return;
+ if(res==='win'||res==='lose'){if(t==='bratki'||t==='brigade')addHeat(15,'разборка с братвой');else if(pub)addHeat(10,'драка средь бела дня')}
+};
+const _useSupplyC=useSupply;
+useSupply=function(id){_useSupplyC(id);if((id==='drink_vodka'||id==='drink_beer')&&!survIndoor())addHeat(3,'распитие на улице')};
+const _bqActC=bqAct;
+bqAct=function(k,a){_bqActC(k,a);if(k==='wagon'&&a==='take')addHeat(4,'тащил ящики с вагона');if(k==='wagon'&&a==='snitch')S().heat=Math.max(0,(S().heat||0)-20)};
+
+/* ---- патруль ---- */
+const COP_NAMES=['Сержант Хабибуллин','Старшина Котов','Младший сержант Гарипов','Сержант Лаптев'];
+function copChance(){const s=S(),h=heat();let c=.02+h/350;if(survNight())c*=1.5;if((g.region||0)===2)c*=1.5;return Math.min(.45,c)}
+function copMeet(where){
+ const s=S();if(g.fight||s.cop||s.venue||s.dlg||s.scene)return false;
+ if(s.trip){s.trip.paused=true;clearTimeout(tripTimer)}
+ s.cop={name:COP_NAMES[Math.floor(Math.random()*COP_NAMES.length)],line:'',where,tries:0};
+ s.cop.line='«'+s.cop.name+'. Документики предъявим. Куда идём, что несём?»'+(heat()>=60?' Второй смотрит в листок с ориентировкой.':'');
+ save();render();return true;
+}
+function bribe(){return Math.round((20+heat()*1.8)*(afterDefault()?1.4:1)/5)*5}
+function copAct(a){
+ const s=S(),C=s.cop;if(!C)return;const h=heat();
+ const free=txt=>{s.cop=null;announce('👮 '+txt);if(s.trip&&s.trip.paused)s.trip.paused=false;save();render();if(s.trip)scheduleWalk()};
+ const say=t=>{C.line=t;C.tries++;save();render()};
+ if(a==='docs'){const ch=h<30?.9:h<60?.55:h<90?.25:.05;if(Math.random()<ch)return free('Проверили документы и отпустили.');{C.must=true;return say('«Так-так… А ну-ка пройдём, разберёмся». (Не отпускают.)')}}
+ if(a==='talk'){if(C.talked){say('«Хватит сказки рассказывать».');return}C.talked=true;const ch=Math.max(.05,.3+(stat(2)-2)*.08+(stat(3)-2)*.04-h/250);if(Math.random()<ch)return free('Заговорил зубы — махнули рукой: «Иди уже».');addHeat(5);{C.must=true;return say('«Умный, да? Пройдём».')}}
+ if(a==='bribe'){const p=bribe();if(g.money<p){C.must=true;say('«Пустой? Ну тогда пройдём».');return}if(Math.random()<.85-h/300){g.money-=p;s.heat=Math.max(0,h-10);return free('Сунул '+p+' ₽ — «Свободен. И чтоб я тебя не видел».')}g.money-=Math.round(p/2);addHeat(10,'попытка дать взятку');{C.must=true;return say('«Взятку предлагаешь?! Ещё и деньги изымем». (Забрали '+Math.round(p/2)+' ₽.)')}}
+ if(a==='run'){const ch=Math.max(.05,.45+(stat(1)-2)*.06-(overload()?.3:0)-C.tries*.05);if(Math.random()<ch){addHeat(20,'убежал от патруля');return free('Рванул через дворы — оторвался. Но тебя запомнили.')}return copJail('Догнали, скрутили.')}
+ if(a==='fight'){s.cop=null;addHeat(50,'драка с милицией');save();startFight('police',{back:null,text:'Ты бьёшь первым. Наряд хватается за дубинки.'});if(g.fight)g.fight.cop=true;save();render();return}
+ if(a==='go')return copJail('Сел в «бобик» без лишних слов.');
+}
+function copJail(txt){
+ const s=S();s.cop=null;clearTimeout(tripTimer);s.trip=null;s.atWild=null;s.cityMode=false;
+ const took={items:[],money:0};
+ const bad=x=>WEAPON[x]||x==='drink_vodka'||x==='drink_beer';
+ g.inventory=g.inventory.filter(x=>{if(bad(x)){took.items.push(x);return false}return true});
+ const w=g.equip&&g.equip['Оружие'];if(w){took.items.push(w);g.equip['Оружие']=null}
+ const cr=B().mats.crate||0;if(cr){took.crates=cr;delete B().mats.crate}
+ took.money=Math.round(g.money*.3);g.money-=took.money;
+ s.jail={items:(s.jail&&s.jail.items||[]).concat(took.items),crates:(s.jail&&s.jail.crates||0)+(took.crates||0),fine:50};
+ const now=g.minute,then=8*60;const wait=Math.max(8*60,(then<=now?1440-now+then:then-now));
+ s.food=Math.max(s.food,45);s.energy=Math.max(s.energy,30);if(g.hp<15)g.hp=15;   // баланда и нары — до утра доживёшь
+ s.mode='inside';try{advance(wait)}finally{s.mode=null}
+ s.pendingDeath=false;if(g.hp<10)g.hp=10;s.warmth=clampN(s.warmth-25);s.nerves=clampN(s.nerves-20);s.heat=Math.min(s.heat||0,30);
+ g.region=6;g.loc='c_police';view='map';focus='c_police';page=0;zoom=1;px=0;py=0;root.dataset.initializedMap='';
+ announce('🚓 '+txt+' Ночь в «обезьяннике». Штраф '+took.money+' ₽'+(took.items.length||took.crates?', изъято: '+took.items.map(anyName).concat(took.crates?['ящики тушёнки ×'+took.crates]:[]).join(', '):'')+'. Забрать вещи — у дежурного, 50 ₽.');
+ save();render();
+}
+// драка с нарядом
+const _fightEndC2=fightEnd;
+fightEnd=function(res){
+ const cop=g.fight&&g.fight.cop;_fightEndC2(res);
+ if(!cop)return;
+ if(res==='lose')copJail('Наряд скрутил тебя.');
+ else if(res==='win'){addHeat(30,'избил наряд');survNote('🚨 Ты избил милиционеров. Теперь тебя ищут всерьёз.')}
+};
+// где встречается патруль: в дороге и на улицах районов
+const _pickRoadEventC=pickRoadEvent;
+pickRoadEvent=function(){if(Math.random()<copChance()*2.5)return {k:'cop'};return _pickRoadEventC()};
+ROAD_EVENTS.cop={title:'👮 Патруль',text:()=>'Навстречу идёт наряд ППС.',opts:[['Подойдут сами','cop-meet','']]};
+const _roadAnswerC=roadAnswer;
+roadAnswer=function(a){if(a==='cop-meet'){const t=S().trip;if(t)t.ev=null;copMeet('road');return}return _roadAnswerC(a)};
+const _walkStepC=walkStep;
+walkStep=function(){const s=g&&S();if(s&&s.trip&&!s.trip.ev&&!s.trip.paused&&Math.random()<copChance()*.12){s.trip.ev={k:'cop'}}return _walkStepC()};
+let lastCopFocus=null;
+const _renderC2=render;
+render=function(){
+ if(g&&!g.fight&&focus&&focus!==lastCopFocus&&view==='map'&&!S().cityMode&&!S().cop&&!S().venue&&!S().dlg&&!SURV_INDOOR.has(focus)&&(dspot(focus)||places.some(p=>p.id===focus))&&focus!=='home'){
+  lastCopFocus=focus;if(Math.random()<copChance()){if(copMeet('street'))return}
+ }
+ if(g)lastCopFocus=focus;
+ _renderC2();
+ if(!g||root.querySelector('.setup'))return;
+ const s=S(),h=heat();
+ if(h>0){const chip='<span class="copchip '+(h>=90?'red':h>=60?'orange':h>=30?'yel':'')+'" title="Внимание милиции: '+heatWord()+'">🚨'+h+'</span>';const t=root.querySelector('.lb-stats')||root.querySelector('.metrics');if(t)t.insertAdjacentHTML('beforeend',chip)}
+ if(s.cop&&!g.fight)root.insertAdjacentHTML('beforeend',copHtml());
+};
+function copHtml(){
+ const s=S(),C=s.cop,h=heat(),p=bribe();
+ const btn=(a,ico,t,sub,dis,cls)=>'<button class="bbtn talk'+(cls?' '+cls:'')+'" data-do="cp:'+a+'"'+(dis?' disabled':'')+'>'+ico+'<b>'+t+'</b><small>'+esc(sub)+'</small></button>';
+ const opts=C.must?btn('go','🚓','Пройти в машину','ночь в отделении, изымут лишнее')+btn('bribe','💸','Дать на лапу',p+' ₽',g.money<p)+btn('run','🏃','Бежать','Ловкость'+(overload()?' · тяжёлый рюкзак!':''))+btn('fight','👊','Драться','очень плохая идея','', 'hot')
+  :btn('docs','🪪','Показать документы',h<30?'обычно отпускают':h<60?'могут придраться':'вряд ли отпустят')+btn('talk','🗣️','Заговорить зубы','Смекалка',C.talked)+btn('bribe','💸','Дать на лапу',p+' ₽ · '+(h>=60?'могут не взять':'обычно берут'),g.money<p)+btn('run','🏃','Бежать','Ловкость · внимание +20')+btn('fight','👊','Драться','внимание +50 · сильные','', 'hot');
+ const bg=s.cityMode?cityArt():(g.region?districtArtSrc(g.region):'');
+ return '<div class="battle talkph vnph copph" style="--bg:url(\''+bg+'\')"><div class="btop"><b>👮 Патруль</b><span>Внимание: '+h+' · '+heatWord()+'</span></div>'+
+  '<div class="tfield"><div class="tside">'+avatar('hero','big')+'<b>Ты</b></div><div class="tmid"><div class="tlabel">🚨 Внимание милиции</div><div class="tbar heat"><i style="width:'+h+'%"></i><u style="left:30%"></u><u style="left:60%"></u><u style="left:90%"></u></div><div class="bubble">'+esc(C.line)+'</div></div><div class="tside"><span class="ava big foe"><i>👮</i></span><b>'+esc(C.name)+'</b></div></div>'+
+  '<div class="blog">'+(g.log||[]).slice(0,2).map((t,i)=>'<div class="'+(i?'':'new')+'">'+esc(t)+'</div>').join('')+'</div>'+
+  '<div class="bacts"><div class="trow">'+opts+'</div></div></div>';
+}
+// отделение: забрать изъятое
+const _actionsForCP2=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForCP2(id);if(!g||id!=='c_police')return a;const J=S().jail;
+ if(J&&((J.items&&J.items.length)||J.crates))a.unshift({name:'📋 Забрать изъятое',doit:'cp:claim',sub:J.fine+' ₽ · '+J.items.map(anyName).concat(J.crates?['ящики ×'+J.crates]:[]).join(', '),alt:true});
+ if(heat()>0)a.unshift({name:'🤝 Помочь следствию',doit:'cp:help',sub:'Дать показания · внимание −25, уважение района −3',alt:false});
+ return a;
+};
+const _doActionCP2=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('cp:')){const a=sid.slice(3),s=S();
+  if(a==='claim'){const J=s.jail;if(!J)return;if(g.money<J.fine){announceAndRender('Дежурный: «Штраф '+J.fine+' ₽. Нет денег — нет вещей».');return}g.money-=J.fine;J.items.forEach(x=>g.inventory.length<20?g.inventory.push(x):B().stash.items.push(x));if(J.crates)B().mats.crate=(B().mats.crate||0)+J.crates;s.jail=null;advance(20);announce('📋 Вернули изъятое.');save();render();return}
+  if(a==='help'){if(s.copHelp===g.day){announceAndRender('Сегодня уже давал показания.');return}s.copHelp=g.day;advance(60);s.heat=Math.max(0,(s.heat||0)-25);addResp(-3);announce('🤝 Дал показания. Милиция к тебе мягче, но на районе такое не любят.');save();render();return}
+  return copAct(a);
+ }
+ return _doActionCP2(id);
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.copchip{display:inline-flex;align-items:center;padding:0 6px;height:24px;border-radius:7px;background:#1d2a3a;border:1px solid #5d7fa8;color:#dce9ff;font-size:12px;font-weight:800;align-self:center;margin-left:3px}.copchip.yel{background:#3a3418;border-color:#c9a64a}.copchip.orange{background:#4a2a12;border-color:#e08a3c}.copchip.red{background:#5b1410;border-color:#ff6a4a;animation:bPulse .8s infinite alternate}'+
+'.tbar.heat{background:linear-gradient(90deg,#2b3a2b 0 30%,#4a4220 30% 60%,#5a3418 60% 90%,#5b1410 90%)}.tbar.heat i{background:#ffffff30}'+
+'.copph{z-index:195}'+
+'</style>');
+
 render();
 })();</script></body></html>
