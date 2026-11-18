@@ -1,0 +1,15 @@
+const {JSDOM,VirtualConsole}=require('jsdom');const html=require('fs').readFileSync(process.argv[2],'utf8');const KEY='gopnik-kazan-1998-survival-v6';
+const errs=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errs.push(String(e.stack||e).slice(0,300)));
+const d=new JSDOM(html,{runScripts:'dangerously',url:'https://x.test/preview-v6/',virtualConsole:vc,beforeParse(w){w.matchMedia=()=>({matches:false,addListener(){}})}});const w=d.window,r=w.document.getElementById('root');
+const c=id=>{const b=w.document.createElement('button');b.dataset.do=id;r.appendChild(b);b.click();b.remove()};
+const st=()=>JSON.parse(w.localStorage.getItem(KEY)||'null');const bk=()=>JSON.parse(w.localStorage.getItem(KEY+'-backup')||'null');
+const title=()=>r.innerHTML.match(/drawer-head"><strong>([^<]*)/)?.[1];const btns=()=>[...r.querySelectorAll('.act')].map(b=>b.textContent.slice(0,40)).join(' | ');
+c('start');c('mail');console.log('1 summer game day',st().day,'xp',st().surv.xp,'menu btn in header:',!!r.querySelector('header .menubtn'));
+r.querySelector('header .menubtn').click();console.log('2 menu:',title(),'::',btns());
+c('surv:newgame');console.log('3 confirm:',btns());
+c('surv:newgame-yes');console.log('4 setup shown:',!!r.querySelector('.setup'),'winter btn',!!r.querySelector('[data-do="start-winter"]'),'cancel btn',!!r.querySelector('[data-do="surv:cancel-new"]'),'backup xp',bk()?.surv?.xp);
+c('surv:cancel-new');console.log('5 cancel -> back in game:',!r.querySelector('.setup'),'xp',st().surv.xp);
+r.querySelector('header .menubtn').click();c('surv:newgame');c('surv:newgame-yes');c('start-winter');console.log('6 winter game shift',st().surv.shift,'date', r.innerHTML.match(/phase-name">([^<]*)/)?.[1]);
+r.querySelector('header .menubtn').click();console.log('7 menu now:',btns());
+c('surv:restore');console.log('8 restored summer: shift',st().surv.shift,'xp',st().surv.xp,'backup shift',bk().surv.shift,'|',st().log[0]);
+console.log('errors',errs);

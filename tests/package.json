@@ -1,0 +1,7 @@
+{
+  "name": "gopnik-tests",
+  "private": true,
+  "description": "Автотесты игры (jsdom): node run.js",
+  "scripts": { "test": "node run.js" },
+  "dependencies": { "jsdom": "24.1.3" }
+}
