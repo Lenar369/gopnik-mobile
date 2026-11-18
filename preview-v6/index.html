@@ -3650,5 +3650,18 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.unit .ulv{position:absolute;top:-6px;left:-8px;z-index:3;min-width:20px;height:20px;padding:0 4px;border-radius:10px;background:#2b2118;border:1px solid #c9a46a;color:#ffe9c2;font-size:11px;line-height:18px;text-align:center}.unit .ulv.hard{background:#7b1d14;border-color:#ff8a6a}.unit .ulv.easy{background:#26382b;border-color:#9fc79a}'+
 '</style>');
 
+/* ===== v6: подложки интерфейса (заказ 03) ===== */
+['ui_button','ui_button_active','ui_plate','ui_panel','ui_photo_frame','ui_title_card','ui_topbar'].forEach(k=>probeAsset(UI+k+'.webp'));
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.bottom button{border:10px solid transparent!important;border-image:url(../art/ui/ui_button.webp) 34 fill stretch!important;background:none!important;box-shadow:none!important}'+
+'.bottom button.on{border-image:url(../art/ui/ui_button_active.webp) 34 fill stretch!important;color:#1e1206!important;font-weight:900!important;text-shadow:0 1px 0 #ffe9b0}'+
+'.lb-plate{border:7px solid transparent!important;border-image:url(../art/ui/ui_plate.webp) 22 fill stretch!important;background:none!important;box-shadow:none!important;padding:0 3px!important}'+
+'.top,.land .top{background:url(../art/ui/ui_topbar.webp) center/auto 100% repeat-x,#1a1510!important}'+
+'.drawer,.overlay .panel-body{border:14px solid transparent!important;border-image:url(../art/ui/ui_panel.webp) 40 fill stretch!important;background:#17130ff2 padding-box!important}'+
+'.drawer{padding:0!important}.drawer-head{border-bottom:1px solid #62482f88}'+
+'.sceneimg,.drawbanner{border:16px solid transparent;border-image:url(../art/ui/ui_photo_frame.webp) 28 stretch;box-sizing:border-box}'+
+'.citybar span{border:6px solid transparent!important;border-image:url(../art/ui/ui_plate.webp) 22 fill stretch!important;background:none!important}'+
+'</style>');
+
 render();
 })();</script></body></html>
