@@ -4310,5 +4310,113 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.wintint .mapart{filter:saturate(.45) brightness(1.12) contrast(.92) hue-rotate(-8deg)!important}.wintint .world:after{content:"";position:absolute;inset:0;background:linear-gradient(#e8f2ff40,#ffffff26);pointer-events:none}.wx-snow.lite{opacity:.45}'+
 '</style>');
 
+
+/* ===== v6: окраины города (заказ 09) — север, юг, восток; переход через край карты ===== */
+// Все координаты — «мировые»: карта центра 0..1536 × 0..1024, окраины пристыкованы к её краям
+// (с нахлёстом — на краю окраины видны первые городские дома).
+const SHEETS={
+ city:{name:'Карта города',off:[0,0]},
+ north:{name:'Северная окраина',what:'дачи, пионерлагерь',off:[0,-774],art:'north',noWinter:true,exit:[800,800],exitIcon:'⬇️'},
+ south:{name:'Южная окраина',what:'свалка, промбаза',off:[0,874],art:'south',exit:[300,140],exitIcon:'⬆️'},
+ east:{name:'Восточная окраина',what:'частный сектор, ферма, посёлок',off:[1386,0],art:'east',exit:[60,285],exitIcon:'⬅️'}
+};
+const CITY_EXITS={north:[980,26],south:[827,1000],east:[1450,530]};
+const EXIT_ICON={north:'⬆️',south:'⬇️',east:'➡️'};
+function sheetOf(p){if(p[0]>1536)return 'east';if(p[1]<0)return 'north';if(p[1]>1024)return 'south';return 'city'}
+function sheetXY(sh,x,y){const o=SHEETS[sh].off;return [o[0]+x,o[1]+y]}
+['north','south','east','village'].forEach(n=>['summer','winter'].forEach(se=>probeAsset('../art/maps/'+n+'_'+se+'.webp')));
+function sheetArt(sh){
+ if(sh==='city')return cityArt();
+ const n=SHEETS[sh].art,su='../art/maps/'+n+'_summer.webp',wi='../art/maps/'+n+'_winter.webp';
+ if(winterNow()&&!SHEETS[sh].noWinter&&ASSET_OK[wi])return wi;
+ return su;
+}
+function sheetNeedsTint(sh){if(!winterNow()||sh==='city')return false;return sheetArt(sh).indexOf('_winter')<0}
+function heroSheet(){return sheetOf(heroXY())}
+function viewSheet(){const s=S();return s.vsheet&&SHEETS[s.vsheet]?s.vsheet:heroSheet()}
+
+// места переезжают на свои окраины + новые места
+WILD.dachas.xy=sheetXY('north',307,400);
+WILD.camp.xy=sheetXY('north',1200,307);
+WILD.dump.xy=sheetXY('south',147,440);
+WILD.sector.xy=sheetXY('east',240,467);
+Object.assign(WILD,{
+ base:{name:'Брошенная промбаза',icon:'🏭',xy:sheetXY('south',693,227),arts:['south'],desc:'Ангары с проржавевшими воротами, цистерны, козловой кран. Сторож бывает, но редко трезвый.',t:{scrap:4,pipe:3,wire:2,battery:1,tape:1,spiral:1,coal:2,rope:1}},
+ farm:{name:'Заброшенная ферма',icon:'🐄',xy:sheetXY('east',987,213),arts:['east'],desc:'Бывшая молочная ферма: длинные коровники, водонапорная башня, ржавый трактор. Колхоз развалился, всё растаскивают.',t:{planks:3,rope:2,nails:2,scrap:2,leather:2,wire:1,food_potato:2,coal:1}},
+ village:{name:'Посёлок за рекой',icon:'🏘️',xy:sheetXY('east',1467,747),arts:['village'],desc:'Деревянные дома, речка с мостками, водонапорная башня. Дачники уехали, в пустых домах можно поживиться — но местные чужих не любят.',t:{food_potato:3,food_pickles:2,herbs:2,cloth:1,wool:1,planks:2,matches:1,drink_water:1}}
+});
+for(const k of ['base','farm','village']){const w=WILD[k];LOOT['wild_'+k]={at:null,name:w.name,t:w.t,cold:true};probeAsset('../art/loot/wild_'+k+'.webp')}
+Object.assign(WILD_FOES,{base:['watchman','bum','gop3'],farm:['dogs','watchman','bum'],village:['drunk','dogs','shpana']});
+const _wildVariantsO=wildVariants;
+wildVariants=function(k){
+ const w=WILD[k];if(!w||!w.arts)return _wildVariantsO(k);
+ const own=_wildVariantsO(k);if(own.length)return own;
+ const n=w.arts[0],su='../art/maps/'+n+'_summer.webp',wi='../art/maps/'+n+'_winter.webp';
+ if(winterNow()&&ASSET_OK[wi]&&!(SHEETS[n]&&SHEETS[n].noWinter))return [wi];
+ return [su];
+};
+
+// отрисовка карты: только текущий лист, метки переводятся в его координаты
+cityWorld=function(){
+ migrateWild();
+ const s=S(),t=s.trip,hp=heroXY(),hs=sheetOf(hp),vs=viewSheet(),o=SHEETS[vs].off;
+ const L=p=>[Math.round((p[0]-o[0])*CMS),Math.round((p[1]-o[1])*CMS)];
+ let h='<img class="mapart cityart" src="'+sheetArt(vs)+'" alt="" draggable="false">';
+ if(t){const a=L(hp),b=L(tgtXY(t.to));h+='<svg class="cityroute" viewBox="0 0 1032 '+CMWH+'"><line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/></svg>'}
+ const pin=(cls,act,name,p,icon)=>{const q=L(p);return '<button class="pin citypin '+cls+'" data-do="'+act+'" data-name="'+esc(name)+'" style="left:'+q[0]+'px;top:'+q[1]+'px">'+icon+'</button>'};
+ if(vs==='city'){
+  h+=CITY_XY.map((p,i)=>pin(i===(t?t.to:s.atWild?-1:g.region)?'active':'','surv:cpin:'+i,regions[i],p,CITY_ICON[i])).join('');
+  for(const k of ['north','south','east'])h+=pin('exitpin'+(hs===k?' here':''),'surv:sheet:'+k,SHEETS[k].name,CITY_EXITS[k],EXIT_ICON[k]);
+ }else{
+  h+=pin('exitpin'+(hs==='city'?' here':''),'surv:sheet:city','В город',sheetXY(vs,...SHEETS[vs].exit),SHEETS[vs].exitIcon);
+ }
+ h+=Object.entries(WILD).filter(([k,w])=>sheetOf(w.xy)===vs).map(([k,w])=>{const on=s.atWild===k||t&&t.to==='w:'+k,Ls=lootState('wild_'+k);return pin('wildpin'+(on?' active':'')+(Ls.ch<=0?' empty':''),'surv:wpin:'+k,w.name,w.xy,w.icon)}).join('');
+ if(hs===vs){const q=L(hp);h+='<div class="cityhero'+(t&&!t.paused?' walking':'')+'" style="left:'+(q[0]+(t?0:30))+'px;top:'+(q[1]-(t?0:14))+'px">'+avatar('hero','hc')+'</div>'}
+ return h;
+};
+// центровка: на героя, если он на этом листе, иначе — на край, ведущий к нему
+cityFit=function(){
+ const v=document.getElementById('maphost');if(!v)return;
+ viewportW=v.clientWidth;viewportH=v.clientHeight;
+ const cover=Math.max(viewportW/1032,viewportH/CMWH),vs=viewSheet(),o=SHEETS[vs].off,hp=heroXY(),hs=sheetOf(hp);
+ if(cityFresh||zoom<cover*.999){
+  zoom=Math.max(cover,Math.min(1.4,cover*1.5));
+  let f=hs===vs?hp:vs==='city'?(CITY_EXITS[hs]||hp):sheetXY(vs,...SHEETS[vs].exit);
+  const dw=root.classList.contains('land')?(document.querySelector('.drawer')?.offsetWidth||0)+12:0;
+  px=(viewportW-dw)/2-(f[0]-o[0])*CMS*zoom;py=viewportH/2-(f[1]-o[1])*CMS*zoom;cityFresh=false;
+ }
+ applyMap();
+};
+// листы переключаются сами, когда герой переходит край карты
+let lastHeroSheet=null;
+const _walkStepO=walkStep;
+walkStep=function(){_walkStepO();if(!g)return;const s=S(),hs=heroSheet();if(lastHeroSheet&&hs!==lastHeroSheet&&s.cityMode){s.vsheet=null;cityFresh=true;if(s.trip)announce('🗺️ '+SHEETS[hs].name+'.');save();render()}lastHeroSheet=hs};
+const _startWalkO=startWalk;
+startWalk=function(d){const s=S();s.vsheet=null;lastHeroSheet=heroSheet();return _startWalkO(d)};
+const _openCityO=openCity;
+openCity=function(){const s=S();s.vsheet=null;lastHeroSheet=heroSheet();return _openCityO()};
+const _survActionO=survAction;
+survAction=function(id){
+ const p=id.split(':'),s=S();
+ if(p[1]==='sheet'&&SHEETS[p[2]]){s.vsheet=p[2]===heroSheet()?null:p[2];focus=null;page=0;cityFresh=true;save();render();return}
+ return _survActionO(id);
+};
+// зимний фильтр для листа без своей зимней картинки
+const _needWinterTintO=needWinterTint;
+needWinterTint=function(){if(g&&S().cityMode)return sheetNeedsTint(viewSheet());return _needWinterTintO()};
+// подпись листа
+const _renderO=render;
+render=function(){
+ _renderO();
+ if(!g||view!=='map'||!S().cityMode)return;
+ const s=S(),vs=viewSheet(),tl=document.querySelector('#maphost .maptitle');
+ if(tl)tl.classList.add('maptop');
+ if(tl&&vs==='city'&&s.atWild&&sheetOf(WILD[s.atWild].xy)!=='city')tl.textContent='🗺️ Карта города';
+ if(tl&&vs!=='city')tl.textContent='🗺️ '+SHEETS[vs].name+(s.atWild&&sheetOf(WILD[s.atWild].xy)===vs?' · '+WILD[s.atWild].name:'');
+};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.maptitle.maptop{top:8px!important;bottom:auto!important}.exitpin{background:#2a4a6a!important;border-color:#bfe0ff!important;font-size:18px}.exitpin.here{box-shadow:0 0 0 3px #ffd36a,0 0 12px #ffd36a}'+
+'</style>');
+
 render();
 })();</script></body></html>
