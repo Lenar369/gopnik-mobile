@@ -5054,7 +5054,12 @@ actionsFor=function(id){
 };
 // «Заря» — картинка гостиницы
 const _placeArtLo=placeArt;
-placeArt=function(id){if(id==='c_zarya'){const k=VENUE_DIR+'hotel_'+(winterNow()?'winter':'summer')+'.webp';if(ASSET_OK[k])return k}return _placeArtLo(id)};
+const LODGE_ART={m_kolhoz:'kolhoz',g_room:'tireroom',c_zarya:'zarya'};
+Object.values(LODGE_ART).forEach(n=>['summer','winter','interior'].forEach(v=>probeAsset(VENUE_DIR+n+'_'+v+'.webp')));
+placeArt=function(id){const n=LODGE_ART[id];if(n){const own=VENUE_DIR+n+'_'+(winterNow()?'winter':'summer')+'.webp';if(ASSET_OK[own])return own;if(id==='c_zarya'){const k=VENUE_DIR+'hotel_'+(winterNow()?'winter':'summer')+'.webp';if(ASSET_OK[k])return k}}return _placeArtLo(id)};
+// после ночлега — интерьер комнаты (если нарисован)
+const _lodgeSleepArt=lodgeSleep;
+lodgeSleep=function(id,mode,safe){const before=g.log[0];_lodgeSleepArt(id,mode,safe);const n=LODGE_ART[id],k=n&&VENUE_DIR+n+'_interior.webp';if(k&&ASSET_OK[k]&&g.log[0]!==before&&/^🛏️/.test(g.log[0])){const s=S();s.scene='loot';s.sceneData={img:k,title:'🛏️ '+citySpotName(id),text:String(g.log[0]).replace(/^🛏️ /,'')};save();render()}};
 
 render();
 })();</script></body></html>
