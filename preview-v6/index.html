@@ -1117,7 +1117,7 @@ function actionsFor(id){if(g.region!==0&&dspot(id))return worldActions(id);let a
  case 'dialog-fight':add('Решить миром','peace','Слова важнее кулаков',true);add('Пошаговая драка','fight');break;
  case 'fight':add('Быстрый удар','attack:fast','90% / −8 сил');add('Обычный удар','attack:normal','70% / −12 сил');add('Сильный удар','attack:heavy','50% / −24 силы');add('Блок','block','Снизить урон',true);add('Уклониться','dodge','От ловкости');add('Сбежать','escape','Побег возможен');add('Договориться','peace','Прекратить драку',true);break;
  case 'closet':add('Закрыть шкаф','close');if(g.inventory.includes('bandage')&&!f.closetBandage)add('Убрать бинт','closetstore');if(f.closetBandage)add('Забрать бинт','closettake');break;
- case 'shop':Object.entries(goods).forEach(([k,it])=>{if(g.money>=it.cost&&g.inventory.length<20)add('Купить '+it.name,'buy:'+k,it.cost+' ₽')});add('Вернуться к киоску','close');break;
+ case 'shop':Object.entries(goods).forEach(([k,it])=>{if(!it.noShop&&g.money>=it.cost&&g.inventory.length<20)add('Купить '+it.name,'buy:'+k,it.cost+' ₽')});add('Вернуться к киоску','close');break;
  case 'story':(g.story?.opts||[]).forEach(o=>add(o[0],'story:'+o[1],o[2]||'',!!o[3]));break;
  case 'finish':add('Помочь соседям','ending:people','Доверие');add('Рассказать своим','ending:crew','Авторитет');add('Скрыть бумаги','ending:alone','Самостоятельность');break;
  }
@@ -2124,8 +2124,8 @@ Object.assign(goods,{
  pipe_club:{name:'Труба с изолентой',slot:'Оружие',cost:20,stat:'удар +11'},
  knuckles:{name:'Кастет',slot:'Оружие',cost:30,stat:'удар +10'},
  nail_bat:{name:'Бита с гвоздями',slot:'Оружие',cost:35,stat:'удар +15'},
- crowbar:{name:'Монтировка',slot:'Инструмент',cost:30,stat:'обыск: +1 находка, быстрее'},
- flashlight:{name:'Фонарик',slot:'Аксессуар',cost:40,stat:'обыск ночью без штрафа, +1 находка'},
+ crowbar:{name:'Монтировка',slot:'Инструмент',cost:30,stat:'обыск быстрее, шансы +15%'},
+ flashlight:{name:'Самодельный фонарик',slot:'Аксессуар',cost:40,stat:'обыск: находки ×0,8 (работает и в рюкзаке)'},
  sack:{name:'Мешок из плёнки',slot:null,cost:10,stat:'+5 кг к переноске'},
  home_backpack:{name:'Самодельный рюкзак',slot:null,cost:45,stat:'+12 кг к переноске'},
  sled:{name:'Санки',slot:null,cost:40,stat:'зимой +20 кг к переноске'}
@@ -2214,7 +2214,7 @@ function search(k){
  const P=LOOT[k];if(!P)return;const s=B(),L=lootState(k);
  if(L.ch<=0){announceAndRender('Здесь уже всё вынесли. Загляни через пару дней.');return}
  if(s.energy<8){announceAndRender('Нет сил лазить по завалам. Отдохни или выпей чаю.');return}
- const night=survNight(),light=has('flashlight')?'flashlight':(night&&g.inventory.includes('torch')?'torch':null);
+ const night=survNight(),lt=searchLight(),light=lt.id,ch=lootChances(k);
  const mins=has('crowbar')?30:45;
  s.mode=P.cold?'foot':null;try{advance(mins)}finally{s.mode=null}
  s.energy=clampN(s.energy-6);
@@ -2223,12 +2223,11 @@ function search(k){
  // риск
  const r=Math.random();
  if(r<.08){g.hp=Math.max(1,g.hp-8);s.nerves=clampN(s.nerves-4);announce('🔎 '+P.name+': порезался о ржавое железо, −8 HP. Ничего не нашёл.');save();render();return}
- let rolls=2+Math.floor(Math.random()*3)+(has('crowbar')?1:0)+(light?1:0)-(night&&!light&&!sk('owl')?1:0);
- const pool=[];for(const[id,w]of Object.entries(P.t))for(let i=0;i<w;i++)pool.push(id);
+ // шансы: у каждого предмета свой бросок (модуль «обыск с шансами»)
  const got={};let lost=0;
- for(let i=0;i<Math.max(1,rolls);i++){const id=pool[Math.floor(Math.random()*pool.length)];if(addLoot(id))got[id]=(got[id]||0)+1;else lost++}
+ for(const c of ch){if(Math.random()>=c.p)continue;const n=c.w>=3&&Math.random()<.4?2:1;for(let i=0;i<n;i++){if(addLoot(c.id))got[c.id]=(got[c.id]||0)+1;else lost++}}
  const list=Object.entries(got).map(([id,n])=>anyIcon(id)+' '+anyName(id)+(n>1?' ×'+n:'')).join(', ');
- announce('🔎 '+P.name+': '+(list||'ничего')+'.'+(lost?' Рюкзак полон — '+lost+' пришлось бросить.':'')+(night&&!light?' В темноте много не найдёшь.':'')+(overload()?' ⚖️ Перегруз: '+carryW()+'/'+carryMax()+' кг — идти будет тяжело.':''));
+ announce('🔎 '+P.name+': '+(list||'ничего')+'.'+(lost?' Рюкзак полон — '+lost+' пришлось бросить.':'')+(light==='torch'?' Факел догорел.':'')+(!light?(night&&!sk('owl')?' В темноте почти ничего не видно — нужен фонарик.':' Без фонарика по тёмным углам много не найдёшь.'):'')+(overload()?' ⚖️ Перегруз: '+carryW()+'/'+carryMax()+' кг — идти будет тяжело.':''));
  addXP(4,'обыск');save();render();
 }
 
@@ -4416,6 +4415,83 @@ render=function(){
 };
 document.head.insertAdjacentHTML('beforeend','<style>'+
 '.maptitle.maptop{top:8px!important;bottom:auto!important}.exitpin{background:#2a4a6a!important;border-color:#bfe0ff!important;font-size:18px}.exitpin.here{box-shadow:0 0 0 3px #ffd36a,0 0 12px #ffd36a}'+
+'</style>');
+
+/* ===== v6: обыск с шансами — видно, что можно найти и с каким шансом; свет решает ===== */
+// Шанс предмета = база (по весу в списке места) × свет × монтировка × сколько осталось хабара; максимум 90%.
+Object.assign(goods,{
+ flash_cn:{name:'Китайский фонарик',slot:null,cost:80,noShop:true,stat:'обыск: находки ×1,0 (работает в рюкзаке)'},
+ flash_army:{name:'Армейский фонарь',slot:null,cost:220,noShop:true,stat:'обыск: находки ×1,3 (работает в рюкзаке)'}
+});
+Object.assign(GOODS_W,{flash_cn:.3,flash_army:.6});
+Object.assign(GICON,{flash_cn:'🔦',flash_army:'🔦'});
+['flash_cn','flash_army'].forEach(id=>probeAsset('../art/items/'+id+'.webp'));
+// от лучшего к худшему; факел сгорает за один обыск
+const LIGHTS=[
+ {id:'flash_army',name:'Армейский фонарь',m:1.3},
+ {id:'flash_cn',name:'Китайский фонарик',m:1.0},
+ {id:'flashlight',name:'Самодельный фонарик',m:.8},
+ {id:'torch',name:'Факел',m:.6}
+];
+const NO_LIGHT={id:null,name:'без света',m:.3};
+// редкие находки сверх обычного списка места
+const RARE_FINDS={wild_base:{flash_army:.05},wild_camp:{flash_army:.04},station_warehouse:{flash_army:.03},market_backrows:{flash_cn:.05},garage_abandoned:{flash_cn:.04},wild_village:{flash_cn:.03}};
+function searchLight(){
+ for(const L of LIGHTS){if(L.id==='torch'?g.inventory.includes('torch'):has(L.id))return L}
+ return NO_LIGHT;
+}
+function searchMult(k){
+ const L=searchLight(),night=survNight()&&!L.id&&!sk('owl'),ch=lootState(k).ch;
+ const left=ch>=3?1:ch===2?.85:ch===1?.7:0;
+ return {light:L,night,crow:has('crowbar'),left,m:L.m*(night?.5:1)*(has('crowbar')?1.15:1)*left};
+}
+function lootChances(k){
+ const P=LOOT[k];if(!P)return [];const M=searchMult(k),cap=p=>Math.min(.9,Math.round(p*M.m*100)/100);
+ const out=Object.entries(P.t).map(([id,w])=>({id,w,p:cap(Math.min(.6,.15+.1*w))}));
+ for(const[id,b]of Object.entries(RARE_FINDS[k]||{}))if(!has(id))out.push({id,w:0,p:cap(b),rare:true});
+ return out.sort((a,b)=>b.p-a.p);
+}
+function placeLootKeys(id){
+ id=String(id||'');if(id.startsWith('wild:'))return LOOT['wild_'+id.slice(5)]?['wild_'+id.slice(5)]:[];
+ return Object.entries(LOOT).filter(([k,P])=>P.at===id).map(([k])=>k);
+}
+function pctTxt(p){const v=Math.round(p*100);return (p>0&&v<1?'<1':v)+'%'}
+function findsHtml(id){
+ const keys=placeLootKeys(id);if(!keys.length)return '';
+ const M=searchMult(keys[0]),L=M.light;
+ let h='<div class="pfind"><div class="pfhead"><b>🔎 Что можно найти</b><small>'+(L.id?'🔦 '+esc(L.name)+(L.id==='torch'?' (сгорит)':''):'🌑 без фонарика')+' · свет ×'+String(L.m).replace('.',',')+(M.night?' · ночь ×0,5':'')+(M.crow?' · монтировка +15%':'')+'</small></div>';
+ for(const k of keys){
+  const c=lootChances(k);
+  if(keys.length>1)h+='<div class="pfsub">'+esc(LOOT[k].name)+'</div>';
+  h+=lootState(k).ch<=0?'<div class="pfsub">Всё вынесли — загляни через пару дней.</div>':
+   '<div class="fchips">'+c.map(x=>'<span class="fchip '+(x.p>=.4?'hi':x.p>=.2?'mid':'lo')+(x.rare?' rare':'')+'">'+anyIcon(x.id)+' '+esc(anyName(x.id))+' <i>'+pctTxt(x.p)+'</i></span>').join('')+'</div>';
+ }
+ if(L.m<1.3)h+='<div class="pfsub">'+(L.id?'С фонарём получше шансы выше.':'Без света почти ничего не видно. Фонарик: самодельный (мастерить дома), китайский — Лавка деталей, Универмаг; армейский — Комиссионка.')+'</div>';
+ return h+'</div>';
+}
+const _placeHtmlL=placeHtml;
+placeHtml=function(){const h=_placeHtmlL();const f=findsHtml(S().place);return f?h.replace('<div class="plog">',f+'<div class="plog">'):h};
+// продажа фонарей
+const FLASH_SHOPS={g_parts:['flash_cn'],c_shop:['flash_cn'],m_pawn:['flash_army']};
+const _actionsForL=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForL(id);if(!g||!FLASH_SHOPS[id])return a;
+ return FLASH_SHOPS[id].map(x=>({name:'🔦 Купить: '+goods[x].name+' · '+survPrice(goods[x].cost)+' ₽',doit:'surv:gbuy:'+x,sub:has(x)?'Уже есть':goods[x].stat,alt:false})).concat(a);
+};
+function buyGear(x){
+ const it=goods[x];if(!it)return;const c=survPrice(it.cost);
+ if(has(x)){announceAndRender('У тебя уже есть: '+it.name+'.');return}
+ if(g.money<c){announceAndRender('Не хватает денег: '+it.name+' стоит '+c+' ₽.');return}
+ if(g.inventory.length>=20){announceAndRender('Рюкзак полон.');return}
+ g.money-=c;g.inventory.push(x);advance(5);announce('🔦 Купил: '+it.name+' за '+c+' ₽. Работает, пока лежит в рюкзаке — при обыске шансы выше.');save();render();
+}
+const _doActionL=doAction;
+doAction=function(id){if(g&&String(id).startsWith('surv:gbuy:')){buyGear(String(id).slice(10));return}return _doActionL(id)};
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.pfind{margin:6px 12px 0;padding:8px 11px;border-radius:10px;background:#000b;color:#f1e3c4;font-size:12.5px;max-width:640px}'+
+'.pfhead{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-bottom:5px}.pfhead small{color:#d8c8a6;opacity:.85}'+
+'.fchips{display:flex;flex-wrap:wrap;gap:4px}.fchip{padding:2px 7px;border-radius:8px;background:#ffffff14;white-space:nowrap}.fchip i{font-style:normal;font-weight:700}'+
+'.fchip.hi i{color:#9be08f}.fchip.mid i{color:#ffd36a}.fchip.lo i{color:#ff9a7a}.fchip.rare{border:1px dashed #ffd36a}.pfsub{margin-top:4px;color:#d8c8a6;font-size:12px}'+
 '</style>');
 
 render();
