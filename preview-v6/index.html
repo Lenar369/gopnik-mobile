@@ -4664,5 +4664,47 @@ doAction=function(id){if(g&&String(id).startsWith('surv:hol:')){doHoliday(String
 const _sellMatH=sellMat;
 sellMat=function(id,all){const m0=g.money;const r=_sellMatH(id,all);const h=holidayToday();if(h&&h.id==='cityday'&&g.money>m0){const bonus=Math.round((g.money-m0)*.3);g.money+=bonus;g.log[0]=String(g.log[0])+' 🎪 Праздничная надбавка +'+bonus+' ₽.';save();render()}return r};
 
+/* ===== v6: канун праздников — ёлка с 28 по 31 декабря, подработка у Гены 22 февраля и 7 марта ===== */
+const EVES=[
+ {id:'tree',m:11,days:[28,29,30,31],at:'m_rows',hint:'На Торговых рядах продают ёлки — поставь дома, до конца января нервы будут восстанавливаться быстрее.',
+  act:'🎄 Купить ёлку',sub:'нервы дома восстанавливаются быстрее до 31 января',cost:30,
+  go(){S().tree=gameDate().getUTCFullYear()+1;return '🎄 Притащил домой пушистую ёлку, мама достала игрушки с антресолей. До конца января дома спокойнее — нервы восстанавливаются быстрее.'}},
+ {id:'gena_feb',m:1,days:[22],at:'court',hint:'Гена Рыжий ищет, кто поможет разгрузить машину с подарками к 23 февраля — Главный двор.',
+  act:'💼 Гена: разгрузить машину с подарками',sub:'3 часа · бодрость −20 · Гена +1',pay:30,
+  go(){return eveWork('коробки с одеколоном и бритвами к 23 февраля')}},
+ {id:'gena_mar',m:2,days:[7],at:'court',hint:'Гена Рыжий ищет, кто поможет разгрузить машину с цветами к 8 марта — Главный двор.',
+  act:'💼 Гена: разгрузить машину с цветами',sub:'3 часа · бодрость −20 · Гена +1',pay:30,
+  go(){return eveWork('вёдра с мимозой и тюльпанами к 8 марта')}}
+];
+function eveWork(what){const s=S(),p=survPrice(30);advance(180);s.energy=clampN(s.energy-20);g.money+=p;g.relations.gena=(g.relations.gena||0)+1;return '💼 Три часа таскал '+what+'. Гена отсчитал '+p+' ₽: «Нормально поработали!» Гена +1.'}
+function eveToday(){const d=gameDate();return EVES.filter(e=>e.m===d.getUTCMonth()&&e.days.includes(d.getUTCDate()))}
+function eveKey(e){const d=gameDate();return e.id+'_'+(e.id==='tree'?d.getUTCFullYear()+1:d.getUTCFullYear())}
+function treeOn(){const s=S(),d=gameDate();if(!s.tree)return false;return (d.getUTCFullYear()===s.tree-1&&d.getUTCMonth()===11&&d.getUTCDate()>=28)||(d.getUTCFullYear()===s.tree&&d.getUTCMonth()===0)}
+const _advanceE=advance;
+advance=function(m){
+ const k0=g?gameDate().toISOString().slice(0,10):'',home=g&&atHome();const r=_advanceE.apply(this,arguments);
+ if(!g||m<=0)return r;const s=S();
+ if(home&&treeOn())s.nerves=clampN(s.nerves+m/60*1.5);
+ if(gameDate().toISOString().slice(0,10)!==k0)for(const e of eveToday())if(!(s.hol||{})[eveKey(e)]&&!(e.id==='tree'&&gameDate().getUTCDate()!==28))announce((e.id==='tree'?'🎄 ':'💼 ')+e.hint);
+ return r;
+};
+const _actionsForE=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForE(id);if(!g)return a;
+ if(id==='home'&&treeOn())a=[{name:'🎄 Ёлка в углу мигает гирляндой',doit:'surv:tree',sub:'Дома нервы восстанавливаются быстрее — до 31 января',alt:false}].concat(a);
+ const es=eveToday().filter(e=>e.at===id);if(!es.length)return a;
+ return es.map(e=>{const done=(S().hol||{})[eveKey(e)];return {name:e.act,doit:'surv:eve:'+e.id,sub:done?'Уже сделано':(e.cost?survPrice(e.cost)+' ₽ · ':e.pay?'+'+survPrice(e.pay)+' ₽ · ':'')+e.sub,alt:!done}}).concat(a);
+};
+function doEve(id){
+ const e=eveToday().find(x=>x.id===id),s=S();if(!e){announceAndRender('Уже поздно — день прошёл.');return}
+ s.hol=s.hol||{};if(s.hol[eveKey(e)]){announceAndRender('Уже сделано.');return}
+ if(e.cost&&g.money<survPrice(e.cost)){announceAndRender('Не хватает денег: нужно '+survPrice(e.cost)+' ₽.');return}
+ if(e.pay&&s.energy<25){announceAndRender('Нет сил таскать коробки. Отдохни сначала.');return}
+ if(e.cost){g.money-=survPrice(e.cost);advance(20)}
+ s.hol[eveKey(e)]=true;announce(e.go());save();render();
+}
+const _doActionE=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('surv:eve:')){doEve(sid.slice(9));return}if(g&&sid==='surv:tree'){announceAndRender('🎄 Гирлянда мигает, пахнет хвоей и мандаринами. Дома и правда спокойнее.');return}return _doActionE(id)};
+
 render();
 })();</script></body></html>
