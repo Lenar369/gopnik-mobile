@@ -4706,5 +4706,12 @@ function doEve(id){
 const _doActionE=doAction;
 doAction=function(id){const sid=String(id);if(g&&sid.startsWith('surv:eve:')){doEve(sid.slice(9));return}if(g&&sid==='surv:tree'){announceAndRender('🎄 Гирлянда мигает, пахнет хвоей и мандаринами. Дома и правда спокойнее.');return}return _doActionE(id)};
 
+/* ===== v6: фонарик-«жучок» — динамо, заряжается рукой, батарейки не нужны ===== */
+Object.assign(goods,{flash_beetle:{name:'Фонарик-«жучок»',slot:null,cost:100,noShop:true,stat:'обыск: находки ×0,9; вечный — жмёшь рычаг, батарейки не нужны'}});
+GOODS_W.flash_beetle=.25;GICON.flash_beetle='🔦';probeAsset('../art/items/flash_beetle.webp');
+LIGHTS.splice(LIGHTS.findIndex(x=>x.id==='flashlight'),0,{id:'flash_beetle',name:'Фонарик-«жучок»',m:.9});
+FLASH_SHOPS.g_parts.push('flash_beetle');FLASH_SHOPS.m_pawn.push('flash_beetle');
+Object.assign(RARE_FINDS,{wild_dachas:{flash_beetle:.05},wild_sector:{flash_beetle:.05},q5_attic:{flash_beetle:.03}});
+
 render();
 })();</script></body></html>

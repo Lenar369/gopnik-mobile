@@ -34,6 +34,12 @@ const okB=died&&/без фонарика/.test(lDead)&&g.surv.fcharge.flash_cn==
 g=st();g.region=4;g.loc='g_market';g.money=200;g.fight=null;g.surv.cop=null;g.inventory=g.inventory.filter(x=>x!=='knuckles');store[KEY]=JSON.stringify(g);a=boot();a.pin('g_market');a.do('pl:enter');
 const kb=/surv:gbuy:knuckles/.test(a.html());g=a.do('surv:gbuy:knuckles');console.log('10 барахолка:',kb,'|',g.log[0]);
 g=a.do('surv:view:craft');const okK=kb&&st().inventory.includes('knuckles')&&!/surv:craft:knuckles/.test(a.html());
-const ok=okK&&ok1&&okB&&hasBuy&&hint&&n>0&&found>=n/2&&okPawn;
+// фонарик-«жучок»: ×0,9, батарейки не нужны — после 12 обысков светит так же; продаётся в Лавке деталей
+g=st();g.inventory=g.inventory.filter(x=>!/flash/.test(x)).concat(['flash_beetle']);store[KEY]=JSON.stringify(g);
+for(let i=0;i<12;i++){g=JSON.parse(store[KEY]);g.surv.energy=90;g.hp=100;g.fight=null;g.surv.loot={};g.surv.cop=null;g.minute=12*60;store[KEY]=JSON.stringify(g);a=boot();g=a.do('surv:loot:q5_attic');if(g.fight)a.do('fx:run');st()}
+A=look(JSON.parse(store[KEY]));const lB=light(A.html())||'';console.log('11 жучок после 12 обысков:',lB);
+g=st();g.region=2;g.loc='g_parts';g.money=300;g.inventory=g.inventory.filter(x=>x!=='flash_beetle');store[KEY]=JSON.stringify(g);a=boot();a.pin('g_parts');a.do('pl:enter');const bB=/surv:gbuy:flash_beetle/.test(a.html());g=a.do('surv:gbuy:flash_beetle');console.log('12 лавка:',bB,'|',g.log[0]);
+const okBeetle=/жучок/.test(lB)&&/×0,9/.test(lB)&&!/🔋/.test(lB)&&bB&&st().inventory.includes('flash_beetle');
+const ok=okBeetle&&okK&&ok1&&okB&&hasBuy&&hint&&n>0&&found>=n/2&&okPawn;
 console.log(ok?'OK':'FAIL');if(!ok)errs.push('finds checks failed');
 console.log('errors',errs);process.exit(0);
