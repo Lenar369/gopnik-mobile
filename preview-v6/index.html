@@ -2122,7 +2122,7 @@ Object.assign(goods,{
  wrapped_boots:{name:'Утеплённые обмотки',slot:'Обувь',cost:15,stat:'тепло +12%'},
  shiv:{name:'Заточка',slot:'Оружие',cost:20,stat:'удар +8, режет'},
  pipe_club:{name:'Труба с изолентой',slot:'Оружие',cost:20,stat:'удар +11'},
- knuckles:{name:'Кастет',slot:'Оружие',cost:30,stat:'удар +10'},
+ knuckles:{name:'Кастет',slot:'Оружие',cost:60,noShop:true,stat:'удар +10, удар «двойка»'},
  nail_bat:{name:'Бита с гвоздями',slot:'Оружие',cost:35,stat:'удар +15'},
  crowbar:{name:'Монтировка',slot:'Инструмент',cost:30,stat:'обыск быстрее, шансы +15%'},
  flashlight:{name:'Самодельный фонарик',slot:'Аксессуар',cost:40,stat:'обыск: находки ×0,8 (работает и в рюкзаке)'},
@@ -2153,7 +2153,6 @@ const RECIPES=[
  {cat:'Еда и лечение',id:'rusks',need:{food_bread:1},min:30,st:'home',out:'rusks',n:2},
  {cat:'Оружие',id:'shiv',need:{scrap:1,tape:1},min:30,st:'any',out:'shiv'},
  {cat:'Оружие',id:'pipe_club',need:{pipe:1,tape:1},min:15,st:'any',out:'pipe_club'},
- {cat:'Оружие',id:'knuckles',need:{scrap:2},min:60,st:'home',tool:'wrench',out:'knuckles'},
  {cat:'Оружие',id:'nail_bat',need:{planks:1,nails:3},min:30,st:'home',base:'workbench',out:'nail_bat'},
  {cat:'Снаряжение',id:'crowbar',need:{pipe:1,scrap:1},min:45,st:'home',tool:'wrench',out:'crowbar'},
  {cat:'Снаряжение',id:'flashlight',need:{battery:2,can:1,wire:1,glass:1},min:40,st:'home',out:'flashlight'},
@@ -4475,7 +4474,7 @@ function findsHtml(id){
 const _placeHtmlL=placeHtml;
 placeHtml=function(){const h=_placeHtmlL();const f=findsHtml(S().place);return f?h.replace('<div class="plog">',f+'<div class="plog">'):h};
 // продажа фонарей
-const FLASH_SHOPS={g_parts:['flash_cn'],c_shop:['flash_cn'],m_pawn:['flash_army']};
+const FLASH_SHOPS={g_parts:['flash_cn'],c_shop:['flash_cn'],m_pawn:['flash_army','knuckles'],g_market:['knuckles']};
 const _actionsForL=actionsFor;
 actionsFor=function(id){
  let a=_actionsForL(id);if(!g)return a;
@@ -4483,14 +4482,14 @@ actionsFor=function(id){
  if(low.length&&batteries()>0&&(placeLootKeys(id).length||FLASH_SHOPS[id]))a=[{name:'🔋 Поменять батарейку',doit:'surv:fcharge',sub:low.map(x=>x.name+' '+flashCharge(x.id)+'/'+x.cap).join(', ')+' · батареек: '+batteries(),alt:false}].concat(a);
  if(id==='g_parts')a=[{name:'🔋 Купить батарейку · '+survPrice(BATTERY_COST)+' ₽',doit:'surv:bbuy',sub:'Для фонарей. Есть: '+batteries(),alt:false}].concat(a);
  if(!FLASH_SHOPS[id])return a;
- return FLASH_SHOPS[id].map(x=>({name:'🔦 Купить: '+goods[x].name+' · '+survPrice(goods[x].cost)+' ₽',doit:'surv:gbuy:'+x,sub:has(x)?'Уже есть':goods[x].stat,alt:false})).concat(a);
+ return FLASH_SHOPS[id].map(x=>({name:(GICON[x]||'🔦')+' Купить: '+goods[x].name+' · '+survPrice(goods[x].cost)+' ₽',doit:'surv:gbuy:'+x,sub:has(x)?'Уже есть':goods[x].stat,alt:false})).concat(a);
 };
 function buyGear(x){
  const it=goods[x];if(!it)return;const c=survPrice(it.cost);
  if(has(x)){announceAndRender('У тебя уже есть: '+it.name+'.');return}
  if(g.money<c){announceAndRender('Не хватает денег: '+it.name+' стоит '+c+' ₽.');return}
  if(g.inventory.length>=20){announceAndRender('Рюкзак полон.');return}
- g.money-=c;g.inventory.push(x);flashFull(x);advance(5);announce('🔦 Купил: '+it.name+' за '+c+' ₽. Работает, пока лежит в рюкзаке — при обыске шансы выше.');save();render();
+ g.money-=c;g.inventory.push(x);if(flashCap(x))flashFull(x);advance(5);announce((GICON[x]||'🔦')+' Купил: '+it.name+' за '+c+' ₽. '+(it.slot==='Оружие'?'Надень в рюкзаке, чтобы бить сильнее.':'Работает, пока лежит в рюкзаке — при обыске шансы выше.'));save();render();
 }
 const _doActionL=doAction;
 doAction=function(id){

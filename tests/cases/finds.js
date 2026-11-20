@@ -30,6 +30,10 @@ A=look(st());h=A.html();const lDead=light(h)||'';console.log('7 сел:',died,'|
 g=A.do('surv:fcharge');console.log('8',g.log[0],'| заряд',g.surv.fcharge.flash_cn,'| батареек',g.surv.mats.battery||0);
 g=st();g.region=2;g.loc='g_parts';g.money=100;store[KEY]=JSON.stringify(g);a=boot();a.pin('g_parts');a.do('pl:enter');const bb=/surv:bbuy/.test(a.html()),b0=st().surv.mats.battery||0;g=a.do('surv:bbuy');console.log('9 лавка:',bb,'|',g.log[0]);
 const okB=died&&/без фонарика/.test(lDead)&&g.surv.fcharge.flash_cn===10&&bb&&g.surv.mats.battery===b0+1;
-const ok=ok1&&okB&&hasBuy&&hint&&n>0&&found>=n/2&&okPawn;
+// кастет — только покупной (Автобарахолка), рецепта нет
+g=st();g.region=4;g.loc='g_market';g.money=200;g.fight=null;g.surv.cop=null;g.inventory=g.inventory.filter(x=>x!=='knuckles');store[KEY]=JSON.stringify(g);a=boot();a.pin('g_market');a.do('pl:enter');
+const kb=/surv:gbuy:knuckles/.test(a.html());g=a.do('surv:gbuy:knuckles');console.log('10 барахолка:',kb,'|',g.log[0]);
+g=a.do('surv:view:craft');const okK=kb&&st().inventory.includes('knuckles')&&!/surv:craft:knuckles/.test(a.html());
+const ok=okK&&ok1&&okB&&hasBuy&&hint&&n>0&&found>=n/2&&okPawn;
 console.log(ok?'OK':'FAIL');if(!ok)errs.push('finds checks failed');
 console.log('errors',errs);process.exit(0);
