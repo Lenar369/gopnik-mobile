@@ -43,7 +43,7 @@
 | Файл | Что | Статус |
 |---|---|---|
 | [REQUEST_01_survival_core.md](REQUEST_01_survival_core.md) | Иконки потребностей, еда, медицина, тепло, экран смерти | ✅ 32 из 32 (все изображения готовы, Claude может внедрять) |
-| [REQUEST_02_loot_places.md](REQUEST_02_loot_places.md) | 17 мест для вылазок за хабаром | ✅ 17 из 17 (все основные локации готовы, включая летнюю и зимнюю крышу) |
+| [REQUEST_02_loot_places.md](REQUEST_02_loot_places.md) | 17 мест для вылазок за хабаром | ✅ 17 из 17 основных и 7 из 7 дополнительных мест на общей карте (14 сезонных файлов), изображения загружены |
 | [REQUEST_03_ui_landscape.md](REQUEST_03_ui_landscape.md) | Интерфейс для горизонтального экрана: портреты, 6 кнопок меню, рамки (образец в `reference/`; кнопок «Торговля» и «Бои» не делать) | ✅ 19 из 19 (утверждены и загружены; оценка после интеграции) |
 | [REQUEST_04_city_map.md](REQUEST_04_city_map.md) | Общая карта города, лето + зима (схема в `reference/city_schema*.jpg`) | ✅ 2 из 2 (утверждены, загружены; проверить координаты при интеграции) |
 | [REQUEST_05_scrap_craft.md](REQUEST_05_scrap_craft.md) | Хабар (22), самодельные вещи (18) и фонари + хабар тёмных углов (6) для крафта, оружие — в заказе 11 — **перерисовать в стиле 01**, промпты: [PROMPTS_05_chatgpt.md](PROMPTS_05_chatgpt.md) | ⏳ 10 из 46 ✅ (`mat_rags.webp`, `mat_planks.webp`, `mat_nails.webp`, `mat_wire.webp`, `mat_bottle.webp`, `mat_can.webp`, `mat_pipe.webp`, `mat_scrap.webp`, `mat_rope.webp`, `mat_tape.webp`); остальные временный вектор и эмодзи |
