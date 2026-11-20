@@ -4923,5 +4923,43 @@ actionsFor=function(id){const a=_actionsForMus(id);if(id!=='survmenu'||!Array.is
 const _doActionMus=doAction;
 doAction=function(id){if(g&&id==='surv:music'){try{localStorage.setItem('gopnik-music',musicOn()?'0':'1')}catch(e){}if(!musicOn()&&MUS.bus&&AC)MUS.bus.gain.setTargetAtTime(.0001,AC.currentTime,.2);else acReady();render();return}return _doActionMus(id)};
 
+/* ===== v6: ночная музыка «Ночной район» — тёмный синт: бас-остинато, ударные, подложка, редкая мелодия (утверждено пользователем) ===== */
+const NR={bpm:92,prog:['Am','Am','F','E'],
+ bass:{Am:[45,45,48,45,52,50,48,47],F:[53,53,57,53,60,57,55,53],E:[52,52,68,52,59,57,55,52]},
+ pad:{Am:[57,60,64],F:[53,57,60],E:[56,59,64]},
+ ph:[null,
+  [[69,4],[72,2],[71,2],[69,6],[0,2],[72,4],[69,4],[68,6],[71,2]],
+  [[76,4],[74,2],[72,2],[71,2],[72,2],[69,4],[77,4],[76,2],[72,2],[71,8]],
+  [[0,8],[0,4],[76,2],[74,2],[72,8],[71,4],[68,4]],
+  [[69,2],[71,2],[72,2],[74,2],[76,6],[74,2],[72,4],[69,4],[68,4],[64,4]],
+  [[69,4],[72,2],[71,2],[69,6],[0,2],[72,4],[69,4],[68,6],[71,2]],
+  [[76,4],[74,2],[72,2],[71,2],[72,2],[69,4],[77,4],[76,2],[72,2],[71,8]],
+  [[69,2],[71,2],[72,2],[74,2],[76,6],[74,2],[72,4],[69,4],[68,4],[64,4]],null]};
+function nrHz(m){return 440*Math.pow(2,(m-69)/12)}
+function nrEighth(A,bus,t,step){
+ const e=60/NR.bpm/2,phase=Math.floor(step/32)%NR.ph.length,bar=Math.floor(step/8)%4,pos=step%8,ch=NR.prog[bar];
+ const env=(v,d,at)=>{const g2=A.createGain();g2.gain.setValueAtTime(.0001,at);g2.gain.exponentialRampToValueAtTime(v,at+.01);g2.gain.exponentialRampToValueAtTime(.0001,at+d);g2.connect(bus);return g2};
+ const osc=(f,d,v,type,at)=>{const o=A.createOscillator();o.type=type;o.frequency.value=f;o.connect(env(v,d,at));o.start(at);o.stop(at+d+.05);return o};
+ const nz=(d,v,f,type,at)=>{const b=A.createBuffer(1,Math.max(1,A.sampleRate*d),A.sampleRate),c=b.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=Math.random()*2-1;const s=A.createBufferSource();s.buffer=b;const fl=A.createBiquadFilter();fl.type=type;fl.frequency.value=f;s.connect(fl);fl.connect(env(v,d,at));s.start(at);s.stop(at+d+.02)};
+ osc(nrHz(NR.bass[ch][pos]),e*.9,.5,'triangle',t);                                        // бас
+ if(pos===0)NR.pad[ch].forEach(m=>osc(nrHz(m),e*8,.05,'sine',t));                       // подложка
+ if(pos===0||pos===4){const o=A.createOscillator(),gk=env(.8,.25,t);o.frequency.setValueAtTime(110,t);o.frequency.exponentialRampToValueAtTime(45,t+.2);o.connect(gk);o.start(t);o.stop(t+.3)} // бочка
+ if(pos===2||pos===6)nz(.16,.22,1800,'bandpass',t);                                       // малый
+ if(pos%2===1)nz(.04,.12,7000,'highpass',t);                                              // тарелочка
+ const P=NR.ph[phase];if(!P)return;                                                         // мелодия
+ let acc=0,idx=(step%32);for(const [m,d] of P){if(acc===idx&&m){const d2=d*e*.97,o=A.createOscillator(),fl=A.createBiquadFilter(),lfo=A.createOscillator(),lg=A.createGain();o.type='sawtooth';o.frequency.value=nrHz(m);fl.type='lowpass';fl.frequency.value=1400;lfo.frequency.value=5;lg.gain.value=nrHz(m)*.006;lfo.connect(lg);lg.connect(o.frequency);o.connect(fl);fl.connect(env(.28,d2,t));o.start(t);lfo.start(t);o.stop(t+d2+.05);lfo.stop(t+d2+.05)}acc+=d;if(acc>idx)break}
+}
+const _musTickNR=musTick;
+musTick=function(){
+ const A=AC;if(!A||A.state!=='running'||!musicOn()||!soundOn())return;
+ if(musMood()!=='night'){if(MUS.nr){MUS.nr=null;MUS.next=0}return _musTickNR()}
+ if(!MUS.bus){MUS.bus=A.createGain();MUS.bus.gain.value=.0001;MUS.bus.connect(A.destination)}
+ MUS.bus.gain.setTargetAtTime(.06,A.currentTime,.6);
+ if(!MUS.nr){MUS.nr={step:0};MUS.mood='night';MUS.next=0}
+ if(MUS.next<A.currentTime)MUS.next=A.currentTime+.1;
+ const e=60/NR.bpm/2;
+ while(MUS.next<A.currentTime+1.2){nrEighth(A,MUS.bus,MUS.next,MUS.nr.step);MUS.nr.step++;MUS.next+=e}
+};
+
 render();
 })();</script></body></html>
