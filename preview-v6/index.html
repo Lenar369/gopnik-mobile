@@ -1598,7 +1598,7 @@ viewPanel=function(){
   const h='<div class="avatar"><div class="face">'+hudImg('bag','🎒','faceico')+'</div><div><strong>Рюкзак '+g.inventory.length+'/20</strong><div>Еда и лекарства — нажми, чтобы использовать</div></div></div>'+needsBars()+
    '<div class="line"><strong>Припасы</strong></div><div class="tilegrid">'+(sup||'<div class="line">Пусто. Купи еду в киоске, на рынке или в универмаге.</div>')+'</div>'+
    (gear?'<div class="line"><strong>Вещи</strong></div><div class="tilegrid">'+gear+'</div>':'')+
-   '<div class="line"><strong>Надето:</strong> '+Object.entries(g.equip).map(([k,v])=>esc(k)+': '+(v?(GOODS_ART[v]&&ASSET_OK[goodsPath(v)]?'<img class="eqico" src="'+goodsPath(v)+'" alt="">':'')+esc(goods[v]?.name||v):'—')).join(' · ')+' · утепление '+Math.round(insulation()*100)+'%</div>';
+   '<div class="line"><strong>Надето:</strong> '+Object.entries(g.equip).map(([k,v])=>esc(k)+': '+(v?(GOODS_ART[v]&&ASSET_OK[goodsPath(v)]?'<img class="eqico" src="'+goodsPath(v)+'" alt="">':ASSET_OK['../art/items/'+v+'.webp']?'<img class="eqico" src="../art/items/'+v+'.webp" alt="">':'')+esc(goods[v]?.name||v):'—')).join(' · ')+' · утепление '+Math.round(insulation()*100)+'%</div>';
   return '<section class="overlay"><header class="panel-head"><h2>Инвентарь</h2><button data-nav="map">×</button></header><div class="panel-body">'+h+'</div></section>';
  }
  let h=_viewPanel();
@@ -1806,7 +1806,7 @@ render=function(){
  if(s.scene)root.insertAdjacentHTML('beforeend',sceneHtml());
 };
 document.head.insertAdjacentHTML('beforeend','<style>'+
-'.eqico{width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:2px}'+
+'.eqico{width:26px;height:26px;object-fit:contain;vertical-align:-8px;margin-right:3px}'+
 '.scenecard{position:absolute;inset:0;z-index:60;background:#000c;display:flex;align-items:center;justify-content:center;padding:12px calc(12px + env(safe-area-inset-right,0px)) 12px calc(12px + env(safe-area-inset-left,0px))}'+
 '.scenebox{width:min(640px,100%);max-height:100%;overflow:auto;background:linear-gradient(145deg,#31291f,#1b1a18);border:1px solid #b18b56;border-radius:14px;box-shadow:0 10px 40px #000}'+
 '.sceneimg{display:block;width:100%;aspect-ratio:1032/581;object-fit:cover;border-radius:13px 13px 0 0;background:#111}'+
