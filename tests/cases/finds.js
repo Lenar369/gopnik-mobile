@@ -25,7 +25,7 @@ g=a.pin('m_pawn');a.do('pl:enter');const hasBuy=/surv:gbuy:flash_army/.test(a.ht
 const okPawn=g.inventory.includes('flash_army')&&g.money<500;
 // батарейки: китайский садится за 10 обысков, батарейка — полный заряд
 g=st();g.inventory=g.inventory.filter(x=>!/flash/.test(x));g.inventory.push('flash_cn');g.surv.fcharge={flash_cn:1};g.surv.mats={battery:1};g.minute=12*60;g.surv.energy=90;g.hp=100;g.fight=null;g.surv.loot={};store[KEY]=JSON.stringify(g);a=boot();
-let died=false;for(let i=0;i<6&&!died;i++){g=a.do('surv:loot:q5_attic');if(g.fight){a.do('fx:run');g=st();g.fight=null;g.hp=100;g.surv.fcharge={flash_cn:1};g.surv.loot={};store[KEY]=JSON.stringify(g);a=boot();continue}died=g.surv.fcharge.flash_cn===0&&/сел/.test(g.log[0]);a.do('surv:scene-ok')}
+let died=false;for(let i=0;i<6&&!died;i++){g=a.do('surv:loot:q5_attic');if(g.fight){a.do('fx:run');g=st();g.fight=null;g.hp=100;g.surv.fcharge={flash_cn:1};g.surv.loot={};store[KEY]=JSON.stringify(g);a=boot();continue}died=g.surv.fcharge.flash_cn===0&&g.log.slice(0,3).some(x=>/сел/.test(x));a.do('surv:scene-ok')}
 A=look(st());h=A.html();const lDead=light(h)||'';console.log('7 сел:',died,'| свет теперь:',lDead,'| кнопка',/surv:fcharge/.test(h));
 g=A.do('surv:fcharge');console.log('8',g.log[0],'| заряд',g.surv.fcharge.flash_cn,'| батареек',g.surv.mats.battery||0);
 g=st();g.region=2;g.loc='g_parts';g.money=100;store[KEY]=JSON.stringify(g);a=boot();a.pin('g_parts');a.do('pl:enter');const bb=/surv:bbuy/.test(a.html()),b0=st().surv.mats.battery||0;g=a.do('surv:bbuy');console.log('9 лавка:',bb,'|',g.log[0]);

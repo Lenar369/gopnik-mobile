@@ -2223,7 +2223,7 @@ function search(k){
  L.ch--;if(L.ch<=0)L.refill=g.day+3;
  // риск
  const r=Math.random();
- if(r<.08){g.hp=Math.max(1,g.hp-8);s.nerves=clampN(s.nerves-4);announce('🔎 '+P.name+': порезался о ржавое железо, −8 HP. Ничего не нашёл.');save();render();return}
+ if(r<.08){g.hp=Math.max(1,g.hp-8);s.nerves=clampN(s.nerves-4);announce('🔎 '+P.name+': порезался о ржавое железо, −8 HP. Ничего не нашёл.'+(died?' 🪫 '+lt.name+' сел — нужна батарейка.':''));save();render();return}
  // шансы: у каждого предмета свой бросок (модуль «обыск с шансами»)
  const got={};let lost=0;
  for(const c of ch){if(Math.random()>=c.p)continue;const n=c.w>=3&&Math.random()<.4?2:1;for(let i=0;i<n;i++){if(addLoot(c.id))got[c.id]=(got[c.id]||0)+1;else lost++}}
