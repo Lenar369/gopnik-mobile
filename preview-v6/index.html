@@ -1362,7 +1362,7 @@ function S(){
 }
 function gameDate(){return new Date(Date.UTC(1998,7,1+(g.day-1)+(S().shift||0)))}
 function dateText(){const d=gameDate();return d.getUTCDate()+' '+MONTHS_RU[d.getUTCMonth()]+' '+d.getUTCFullYear()}
-function dateShort(){const d=gameDate();return d.getUTCDate()+' '+MONTHS_SHORT[d.getUTCMonth()]}
+function dateShort(){const d=gameDate();return d.getUTCDate()+' '+MONTHS_SHORT[d.getUTCMonth()]+' '+d.getUTCFullYear()}
 function seasonName(){const m=gameDate().getUTCMonth();return m<2||m===11?'зима':m<5?'весна':m<8?'лето':'осень'}
 function survNight(){const h=g.minute/60;return h>=21||h<6}
 function coldRate(){const m=gameDate().getUTCMonth();return survNight()?COLD_NIGHT[m]:COLD_DAY[m]}
@@ -1481,7 +1481,7 @@ const _start=start;
 start=function(){_start();S().score=progressScore()};
 const BACKUP_KEY=KEY+'-backup';
 function hasBackup(){try{return !!localStorage.getItem(BACKUP_KEY)}catch(e){return false}}
-function backupLabel(){try{const b=JSON.parse(localStorage.getItem(BACKUP_KEY));const sh=(b.surv&&b.surv.shift)||0;const d=new Date(Date.UTC(1998,7,1+(b.day-1)+sh));return esc(b.name)+' · '+d.getUTCDate()+' '+MONTHS_SHORT[d.getUTCMonth()]+' · '+b.money+' ₽'}catch(e){return ''}}
+function backupLabel(){try{const b=JSON.parse(localStorage.getItem(BACKUP_KEY));const sh=(b.surv&&b.surv.shift)||0;const d=new Date(Date.UTC(1998,7,1+(b.day-1)+sh));return esc(b.name)+' · '+d.getUTCDate()+' '+MONTHS_SHORT[d.getUTCMonth()]+' '+d.getUTCFullYear()+' · '+b.money+' ₽'}catch(e){return ''}}
 function survMenu(id){
  if(id==='surv:menu'){focus='survmenu';page=0;render();return true}
  if(id==='surv:newgame'){focus='survmenu-confirm';page=0;render();return true}
@@ -1675,7 +1675,7 @@ function landBar(){
  NEED_DEF.forEach(([k,ico,label])=>{const v=Math.round(s[k]);h+=plate(lvlCls(v),hudImg(k,ico,'lbico'),v,label)});
  if(s.cold)h+='<div class="lb-plate low" title="Простуда">🤧</div>';
  h+='</div>'+plate('lb-money','<b class="rub">₽</b>',g.money,'Деньги');
- h+='<div class="lb-plate lb-date" title="'+esc(dateText())+'"><small>'+WEEKDAYS[d.getUTCDay()]+', '+dateShort()+' 1998</small><b>'+partOfDay().icon+' '+hourMinute()+'</b></div>';
+ h+='<div class="lb-plate lb-date" title="'+esc(dateText())+'"><small>'+WEEKDAYS[d.getUTCDay()]+', '+dateShort()+'</small><b>'+partOfDay().icon+' '+hourMinute()+'</b></div>';
  h+='<button class="menubtn lb-menu" data-do="surv:menu" aria-label="Меню игры">'+artOr(UI+'nav_settings.webp','☰','lbmenuico')+'</button></div>';
  return h;
 }
@@ -1694,7 +1694,7 @@ function questLines(){
  return out;
 }
 function landSide(){
- const reg=g.region||0,name=reg===0?regions[0]:(DISTRICTS[reg]?.name||regions[reg]),tag=reg===0?'Казань, 1998 год':(DISTRICTS[reg]?.tag||'');
+ const reg=g.region||0,name=reg===0?regions[0]:(DISTRICTS[reg]?.name||regions[reg]),tag=reg===0?'Казань, '+gameDate().getUTCFullYear()+' год':(DISTRICTS[reg]?.tag||'');
  let body='';
  if(landTab==='q')body=questLines().map(x=>'<div class="ls-item '+x.cls+'"><b>'+(x.cls==='done'?'✓ ':x.cls==='main'?'❗ ':x.cls==='act'?'▸ ':'○ ')+esc(x.t)+'</b>'+esc(x.d)+'</div>').join('');
  else body=(g.log||[]).slice(0,14).map(t=>'<div class="ls-item ev">'+esc(t)+'</div>').join('')||'<div class="ls-item">Пока тихо.</div>';
@@ -1777,7 +1777,7 @@ function goodsPath(id){return '../art/items/'+GOODS_ART[id]+'.webp'}
 Object.keys(GOODS_ART).forEach(id=>probeAsset(goodsPath(id)));
 const SCENES={
  death:{img:'death_wakeup',title:'☠ Ты очнулся',text:()=>'Облупленный потолок, тусклая лампа, капельница. '+(S().deathInfo?lossText(S().deathInfo)+'.':''),btn:'Прийти в себя'},
- winter:{img:'winter_yard',title:'❄️ Декабрь 1998',text:()=>'Двор занесло снегом, из подвальных окон валит пар. На улице мороз — без тёплой одежды долго не протянешь.',btn:'Выйти во двор'},
+ winter:{img:'winter_yard',title:'❄️ Декабрь '+(typeof g!=='undefined'&&g?gameDate().getUTCFullYear():1998),text:()=>'Двор занесло снегом, из подвальных окон валит пар. На улице мороз — без тёплой одежды долго не протянешь.',btn:'Выйти во двор'},
  default:{img:'default_news',title:'📉 17 августа 1998',text:()=>'По телевизору говорят о дефолте. Рубль рухнул, цены на еду и лекарства выросли вдвое. Кошелёк на столе пуст.',btn:'Ничего, прорвёмся'}
 };
 Object.values(SCENES).forEach(x=>probeAsset('../art/scenes/'+x.img+'.webp'));
@@ -2049,7 +2049,7 @@ render=function(){
  const s=S();if(s.trip&&!s.trip.paused&&!s.trip.ev&&!tripTimer)scheduleWalk();
 };
 const _landSideC=landSide;
-landSide=function(){let h=_landSideC();if(cityOn())h=h.replace(/<div class="ls-card">[\s\S]*?<\/div>/,'<div class="ls-card"><b>🗺️ Город</b><small>'+(S().trip?'В пути → '+esc(regions[S().trip.to]):'Казань, 1998 год')+'</small></div>');return h};
+landSide=function(){let h=_landSideC();if(cityOn())h=h.replace(/<div class="ls-card">[\s\S]*?<\/div>/,'<div class="ls-card"><b>🗺️ Город</b><small>'+(S().trip?'В пути → '+esc(regions[S().trip.to]):'Казань, '+gameDate().getUTCFullYear()+' год')+'</small></div>');return h};
 
 document.head.insertAdjacentHTML('beforeend','<style>'+
 '.citymap .world{height:'+CMWH+'px}.cityart{object-fit:fill}'+
@@ -4603,6 +4603,20 @@ render=function(){
  const k='../art/maps/yard_summer.webp',im=document.querySelector('#maphost .mapart');
  if(im&&ASSET_OK[k]&&!im.src.endsWith('yard_summer.webp'))im.src=k;
 };
+
+/* ===== v6: календарь — год в дате, переход через Новый год ===== */
+SCENES.newyear={img:'winter_yard',title:'🎄 С Новым годом!',text:()=>'Куранты по телевизору, салют за окнами, во дворе кто-то орёт «С Новым '+gameDate().getUTCFullYear()+'-м!». Старый год позади — ты выжил. Нервы +15.',btn:'С Новым годом!'};
+const _advanceY=advance;
+advance=function(m){
+ const y0=g?gameDate().getUTCFullYear():0;const r=_advanceY.apply(this,arguments);
+ if(g&&m>0){const y=gameDate().getUTCFullYear();if(y>y0){const s=S();s.nerves=clampN((s.nerves||0)+15);announce('🎄 Наступил '+y+' год! Нервы +15.');s.nyPending=true}}
+ return r;
+};
+// поздравление — как только не открыто другое окно (находки, драка, разговор)
+const _renderY=render;
+render=function(){if(g){const s=S();if(s.nyPending&&!s.scene&&!g.fight&&!s.dlg){s.scene='newyear';save()}}return _renderY()};
+const _survActionY=survAction;
+survAction=function(id){if(id==='surv:scene-ok'&&g&&S().scene==='newyear')S().nyPending=false;return _survActionY(id)};
 
 render();
 })();</script></body></html>
