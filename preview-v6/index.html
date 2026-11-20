@@ -4919,7 +4919,7 @@ function musTick(){
 }
 // таймер запускается при первом звуке (acReady), чтобы без звука ничего не крутилось
 const _actionsForMus=actionsFor;
-actionsFor=function(id){const a=_actionsForMus(id);if(id!=='survmenu'||!Array.isArray(a))return a;const b={name:musicOn()?'🎵 Музыка: включена':'🎵 Музыка: выключена',doit:'surv:music',sub:'Тихий перебор — днём, ночью и зимой свой',alt:false};const i=a.findIndex(x=>x.doit==='fx:sound');return i<0?a.concat([b]):a.slice(0,i+1).concat([b],a.slice(i+1))};
+actionsFor=function(id){const a=_actionsForMus(id);if(id!=='survmenu'||!Array.isArray(a))return a;const b={name:musicOn()?'🎵 Музыка: включена':'🎵 Музыка: выключена',doit:'surv:music',sub:'Днём — вальс под гитару, ночью — «Ночной район»',alt:false};const i=a.findIndex(x=>x.doit==='fx:sound');return i<0?a.concat([b]):a.slice(0,i+1).concat([b],a.slice(i+1))};
 const _doActionMus=doAction;
 doAction=function(id){if(g&&id==='surv:music'){try{localStorage.setItem('gopnik-music',musicOn()?'0':'1')}catch(e){}if(!musicOn()&&MUS.bus&&AC)MUS.bus.gain.setTargetAtTime(.0001,AC.currentTime,.2);else acReady();render();return}return _doActionMus(id)};
 
@@ -4959,6 +4959,46 @@ musTick=function(){
  if(MUS.next<A.currentTime)MUS.next=A.currentTime+.1;
  const e=60/NR.bpm/2;
  while(MUS.next<A.currentTime+1.2){nrEighth(A,MUS.bus,MUS.next,MUS.nr.step);MUS.nr.step++;MUS.next+=e}
+};
+
+/* ===== v6: дневная музыка «Лирика» — вальс под гитару: перебор + гитара-соло (утверждено пользователем) ===== */
+const LY={bpm:92,
+ ch:{Am:[45,[57,60,64]],Dm:[50,[53,57,62]],E7:[40,[56,59,62]],A7:[45,[55,61,64]],C:[48,[55,60,64]],G7:[43,[53,59,62]]},
+ P1:['Am','Am','Dm','Dm','E7','E7','Am','Am'],P2:['Am','A7','Dm','Dm','G7','C','E7','E7'],
+ M1:[[64,2],[69,2],[71,2],[72,4],[71,2],[69,2],[74,2],[72,2],[69,6],[68,2],[71,2],[74,2],[72,4],[71,2],[69,6],[0,6]],
+ M2:[[76,3],[74,1],[72,2],[73,2],[76,2],[79,2],[77,4],[76,2],[74,6],[74,2],[71,2],[67,2],[76,4],[72,2],[71,2],[74,2],[71,2],[68,6]]};
+LY.form=[['P1',null],['P1','M1'],['P2','M2'],['P1','M1'],['P2','M2'],['P1','M1']];
+const KS_CACHE={};
+function ksBuf(A,f,dur,bright){
+ const key=Math.round(f*10)+'|'+Math.round(dur*20)+'|'+bright;if(KS_CACHE[key])return KS_CACHE[key];
+ const sr=A.sampleRate,n=Math.max(1,Math.floor(dur*sr)),p=Math.max(2,Math.round(sr/f)),buf=new Float32Array(p),k=.996-.002*(1-bright);
+ for(let i=0;i<p;i++)buf[i]=Math.random()*2-1;
+ const b=A.createBuffer(1,n,sr),o=b.getChannelData(0);
+ for(let i=0;i<n;i++){const j=i%p,x=buf[j];buf[j]=k*.5*(x+buf[(i+1)%p]);o[i]=x}
+ return KS_CACHE[key]=b;
+}
+function lyPluck(A,bus,m,dur,v,bright,t){const s=A.createBufferSource();s.buffer=ksBuf(A,440*Math.pow(2,(m-69)/12),dur,bright);const g2=A.createGain();g2.gain.value=v;s.connect(g2);g2.connect(bus);s.start(t)}
+function lyEighth(A,bus,t,step){
+ const e=60/LY.bpm/2,barAll=Math.floor(step/6),pos=step%6;
+ let b=barAll%(LY.form.length*8),sec=LY.form[Math.floor(b/8)],bar=b%8;
+ const [bass,cc]=LY.ch[LY[sec[0]][bar]];
+ if(pos===0)lyPluck(A,bus,bass,3*e*2,.5,.4,t);
+ else{const seq=[cc[0],cc[1],cc[2],cc[1],cc[0]];lyPluck(A,bus,seq[pos-1],e*2.2,.2,.6,t)}
+ if(!sec[1])return;
+ const M=LY[sec[1]],idx=bar*6+pos;let acc=0;
+ for(const [m,d] of M){if(acc===idx&&m){lyPluck(A,bus,m,d*e*1.3+.3,.42,.85,t)}acc+=d;if(acc>idx)break}
+}
+const _musTickLY=musTick;
+musTick=function(){
+ const A=AC;if(!A||A.state!=='running'||!musicOn()||!soundOn())return _musTickLY();
+ const mood=musMood();if(mood!=='day'&&mood!=='winter'){if(MUS.ly){MUS.ly=null;MUS.next=0}return _musTickLY()}
+ if(MUS.nr){MUS.nr=null;MUS.next=0}
+ if(!MUS.bus){MUS.bus=A.createGain();MUS.bus.gain.value=.0001;MUS.bus.connect(A.destination)}
+ MUS.bus.gain.setTargetAtTime(.075,A.currentTime,.6);
+ if(!MUS.ly){MUS.ly={step:0};MUS.next=0}
+ if(MUS.next<A.currentTime)MUS.next=A.currentTime+.1;
+ const e=60/LY.bpm/2;
+ while(MUS.next<A.currentTime+1.2){lyEighth(A,MUS.bus,MUS.next,MUS.ly.step);MUS.ly.step++;MUS.next+=e}
 };
 
 render();
