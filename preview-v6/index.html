@@ -5001,5 +5001,60 @@ musTick=function(){
  while(MUS.next<A.currentTime+1.2){lyEighth(A,MUS.bus,MUS.next,MUS.ly.step);MUS.ly.step++;MUS.next+=e}
 };
 
+/* ===== v6: ночлег за деньги — настоящий сон (раньше бодрость падала до 0) + три новые гостиницы ===== */
+// новые места (координаты — по новым картам районов)
+DISTRICTS[1].spots.push(SP('m_kolhoz','Дом колхозника','🛏️',260,55,'Дешёвая гостиница у рынка: койки в общей комнате, торговцы с баулами. Спят чутко — тут тащат всё, что плохо лежит.','','Вахтёрша'));
+DISTRICTS[4].spots.push(SP('g_room','Комната над шиномонтажом','🛏️',70,200,'Каморка над боксом: топчан, печка-буржуйка, запах резины. Сдаёт жена Ильдара.','','Наиля'));
+DISTRICTS[6].spots.push(SP('c_zarya','Гостиница «Заря»','🏨',350,60,'Гостиница в центре: ковровые дорожки, горячий душ, буфет на этаже. Дорого, зато спокойно.','','Администратор'));
+['m_kolhoz','g_room','c_zarya'].forEach(id=>SURV_INDOOR.add(id));
+// цены и особенности ночлега
+const LODGES={
+ hotel:{price:30},f_dorm:{price:15},w_cafe:{price:20},
+ m_kolhoz:{price:10,theft:.3,safe:5,note:'Койка в общей комнате'},
+ g_room:{price:20,warm:true,free:()=>!!S().ildarFree,note:'У печки тепло'},
+ c_zarya:{price:60,warm:true,shower:true,note:'Горячий душ, завтрак, спокойно'}
+};
+function lodgePrice(id){const L=LODGES[id];if(!L)return null;return L.free&&L.free()?0:L.price}
+function lodgeSleep(id,mode,safe){
+ const L=LODGES[id],s=S();if(!L||g.loc!==id){announceAndRender('Ночлег доступен только здесь.');return}
+ const price=lodgePrice(id)+(safe&&L.safe?L.safe:0);
+ if(g.money<price){announceAndRender('Не хватает '+price+' ₽ на ночлег.');return}
+ if(mode==='morning'&&!nightRestAvailable()){announceAndRender('До ночи ещё рано. Можно снять кровать на 8 часов.');return}
+ const mins=mode==='morning'?minutesUntilMorning():480;g.money-=price;g.lodgingNights=(g.lodgingNights||0)+1;
+ if(L.shower&&s.cold){s.cold=false}
+ restSleep(mins,'🛏️ '+citySpotName(id)+(price?' — '+price+' ₽.':' — бесплатно, по-свойски.'));
+ let extra='';
+ if(L.warm){s.warmth=100;extra+=' Тепло, выспался.'}
+ if(L.shower){s.warmth=100;s.nerves=clampN(s.nerves+10);if(mode==='morning'){s.food=clampN((s.food||0)+30);extra+=' Горячий душ и завтрак в буфете: сытость +30, нервы +10.'}else extra+=' Горячий душ: нервы +10.'}
+ if(L.theft&&!safe&&Math.random()<L.theft){
+  const mats=Object.keys(B().mats||{}).filter(x=>x!=='crate');let gone=[];
+  for(let i=0;i<2&&mats.length;i++){const k=mats.splice(Math.floor(Math.random()*mats.length),1)[0];const n=Math.max(1,Math.floor(B().mats[k]/2));B().mats[k]-=n;if(B().mats[k]<=0)delete B().mats[k];gone.push(anyName(k)+(n>1?' ×'+n:''))}
+  const lost=Math.min(g.money,Math.round(g.money*.2));g.money-=lost;
+  if(gone.length||lost)extra+=' 🧳 Утром недосчитался: '+[lost?lost+' ₽':'',...gone].filter(Boolean).join(', ')+'. Соседи по комнате делают вид, что спали.';
+ }
+ if(extra){g.log[0]=String(g.log[0])+extra}
+ save();render();
+}
+const _doActionLo=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('world:sleep:')){const p=sid.split(':');if(LODGES[p[2]]){const wasV=S().venue;lodgeSleep(p[2],p[3],p[4]==='safe');if(wasV){S().venue=null;save();render()}return}}
+ return _doActionLo(id);
+};
+// кнопки ночлега в новых местах
+const _actionsForLo=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForLo(id);if(!g||!['m_kolhoz','g_room','c_zarya'].includes(id))return a;
+ const L=LODGES[id],p=lodgePrice(id),pt=p?p+' ₽':'бесплатно',night=nightRestAvailable();
+ const add=[];
+ if(night)add.push({name:'🛏️ Ночлег до 07:00',doit:'world:sleep:'+id+':morning',sub:pt+' · '+L.note,alt:true});
+ add.push({name:'🕗 Кровать на 8 часов',doit:'world:sleep:'+id+':eight',sub:pt+' · '+L.note,alt:!night});
+ if(L.safe){if(night)add.push({name:'🧳 Ночлег + камера хранения',doit:'world:sleep:'+id+':morning:safe',sub:(p+L.safe)+' ₽ · вещи не украдут',alt:false});else add.push({name:'🧳 8 часов + камера хранения',doit:'world:sleep:'+id+':eight:safe',sub:(p+L.safe)+' ₽ · вещи не украдут',alt:false})}
+ return add.concat(a);
+};
+// «Заря» — картинка гостиницы
+const _placeArtLo=placeArt;
+placeArt=function(id){if(id==='c_zarya'){const k=VENUE_DIR+'hotel_'+(winterNow()?'winter':'summer')+'.webp';if(ASSET_OK[k])return k}return _placeArtLo(id)};
+
 render();
 })();</script></body></html>
