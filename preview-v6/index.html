@@ -4724,5 +4724,107 @@ navbar=function(){
 };
 document.head.insertAdjacentHTML('beforeend','<style>.navwrap{position:relative;display:inline-block}nav.bottom button.hasnew::after,nav.bottom button.hasnew::before{display:none!important}.navalert{position:absolute;top:-6px;right:-10px;width:20px;height:20px;object-fit:contain;font-style:normal;font-weight:800;color:#fff;background:transparent;line-height:20px;text-align:center}i.navalert{background:#c0392b;border-radius:50%}</style>');
 
+/* ===== v6: ночёвка вне дома — в местах вылазок, до 7 утра; холод, слабее отдых, риск ограбления/нападения ===== */
+// w — тепло в час (зимой; летом +8), risk — шанс ночного происшествия, txt — где спишь
+const SHELTER={
+ heat:{w:12,risk:.3,txt:'на картонке у тёплых труб'},
+ cellar:{w:10,risk:.25,txt:'в подвале у труб отопления'},
+ dachas:{w:-4,risk:.12,txt:'в пустом щитовом домике'},
+ sector:{w:-3,risk:.15,txt:'в брошенном доме, на старом диване'},
+ camp:{w:-5,risk:.15,txt:'в корпусе пионерлагеря, на железной койке'},
+ farm:{w:-3,risk:.12,txt:'на сеновале в коровнике'},
+ village:{w:-2,risk:.25,txt:'в пустом доме дачников'},
+ base:{w:-6,risk:.2,txt:'в ангаре за ящиками'},
+ hospital:{w:-7,risk:.25,txt:'на бетонном этаже долгостроя'},
+ dump:{w:-8,risk:.4,txt:'в будке на краю свалки'},
+ bank:{w:-10,risk:.15,txt:'под перевёрнутой лодкой у насыпи'}
+};
+function shelterOf(k){const S0=SHELTER[k]||{w:-6,risk:.2,txt:'где придётся'};const risk=S0.risk*(k==='dump'&&dumpOk()?.25:1);return {...S0,risk}}
+function sleepHourOk(){const h=g.minute/60;return h>=18||h<6}
+function minsTo7(){const m=g.minute,t=7*60;return m<t?t-m:1440-m+t}
+function sleepOut(k){
+ const s=S(),w=WILD[k];if(!w||s.atWild!==k)return;
+ if(!sleepHourOk()){announceAndRender('Рано ложиться — заночевать можно с 18:00.');return}
+ if(s.trip){announceAndRender('Сначала дойди до места.');return}
+ const sh=shelterOf(k),mins=minsTo7(),h=mins/60;
+ const fire=g.inventory.includes('campfire');if(fire)g.inventory.splice(g.inventory.indexOf('campfire'),1);
+ let rate=sh.w+(winterNow()?0:8)+(fire?6:0);if(rate<0)rate*=(1-insulation());
+ const w0=s.warmth,e0=s.energy,n0=s.nerves,hp0=g.hp,cold0=s.cold;
+ restSleep(mins,'🌙 Заночевал '+sh.txt+'.');
+ // поправки: на улице спится хуже, тепло — по укрытию
+ s.warmth=clampN(w0+rate*h);
+ s.energy=clampN(e0+(s.energy-e0)*.7);
+ s.nerves=clampN(n0+(s.nerves-n0)*.3-(rate<0?4:0));
+ g.hp=Math.max(1,hp0+Math.round((g.hp-hp0)*.5));
+ if(rate<0)s.cold=cold0;
+ if(s.warmth<20&&!s.cold&&Math.random()<.5){s.cold=true;s.coldSleeps=0}
+ let note=(fire?' Костёр грел до утра.':'')+(rate<0?' Ночью замёрз — тепло '+Math.round(s.warmth)+'.':' Было тепло.')+(s.cold&&!cold0?' 🤧 Простыл.':'');
+ // ночное происшествие
+ if(Math.random()<sh.risk){
+  if(Math.random()<.5){
+   const lost=Math.min(g.money,Math.round(g.money*.3)),mats=Object.keys(B().mats||{}).filter(x=>x!=='crate');let gone=[];
+   for(let i=0;i<2&&mats.length;i++){const id=mats.splice(Math.floor(Math.random()*mats.length),1)[0];const n=Math.max(1,Math.floor(B().mats[id]/2));B().mats[id]-=n;if(B().mats[id]<=0)delete B().mats[id];gone.push(anyName(id)+(n>1?' ×'+n:''))}
+   g.money-=lost;announce('🌙 Ночью обчистили, пока спал: −'+lost+' ₽'+(gone.length?', '+gone.join(', '):'')+'.'+note);save();render();return;
+  }
+  const foes=(k==='dump'&&!dumpOk())?['bum','bum','dogs']:(WILD_FOES[k]||['bum']);const t=foes[Math.floor(Math.random()*foes.length)];
+  announce('🌙 Под утро разбудили — чужие.'+note);startFight(t,{text:'Тебя растолкали: «Ты чего тут разлёгся?»'});save();render();return;
+ }
+ announce('🌙 Ночь прошла спокойно. Бодрость '+Math.round(s.energy)+', тепло '+Math.round(s.warmth)+'.'+note);save();render();
+}
+const _actionsForN=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForN(id);if(!g||!String(id).startsWith('wild:'))return a;const k=String(id).slice(5),s=S();
+ if(s.atWild!==k||s.trip)return a;const sh=shelterOf(k);
+ const warm=sh.w+(winterNow()?0:8),risk=Math.round(sh.risk*100);
+ const b={name:'🌙 Заночевать здесь',doit:'surv:sleepout:'+k,sub:sleepHourOk()?'До 7:00 · '+(warm>=0?'тепло':'холодно'+(g.inventory.includes('campfire')?' (костёр поможет)':'')) +' · риск ночью '+risk+'%':'С 18:00 · '+(warm>=0?'тепло':'холодно')+' · риск '+risk+'%',alt:sleepHourOk()};
+ const i=a.findIndex(x=>String(x.doit).startsWith('surv:loot:'));return i<0?[b].concat(a):a.slice(0,i+1).concat([b],a.slice(i+1));
+};
+
+/* ===== v6: серьёзное дело «Король свалки» (даёт сторож Разборки, Гаражный) ===== */
+ENEMY.dumpking={name:'Король свалки со свитой',one:'Король свалки',icon:'👑',n:3,hp:45,dmg:[7,13],acc:.65,talk:4,pay:60,run:.4,xp:120,resp:6,loot:{money:[40,90],mats:{scrap:3,wire:2,battery:1}},style:[.3,.4,.3]};
+probeAsset(FIGHTER_DIR+'dumpking.webp');
+Object.assign(BQ,{dump:{giver:'g_scrap',lvl:6,title:'Король свалки',ico:'👑',
+ pitch:'«На городской свалке завёлся "король" — Шамиль. Сколотил бригаду бродяг, никого не пускает, металл гонит налево. Сходи разберись: хочешь — договорись, хочешь — выгони. Мне главное, чтоб металл снова к нам шёл».'}});
+function dumpOk(){return !!S().dumpKing}
+const _bqHintK=bqHint;
+bqHint=function(k){
+ if(k!=='dump')return _bqHintK(k);const q=Q()[k];if(!q)return '';if(q.done)return '✅ выполнено';if(q.fail)return '❌ провалено';
+ if(q.st==='go')return 'Иди на Городскую свалку (южная окраина) и найди Короля.';
+ if(q.st==='bring')return 'Король ждёт: 2 батарейки и 3 проволоки (в хабаре). Отнеси на свалку. Есть: батарейки '+(B().mats.battery||0)+'/2, проволока '+(B().mats.wire||0)+'/3.';
+ return '';
+};
+const _actionsForK=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForK(id);if(!g||id!=='wild:dump'||S().atWild!=='dump'||g.fight)return a;const st=qStage('dump');
+ if(st==='go')return [
+  {name:'👑 Заплатить Королю дань',doit:'bq:dump:pay',sub:survPrice(50)+' ₽ · пускает на свалку',alt:false},
+  {name:'🤝 Предложить работу',doit:'bq:dump:work',sub:'Принести ему 2 батарейки и 3 проволоки',alt:false},
+  {name:'👊 Выгнать Короля',doit:'bq:dump:fight',sub:'Он и двое из свиты',alt:true}].concat(a);
+ if(st==='bring')return [{name:'📦 Отдать Королю батарейки и проволоку',doit:'bq:dump:give',sub:'Нужно: 🔋 2 · ➰ 3',alt:true},{name:'👊 Передумал — выгнать',doit:'bq:dump:fight',sub:'Он и двое из свиты',alt:false}].concat(a);
+ return a;
+};
+const _bqActK=bqAct;
+bqAct=function(k,a){
+ if(k!=='dump')return _bqActK(k,a);const q=Q().dump;if(!q)return;const s=S();
+ if(a==='pay'){const c=survPrice(50);if(g.money<c){announceAndRender('Не хватает: Король хочет '+c+' ₽.');return}g.money-=c;s.dumpKing='tribute';advance(20);bqDone('dump','Заплатил дань. Король пускает на свалку, ночевать там теперь спокойнее. Сторож Разборки ворчит, но доволен — металл снова пошёл.',100);return}
+ if(a==='work'){q.st='bring';advance(20);announce('👑 Король: «Батарейки и проволоку принесёшь — будешь тут как свой».');save();render();return}
+ if(a==='give'){const m=B().mats;if((m.battery||0)<2||(m.wire||0)<3){announceAndRender('Не хватает: батарейки '+(m.battery||0)+'/2, проволока '+(m.wire||0)+'/3.');return}
+  m.battery-=2;m.wire-=3;if(!m.battery)delete m.battery;if(!m.wire)delete m.wire;s.dumpKing='friend';advance(20);g.money+=survPrice(40);
+  bqDone('dump','Король теперь за тебя: на свалке ты свой, хабара больше, ночевать безопасно. Сторож Разборки заплатил '+survPrice(40)+' ₽.',150);return}
+ if(a==='fight'){startFight('dumpking',{text:'Король поднимается с продавленного кресла: «Ты кто такой, чтоб тут командовать?»'});if(g.fight)g.fight.quest='dump';save();render();return}
+};
+const _fightEndK=fightEnd;
+fightEnd=function(res){
+ const tag=g.fight&&g.fight.quest;_fightEndK(res);if(tag!=='dump')return;
+ if(res==='win'){S().dumpKing='beaten';g.money+=survPrice(60);bqDone('dump','Король свалки сбежал со свитой. Свалка теперь твоя: хабара больше, ночевать спокойно. Сторож Разборки отсчитал '+survPrice(60)+' ₽.',200)}
+ else if(res==='talk'||res==='pay'){S().dumpKing='tribute';bqDone('dump','Разошлись миром: Король пускает тебя на свалку.',120)}
+ else{announce('Король со свитой отбились. Можно прийти ещё раз — или договориться.');save();render()}
+};
+// хабар со свалки после дела: +1 находка
+const _searchK=search;
+search=function(k){const before=g.log[0];_searchK(k);if(k==='wild_dump'&&dumpOk()&&!g.fight&&g.log[0]!==before&&/^🔎/.test(g.log[0])){const ex=extraFinds(k,S().dumpKing==='tribute'?0:1);if(ex.length){g.log[0]=g.log[0].replace(/\.(?=[^.]*$)/,'')+' + свои со свалки: '+ex.join(', ')+'.';save();render()}}};
+const _doActionN=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('surv:sleepout:')){sleepOut(sid.slice(14));return}return _doActionN(id)};
+
 render();
 })();</script></body></html>
