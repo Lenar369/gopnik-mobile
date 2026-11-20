@@ -5,7 +5,7 @@ function boot(){const vc=new VirtualConsole();vc.on('jsdomError',e=>errs.push(St
 const st=()=>{store[KEY]=W.localStorage.getItem(KEY);return JSON.parse(store[KEY])};const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const pins=h=>(h.match(/data-do="surv:(wpin|sheet|cpin):[^"]*"/g)||[]).map(x=>x.slice(14,-1)).join(' ');
 const art=h=>h.match(/class="mapart cityart" src="([^"]*)"/)?.[1];
-async function go(a,to){let r;for(let k=0;k<4;k++){r=await go1(a,to);const g=r[0];if(typeof to==='string'?g.surv.atWild===to.slice(2):g.region===to&&!g.surv.cityMode)break;if(g.fight)a.do('fx:run');a.do('city')}return r}
+async function go(a,to){let r;const all=new Set();for(let k=0;k<4;k++){r=await go1(a,to);r[1].forEach(x=>all.add(x));r[1]=[...all];const g=r[0];if(typeof to==='string'?g.surv.atWild===to.slice(2):g.region===to&&!g.surv.cityMode)break;if(g.fight)a.do('fx:run');a.do('city')}return r}
 async function go1(a,to){a.do('surv:walk:'+to);const seen=new Set();let g;for(let i=0;i<2000;i++){await wait(3);g=st();const t=art(a.html());if(t)seen.add(t.split("/").pop());if(!g.surv.trip)break;if(g.surv.trip.ev)a.do('surv:road:skip');if(g.surv.trip&&g.surv.trip.paused)a.do('surv:tripgo');g=st();if(g.hp<40)g=st()}return [g,[...seen]]}
 (async()=>{
  let a=boot(),g=a.do('start');g=a.do('city');let h=a.html();
