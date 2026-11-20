@@ -4583,5 +4583,26 @@ document.head.insertAdjacentHTML('beforeend','<style>.pfdark{color:#bfe0ff!impor
 /* ===== v6: портреты бойцов, объявленных позже (заказ 06, раздел D) ===== */
 Object.keys(ENEMY).forEach(k=>probeAsset(FIGHTER_DIR+k+'.webp'));
 
+/* ===== v6: новые карты районов (заказ 10) — летние пары к зимним, метки переставлены по новым кадрам ===== */
+const NEW_PINS={"0":{"home":[140,380],"house12":[880,250],"court":[540,215],"play":[410,370],"kiosk":[710,430],"garage":[920,85],"stop":[930,415],"back":[80,110],"q5_cafe":[215,475],"q5_police":[565,150]},"1":{"m_rows":[420,270],"m_pawn":[150,300],"m_cafe":[860,370],"m_depot":[900,150],"m_workers":[470,430],"m_side":[520,150],"m_stop":[330,540]},"2":{"s_station":[510,135],"s_platform":[760,100],"s_ticket":[380,85],"s_cafe":[230,370],"hotel":[930,230],"s_luggage":[700,490],"s_stop":[420,180],"s_bar":[70,410]},"3":{"f_gate":[330,320],"f_dorm":[960,320],"f_canteen":[120,360],"f_repair":[310,170],"f_warehouse":[830,215],"f_boiler":[650,110],"f_stop":[420,520]},"4":{"g_mech":[300,240],"g_market":[590,205],"g_scrap":[860,210],"g_parts":[725,295],"g_gas":[470,160],"g_job":[200,330],"g_park":[460,295],"g_stop":[330,530],"g_bar":[910,380]},"5":{"w_quay":[880,215],"w_boat":[640,290],"w_cafe":[400,170],"w_fish":[290,280],"w_warehouse":[650,150],"w_watch":[900,400],"w_stop":[330,520],"w_club":[110,230]},"6":{"c_square":[330,270],"c_book":[140,410],"c_bank":[535,185],"c_cafe":[470,195],"c_archive":[190,130],"c_med":[605,180],"c_shop":[870,140],"c_stop":[700,420],"c_rest":[430,130],"c_police":[685,155]}};
+(function(){
+ for(const[r,M]of Object.entries(NEW_PINS)){
+  const list=r==='0'?places:(DISTRICTS[r]?DISTRICTS[r].spots:[]);
+  list.forEach(p=>{if(M[p.id]){p.x=M[p.id][0];p.y=M[p.id][1]}});
+ }
+ if(NEW_PINS[0].q5_police){UCH.x=NEW_PINS[0].q5_police[0];UCH.y=NEW_PINS[0].q5_police[1]}
+})();
+Object.values(MAPW).concat(['yard']).forEach(n=>probeAsset('../art/maps/'+n+'_summer.webp'));
+const _districtArtSrcN=districtArtSrc;
+districtArtSrc=function(id){const n=MAPW[id];if(n&&!winterNow()&&ASSET_OK['../art/maps/'+n+'_summer.webp'])return '../art/maps/'+n+'_summer.webp';return _districtArtSrcN(id)};
+// Пятый квартал: летом новая картинка вместо встроенной старой
+const _renderN=render;
+render=function(){
+ _renderN();
+ if(!g||view!=='map'||(g.region||0)!==0||S().cityMode||winterNow())return;
+ const k='../art/maps/yard_summer.webp',im=document.querySelector('#maphost .mapart');
+ if(im&&ASSET_OK[k]&&!im.src.endsWith('yard_summer.webp'))im.src=k;
+};
+
 render();
 })();</script></body></html>
