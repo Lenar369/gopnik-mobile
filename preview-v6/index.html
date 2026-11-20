@@ -4827,7 +4827,7 @@ const _doActionN=doAction;
 doAction=function(id){const sid=String(id);if(g&&sid.startsWith('surv:sleepout:')){sleepOut(sid.slice(14));return}return _doActionN(id)};
 
 /* ===== v6: звуки мира (WebAudio, без файлов) — шаги, обыск, находки, деньги, крафт, сон, уровень, тревога, куранты, ветер и дождь ===== */
-function acReady(){if(!soundOn())return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}if(AC&&AC.state==='suspended'){try{AC.resume()}catch(e){}}return AC}
+function acReady(){if(!soundOn())return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}if(AC&&AC.state==='suspended'){try{AC.resume()}catch(e){}}if(AC&&!MUS.timer)MUS.timer=setInterval(()=>{try{musTick()}catch(e){}},250);return AC}
 function snd(kind){
  const A=acReady();if(!A)return;const t=A.currentTime;
  const env=(v,d,at=0)=>{const g2=A.createGain();g2.gain.setValueAtTime(.0001,t+at);g2.gain.exponentialRampToValueAtTime(v,t+at+.01);g2.gain.exponentialRampToValueAtTime(.0001,t+at+d);g2.connect(A.destination);return g2};
@@ -4917,7 +4917,7 @@ function musTick(){
   MUS.next+=eighth;MUS.step++;
  }
 }
-MUS.timer=setInterval(()=>{try{musTick()}catch(e){}},250);
+// таймер запускается при первом звуке (acReady), чтобы без звука ничего не крутилось
 const _actionsForMus=actionsFor;
 actionsFor=function(id){const a=_actionsForMus(id);if(id!=='survmenu'||!Array.isArray(a))return a;const b={name:musicOn()?'🎵 Музыка: включена':'🎵 Музыка: выключена',doit:'surv:music',sub:'Тихий перебор — днём, ночью и зимой свой',alt:false};const i=a.findIndex(x=>x.doit==='fx:sound');return i<0?a.concat([b]):a.slice(0,i+1).concat([b],a.slice(i+1))};
 const _doActionMus=doAction;
