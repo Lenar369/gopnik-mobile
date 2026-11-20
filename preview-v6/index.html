@@ -4618,5 +4618,51 @@ render=function(){if(g){const s=S();if(s.nyPending&&!s.scene&&!g.fight&&!s.dlg){
 const _survActionY=survAction;
 survAction=function(id){if(id==='surv:scene-ok'&&g&&S().scene==='newyear')S().nyPending=false;return _survActionY(id)};
 
+/* ===== v6: праздники — 23 февраля, 8 марта, 9 мая, День города (30 августа) ===== */
+const HOLIDAYS=[
+ {id:'feb23',m:1,d:23,icon:'🎖️',name:'23 февраля',hint:'Мужики во дворе отмечают — загляни на Главный двор.',
+  at:'court',act:'🎖️ Поздравить мужиков с 23 февраля',sub:'на пиво · Валера, Гена, Санёк, Борис +1 · нервы +5',cost:15,
+  go(){['valera','gena','sanya','boris'].forEach(k=>g.relations[k]=(g.relations[k]||0)+1);S().nerves=clampN(S().nerves+5);return '🎖️ Взял пива, поздравил мужиков во дворе. Валера жмёт руку: «Вот это по-нашему!» Отношения во дворе +1, нервы +5.'}},
+ {id:'mar8',m:2,d:8,icon:'💐',name:'8 марта',hint:'Поздравь маму и тётю Зою — дома.',
+  at:'home',act:'💐 Поздравить маму и тётю Зою',sub:'на мимозу и конфеты · тётя Зоя +2 · нервы +10',cost:20,
+  go(){g.relations.zoya=(g.relations.zoya||0)+2;S().nerves=clampN(S().nerves+10);return '💐 Принёс мимозу и коробку конфет. Мама прослезилась, тётя Зоя напекла пирогов. Тётя Зоя +2, нервы +10.'}},
+ {id:'may9',m:4,d:9,icon:'🎗️',name:'9 мая',hint:'На Центральной площади — парад и цветы у памятника.',
+  at:'c_square',act:'🎗️ Цветы к памятнику',sub:'Бесплатно · нервы +10 · опыт +10',cost:0,
+  go(){S().nerves=clampN(S().nerves+10);addXP(10,'9 мая');return '🎗️ Положил цветы к памятнику, постоял с ветеранами. Дед с орденами пожал руку. Нервы +10.'}},
+ {id:'cityday',m:7,d:30,icon:'🎪',name:'День города',hint:'Ярмарка на Центральной площади, а скупщик в Комиссионке сегодня платит на 30% больше.',
+  at:'c_square',act:'🎪 Ярмарка: шашлык и аттракционы',sub:'сытость +25 · нервы +15',cost:15,
+  go(){const s=S();s.food=clampN((s.food||0)+25);s.nerves=clampN(s.nerves+15);return '🎪 Шашлык с лучком, «колесо обозрения» и концерт на площади. Сытость +25, нервы +15.'}}
+];
+function holidayToday(){const d=gameDate();return HOLIDAYS.find(h=>h.m===d.getUTCMonth()&&h.d===d.getUTCDate())||null}
+function holKey(h){return h.id+'_'+gameDate().getUTCFullYear()}
+// объявление утром праздника
+const _advanceH=advance;
+advance=function(m){
+ const k0=g?gameDate().toISOString().slice(0,10):'';const r=_advanceH.apply(this,arguments);
+ if(g&&m>0&&gameDate().toISOString().slice(0,10)!==k0){const h=holidayToday();if(h)announce(h.icon+' Сегодня '+h.name+'! '+h.hint)}
+ return r;
+};
+// значок праздника в дате
+const _dateShortH=dateShort;
+dateShort=function(){const h=g?holidayToday():null;return _dateShortH()+(h?' '+h.icon:'')};
+// праздничное дело в месте — раз в год
+const _actionsForH=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForH(id);if(!g)return a;const h=holidayToday();
+ if(!h||h.at!==id)return a;const done=(S().hol||{})[holKey(h)];
+ return [{name:h.act,doit:'surv:hol:'+h.id,sub:done?'Уже было — в этом году':(h.cost?survPrice(h.cost)+' ₽ '+h.sub:h.sub),alt:!done}].concat(a);
+};
+function doHoliday(id){
+ const h=HOLIDAYS.find(x=>x.id===id),s=S();if(!h||holidayToday()!==h){announceAndRender('Праздник уже прошёл.');return}
+ s.hol=s.hol||{};if(s.hol[holKey(h)]){announceAndRender('В этом году уже отметил.');return}
+ if(h.cost&&g.money<survPrice(h.cost)){announceAndRender('Не хватает денег: нужно '+survPrice(h.cost)+' ₽.');return}
+ if(h.cost)g.money-=survPrice(h.cost);s.hol[holKey(h)]=true;advance(60);announce(h.go());save();render();
+}
+const _doActionH=doAction;
+doAction=function(id){if(g&&String(id).startsWith('surv:hol:')){doHoliday(String(id).slice(9));return}return _doActionH(id)};
+// День города: скупщик платит +30%
+const _sellMatH=sellMat;
+sellMat=function(id,all){const m0=g.money;const r=_sellMatH(id,all);const h=holidayToday();if(h&&h.id==='cityday'&&g.money>m0){const bonus=Math.round((g.money-m0)*.3);g.money+=bonus;g.log[0]=String(g.log[0])+' 🎪 Праздничная надбавка +'+bonus+' ₽.';save();render()}return r};
+
 render();
 })();</script></body></html>
