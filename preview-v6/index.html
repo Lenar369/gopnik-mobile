@@ -4826,5 +4826,70 @@ search=function(k){const before=g.log[0];_searchK(k);if(k==='wild_dump'&&dumpOk(
 const _doActionN=doAction;
 doAction=function(id){const sid=String(id);if(g&&sid.startsWith('surv:sleepout:')){sleepOut(sid.slice(14));return}return _doActionN(id)};
 
+/* ===== v6: звуки мира (WebAudio, без файлов) — шаги, обыск, находки, деньги, крафт, сон, уровень, тревога, куранты, ветер и дождь ===== */
+function acReady(){if(!soundOn())return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}if(AC&&AC.state==='suspended'){try{AC.resume()}catch(e){}}return AC}
+function snd(kind){
+ const A=acReady();if(!A)return;const t=A.currentTime;
+ const env=(v,d,at=0)=>{const g2=A.createGain();g2.gain.setValueAtTime(.0001,t+at);g2.gain.exponentialRampToValueAtTime(v,t+at+.01);g2.gain.exponentialRampToValueAtTime(.0001,t+at+d);g2.connect(A.destination);return g2};
+ const tone=(f,d,v,at=0,type='sine',f2)=>{const o=A.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t+at);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+at+d);o.connect(env(v,d,at));o.start(t+at);o.stop(t+at+d+.02)};
+ const noise=(d,v,f,type='lowpass',at=0,q=1)=>{const b=A.createBuffer(1,Math.max(1,A.sampleRate*d),A.sampleRate),c=b.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=Math.random()*2-1;const s=A.createBufferSource();s.buffer=b;const fl=A.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;s.connect(fl);fl.connect(env(v,d,at));s.start(t+at);s.stop(t+at+d+.02)};
+ switch(kind){
+  case 'click':tone(1800,.03,.04,0,'triangle');break;
+  case 'step':noise(.07,.12,winterNow()?2600:500,winterNow()?'bandpass':'lowpass',0,winterNow()?2:1);break;
+  case 'door':tone(180,.35,.06,0,'sawtooth',120);noise(.25,.08,300,'lowpass',.05);break;
+  case 'search':for(let i=0;i<4;i++)noise(.12,.1,1500+Math.random()*1500,'bandpass',i*.13,1.5);break;
+  case 'find':tone(1320,.18,.12,0,'triangle');tone(1760,.25,.1,.08,'triangle');break;
+  case 'coins':[2100,2650,2350].forEach((f,i)=>tone(f,.12,.08,i*.06,'square'));break;
+  case 'craft':[0,.22,.44].forEach(at=>{tone(260,.08,.18,at,'square',120);noise(.06,.12,1800,'highpass',at)});break;
+  case 'sleep':[523,392,330,262].forEach((f,i)=>tone(f,.5,.08,i*.28,'sine'));break;
+  case 'level':[392,523,659,784].forEach((f,i)=>tone(f,.25,.12,i*.1,'triangle'));break;
+  case 'alarm':for(let i=0;i<3;i++){tone(880,.18,.08,i*.36,'square');tone(660,.18,.08,i*.36+.18,'square')}break;
+  case 'bells':for(let i=0;i<6;i++){tone(523,1.6,.12,i*.9,'sine');tone(1046,1.2,.05,i*.9,'sine');tone(1568,.8,.03,i*.9,'sine')}break;
+  case 'bad':tone(220,.35,.12,0,'sawtooth',110);break;
+ }
+}
+// фон: ветер зимой на улице, дождь в дождь
+let AMB=null;
+function ambUpdate(){
+ if(!g)return;const s=S(),want=!soundOn()||survIndoor()||s.sleeping||g.fight?null:weatherNow()==='rain'?'rain':(winterNow()||weatherNow()==='snow')?'wind':null;
+ if(AMB&&AMB.kind===want)return;
+ if(AMB){try{const A=AC;AMB.g.gain.setTargetAtTime(.0001,A.currentTime,.4);const old=AMB;setTimeout(()=>{try{old.src.stop()}catch(e){}},1500)}catch(e){}AMB=null}
+ if(!want||!AC||AC.state!=='running')return;
+ const A=AC,b=A.createBuffer(1,A.sampleRate*4,A.sampleRate),c=b.getChannelData(0);let last=0;
+ for(let i=0;i<c.length;i++){const w=Math.random()*2-1;last=want==='wind'?(last+.02*w)/1.02:w;c[i]=want==='wind'?last*3.5:w}
+ const src=A.createBufferSource();src.buffer=b;src.loop=true;const fl=A.createBiquadFilter();fl.type=want==='wind'?'lowpass':'bandpass';fl.frequency.value=want==='wind'?(weatherNow()==='snow'?900:500):2500;
+ const g2=A.createGain();g2.gain.value=.0001;src.connect(fl);fl.connect(g2);g2.connect(A.destination);src.start();g2.gain.setTargetAtTime(want==='wind'?(weatherNow()==='snow'?.09:.04):.05,A.currentTime,.8);
+ AMB={kind:want,src,g:g2};
+}
+// события по новой записи в журнале
+let SND_LAST=null;
+const _renderSnd=render;
+render=function(){
+ const r=_renderSnd();if(!g)return r;
+ const top=g.log&&g.log[0];
+ if(SND_LAST!==null&&top&&top!==SND_LAST){const x=String(top);
+  if(/^🎄 Наступил/.test(x))snd('bells');
+  else if(/Новый уровень/.test(x)||/^⭐/.test(x))snd('level');
+  else if(/^🚨|облав|ищут/.test(x))snd('alarm');
+  else if(/^🔎/.test(x)){snd('search');if(!/: ничего|Ничего не нашёл/.test(x))setTimeout(()=>snd('find'),550)}
+  else if(/^💰|Купил|купил|^🔋 Купил/.test(x))snd('coins');
+  else if(/^🔨 Сделано/.test(x))snd('craft');
+  else if(/^🌙|поспал|Поспал/.test(x))snd('sleep');
+  else if(/обчистили|^💀/.test(x))snd('bad');
+ }
+ if(top)SND_LAST=top;
+ try{ambUpdate()}catch(e){}
+ return r;
+};
+// шаги при ходьбе по карте
+const _walkStepSnd=walkStep;
+walkStep=function(){const r=_walkStepSnd.apply(this,arguments);try{if(g&&S().trip&&!S().trip.paused)snd('step')}catch(e){}return r};
+// щелчок на кнопках, дверь при входе в место; первый клик «будит» звук
+root.addEventListener('click',e=>{const b=e.target.closest('button,[data-do],[data-pin],[data-nav]');if(!b||!soundOn())return;const d=b.dataset&&b.dataset.do||'';
+ if(d==='pl:enter')snd('door');else if(!/^fx:/.test(d))snd('click');setTimeout(()=>{try{ambUpdate()}catch(e2){}},50)},true);
+// кнопка в меню игры
+const _actionsForSnd=actionsFor;
+actionsFor=function(id){const a=_actionsForSnd(id);if(id!=='survmenu'||!Array.isArray(a))return a;const b={name:soundOn()?'🔊 Звук: включён':'🔇 Звук: выключен',doit:'fx:sound',sub:'Шаги, обыск, драки, ветер и дождь',alt:false};return a.length?[a[0],b].concat(a.slice(1)):[b]};
+
 render();
 })();</script></body></html>
