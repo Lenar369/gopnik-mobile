@@ -4581,5 +4581,8 @@ findsHtml=function(id){
 };
 document.head.insertAdjacentHTML('beforeend','<style>.pfdark{color:#bfe0ff!important;font-weight:600}.pfind .pfdark+.fchips .fchip{background:#2a4a6a99}</style>');
 
+/* ===== v6: портреты бойцов, объявленных позже (заказ 06, раздел D) ===== */
+Object.keys(ENEMY).forEach(k=>probeAsset(FIGHTER_DIR+k+'.webp'));
+
 render();
 })();</script></body></html>
