@@ -4523,5 +4523,63 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.fchip.hi i{color:#9be08f}.fchip.mid i{color:#ffd36a}.fchip.lo i{color:#ff9a7a}.fchip.rare{border:1px dashed #ffd36a}.pfsub{margin-top:4px;color:#d8c8a6;font-size:12px}'+
 '</style>');
 
+/* ===== v6: тёмные углы — обыскать можно только с исправным хорошим фонарём (китайский/армейский) ===== */
+Object.assign(MAT,{
+ copper:{name:'Медный провод',icon:'🟠',w:.5,p:9},
+ radio_parts:{name:'Радиодетали',icon:'📟',w:.2,p:10},
+ coins:{name:'Старые монеты',icon:'🪙',w:.1,p:30}
+});
+['copper','radio_parts','coins'].forEach(id=>probeAsset(matPath(id)));
+Object.assign(SUP,{army_ration:{name:'Армейский сухпаёк',icon:'🥫',cost:0,fx:{food:60,energy:10,nerves:3},w:.6}});
+probeAsset('../art/items/army_ration.webp');
+// угол привязан к обычному месту обыска (ключ LOOT родителя)
+const DARK={
+ q5_basement:{name:'Дальний отсек подвала',desc:'за ржавой дверью, куда не доходит свет',t:{copper:3,radio_parts:2,coins:1,army_ration:1}},
+ factory_boiler:{name:'Угольная яма котельной',desc:'чёрная яма под котлами',t:{copper:3,coal:3,radio_parts:1,coins:1}},
+ garage_abandoned:{name:'Смотровая яма',desc:'глубокая яма под завалом',t:{copper:2,radio_parts:3,battery:2,coins:1}},
+ wild_heat:{name:'Коллектор теплотрассы',desc:'длинный тёмный тоннель с трубами',t:{copper:4,coins:1,army_ration:1,battery:1}},
+ wild_cellar:{name:'Заваленный проход',desc:'лаз за кирпичами в соседний подвал',t:{army_ration:3,coins:1,radio_parts:1,battery:2}},
+ wild_camp:{name:'Убежище под столовой',desc:'старое укрытие, дверь приоткрыта',t:{coins:2,army_ration:2,radio_parts:2,copper:1}}
+};
+for(const[k,D]of Object.entries(DARK)){if(!LOOT[k])continue;LOOT['dark_'+k]={at:null,name:D.name,t:D.t,cold:LOOT[k].cold,dark:true,parent:k}}
+Object.assign(RARE_FINDS,{dark_wild_camp:{flash_army:.08},dark_wild_heat:{flash_cn:.06}});
+function darkOk(){return searchLight().m>=1}
+function darkKeysFor(id){return placeLootKeys(id).filter(k=>LOOT['dark_'+k]).map(k=>'dark_'+k)}
+// окно места: блок шансов показывает и тёмный угол
+const _placeLootKeysD=placeLootKeys;
+placeLootKeys=function(id){const a=_placeLootKeysD(id);return a.concat(a.filter(k=>LOOT['dark_'+k]).map(k=>'dark_'+k))};
+// фон сцены находки — как у основного места
+const _lootArtD=lootArt;
+lootArt=function(k){const P=LOOT[k];return _lootArtD(P&&P.parent?P.parent:k)};
+// запрет без фонаря
+const _searchDk=search;
+search=function(k){
+ const P=LOOT[k];
+ if(P&&P.dark&&!darkOk()){const L=searchLight();announceAndRender('🌑 '+P.name+': '+(L.id?L.name+' не добивает':'хоть глаз выколи')+'. Нужен исправный китайский или армейский фонарь.');return}
+ return _searchDk(k);
+};
+const _actionsForDk=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForDk(id);if(!g)return a;
+ const ks=_placeLootKeysD(id).filter(k=>LOOT['dark_'+k]);if(!ks.length)return a;
+ const ok=darkOk(),btn=ks.map(k=>{const dk='dark_'+k,left=lootLeft(dk);return {name:'🔦 Тёмный угол: '+LOOT[dk].name,doit:'surv:loot:'+dk,sub:ok?(has('crowbar')?'30':'45')+' мин · хабара: '+left+' · '+DARK[k].desc:'🔒 нужен китайский или армейский фонарь',alt:ok&&left!=='пусто'}});
+ // сразу после обычного обыска
+ const i=a.findIndex(b=>String(b.doit).startsWith('surv:loot:'));
+ return i<0?btn.concat(a):a.slice(0,i+1).concat(btn,a.slice(i+1));
+};
+// в блоке «Что можно найти»: тёмный угол с замком, если нет света
+const _findsHtmlD=findsHtml;
+findsHtml=function(id){
+ let h=_findsHtmlD(id);if(!h)return h;
+ for(const dk of darkKeysFor(id)){
+  const name=esc(LOOT[dk].name);
+  const tag='<div class="pfsub pfdark">🔦 Тёмный угол: '+name+(darkOk()?'':' — 🔒 нужен китайский или армейский фонарь')+'</div>';
+  h=h.replace('<div class="pfsub">'+name+'</div>',tag);
+  if(!darkOk()){const i=h.indexOf(tag)+tag.length,j=h.indexOf('</div>',i);if(h.startsWith('<div class="fchips">',i))h=h.slice(0,i)+h.slice(i,j).replace(/<i>[^<]*<\/i>/g,'<i>🔒</i>')+h.slice(j)}
+ }
+ return h;
+};
+document.head.insertAdjacentHTML('beforeend','<style>.pfdark{color:#bfe0ff!important;font-weight:600}.pfind .pfdark+.fchips .fchip{background:#2a4a6a99}</style>');
+
 render();
 })();</script></body></html>
