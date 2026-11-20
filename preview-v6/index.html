@@ -2219,6 +2219,7 @@ function search(k){
  s.mode=P.cold?'foot':null;try{advance(mins)}finally{s.mode=null}
  s.energy=clampN(s.energy-6);
  if(light==='torch'){g.inventory.splice(g.inventory.indexOf('torch'),1)}
+ const died=lt.cap?flashUse(lt.id):false;
  L.ch--;if(L.ch<=0)L.refill=g.day+3;
  // риск
  const r=Math.random();
@@ -2227,7 +2228,7 @@ function search(k){
  const got={};let lost=0;
  for(const c of ch){if(Math.random()>=c.p)continue;const n=c.w>=3&&Math.random()<.4?2:1;for(let i=0;i<n;i++){if(addLoot(c.id))got[c.id]=(got[c.id]||0)+1;else lost++}}
  const list=Object.entries(got).map(([id,n])=>anyIcon(id)+' '+anyName(id)+(n>1?' ×'+n:'')).join(', ');
- announce('🔎 '+P.name+': '+(list||'ничего')+'.'+(lost?' Рюкзак полон — '+lost+' пришлось бросить.':'')+(light==='torch'?' Факел догорел.':'')+(!light?(night&&!sk('owl')?' В темноте почти ничего не видно — нужен фонарик.':' Без фонарика по тёмным углам много не найдёшь.'):'')+(overload()?' ⚖️ Перегруз: '+carryW()+'/'+carryMax()+' кг — идти будет тяжело.':''));
+ announce('🔎 '+P.name+': '+(list||'ничего')+'.'+(lost?' Рюкзак полон — '+lost+' пришлось бросить.':'')+(light==='torch'?' Факел догорел.':'')+(died?' 🪫 '+lt.name+' сел — нужна батарейка.':'')+(!light?(night&&!sk('owl')?' В темноте почти ничего не видно — нужен фонарик.':' Без фонарика по тёмным углам много не найдёшь.'):'')+(overload()?' ⚖️ Перегруз: '+carryW()+'/'+carryMax()+' кг — идти будет тяжело.':''));
  addXP(4,'обыск');save();render();
 }
 
@@ -4420,16 +4421,16 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 /* ===== v6: обыск с шансами — видно, что можно найти и с каким шансом; свет решает ===== */
 // Шанс предмета = база (по весу в списке места) × свет × монтировка × сколько осталось хабара; максимум 90%.
 Object.assign(goods,{
- flash_cn:{name:'Китайский фонарик',slot:null,cost:80,noShop:true,stat:'обыск: находки ×1,0 (работает в рюкзаке)'},
- flash_army:{name:'Армейский фонарь',slot:null,cost:220,noShop:true,stat:'обыск: находки ×1,3 (работает в рюкзаке)'}
+ flash_cn:{name:'Китайский фонарик',slot:null,cost:80,noShop:true,stat:'обыск: находки ×1,0; батарейки на 10 обысков'},
+ flash_army:{name:'Армейский фонарь',slot:null,cost:220,noShop:true,stat:'обыск: находки ×1,3; батарейки на 15 обысков'}
 });
 Object.assign(GOODS_W,{flash_cn:.3,flash_army:.6});
 Object.assign(GICON,{flash_cn:'🔦',flash_army:'🔦'});
 ['flash_cn','flash_army'].forEach(id=>probeAsset('../art/items/'+id+'.webp'));
 // от лучшего к худшему; факел сгорает за один обыск
 const LIGHTS=[
- {id:'flash_army',name:'Армейский фонарь',m:1.3},
- {id:'flash_cn',name:'Китайский фонарик',m:1.0},
+ {id:'flash_army',name:'Армейский фонарь',m:1.3,cap:15},
+ {id:'flash_cn',name:'Китайский фонарик',m:1.0,cap:10},
  {id:'flashlight',name:'Самодельный фонарик',m:.8},
  {id:'torch',name:'Факел',m:.6}
 ];
@@ -4437,7 +4438,7 @@ const NO_LIGHT={id:null,name:'без света',m:.3};
 // редкие находки сверх обычного списка места
 const RARE_FINDS={wild_base:{flash_army:.05},wild_camp:{flash_army:.04},station_warehouse:{flash_army:.03},market_backrows:{flash_cn:.05},garage_abandoned:{flash_cn:.04},wild_village:{flash_cn:.03}};
 function searchLight(){
- for(const L of LIGHTS){if(L.id==='torch'?g.inventory.includes('torch'):has(L.id))return L}
+ for(const L of LIGHTS){if(L.id==='torch'?g.inventory.includes('torch'):has(L.id)&&(!L.cap||flashCharge(L.id)>0))return L}
  return NO_LIGHT;
 }
 function searchMult(k){
@@ -4459,13 +4460,15 @@ function pctTxt(p){const v=Math.round(p*100);return (p>0&&v<1?'<1':v)+'%'}
 function findsHtml(id){
  const keys=placeLootKeys(id);if(!keys.length)return '';
  const M=searchMult(keys[0]),L=M.light;
- let h='<div class="pfind"><div class="pfhead"><b>🔎 Что можно найти</b><small>'+(L.id?'🔦 '+esc(L.name)+(L.id==='torch'?' (сгорит)':''):'🌑 без фонарика')+' · свет ×'+String(L.m).replace('.',',')+(M.night?' · ночь ×0,5':'')+(M.crow?' · монтировка +15%':'')+'</small></div>';
+ let h='<div class="pfind"><div class="pfhead"><b>🔎 Что можно найти</b><small>'+(L.id?'🔦 '+esc(L.name)+(L.id==='torch'?' (сгорит)':'')+(L.cap?' 🔋'+flashCharge(L.id)+'/'+L.cap:''):'🌑 без фонарика')+' · свет ×'+String(L.m).replace('.',',')+(M.night?' · ночь ×0,5':'')+(M.crow?' · монтировка +15%':'')+'</small></div>';
  for(const k of keys){
   const c=lootChances(k);
   if(keys.length>1)h+='<div class="pfsub">'+esc(LOOT[k].name)+'</div>';
   h+=lootState(k).ch<=0?'<div class="pfsub">Всё вынесли — загляни через пару дней.</div>':
    '<div class="fchips">'+c.map(x=>'<span class="fchip '+(x.p>=.4?'hi':x.p>=.2?'mid':'lo')+(x.rare?' rare':'')+'">'+anyIcon(x.id)+' '+esc(anyName(x.id))+' <i>'+pctTxt(x.p)+'</i></span>').join('')+'</div>';
  }
+ const dead=LIGHTS.filter(x=>x.cap&&has(x.id)&&flashCharge(x.id)<=0);
+ if(dead.length)h+='<div class="pfsub">🪫 '+dead.map(x=>esc(x.name)).join(', ')+' сел'+(dead.length>1?'и':'')+' — '+(batteries()>0?'вставь батарейку (кнопка справа).':'нужна батарейка: в хабаре или в Лавке деталей.')+'</div>';
  if(L.m<1.3)h+='<div class="pfsub">'+(L.id?'С фонарём получше шансы выше.':'Без света почти ничего не видно. Фонарик: самодельный (мастерить дома), китайский — Лавка деталей, Универмаг; армейский — Комиссионка.')+'</div>';
  return h+'</div>';
 }
@@ -4475,7 +4478,11 @@ placeHtml=function(){const h=_placeHtmlL();const f=findsHtml(S().place);return f
 const FLASH_SHOPS={g_parts:['flash_cn'],c_shop:['flash_cn'],m_pawn:['flash_army']};
 const _actionsForL=actionsFor;
 actionsFor=function(id){
- const a=_actionsForL(id);if(!g||!FLASH_SHOPS[id])return a;
+ let a=_actionsForL(id);if(!g)return a;
+ const low=LIGHTS.filter(x=>x.cap&&has(x.id)&&flashCharge(x.id)<x.cap);
+ if(low.length&&batteries()>0&&(placeLootKeys(id).length||FLASH_SHOPS[id]))a=[{name:'🔋 Поменять батарейку',doit:'surv:fcharge',sub:low.map(x=>x.name+' '+flashCharge(x.id)+'/'+x.cap).join(', ')+' · батареек: '+batteries(),alt:false}].concat(a);
+ if(id==='g_parts')a=[{name:'🔋 Купить батарейку · '+survPrice(BATTERY_COST)+' ₽',doit:'surv:bbuy',sub:'Для фонарей. Есть: '+batteries(),alt:false}].concat(a);
+ if(!FLASH_SHOPS[id])return a;
  return FLASH_SHOPS[id].map(x=>({name:'🔦 Купить: '+goods[x].name+' · '+survPrice(goods[x].cost)+' ₽',doit:'surv:gbuy:'+x,sub:has(x)?'Уже есть':goods[x].stat,alt:false})).concat(a);
 };
 function buyGear(x){
@@ -4483,10 +4490,32 @@ function buyGear(x){
  if(has(x)){announceAndRender('У тебя уже есть: '+it.name+'.');return}
  if(g.money<c){announceAndRender('Не хватает денег: '+it.name+' стоит '+c+' ₽.');return}
  if(g.inventory.length>=20){announceAndRender('Рюкзак полон.');return}
- g.money-=c;g.inventory.push(x);advance(5);announce('🔦 Купил: '+it.name+' за '+c+' ₽. Работает, пока лежит в рюкзаке — при обыске шансы выше.');save();render();
+ g.money-=c;g.inventory.push(x);flashFull(x);advance(5);announce('🔦 Купил: '+it.name+' за '+c+' ₽. Работает, пока лежит в рюкзаке — при обыске шансы выше.');save();render();
 }
 const _doActionL=doAction;
-doAction=function(id){if(g&&String(id).startsWith('surv:gbuy:')){buyGear(String(id).slice(10));return}return _doActionL(id)};
+doAction=function(id){
+ const sid=String(id);
+ if(g&&sid.startsWith('surv:gbuy:')){buyGear(sid.slice(10));return}
+ if(g&&sid==='surv:fcharge'){chargeFlash();return}
+ if(g&&sid==='surv:bbuy'){buyBattery();return}
+ if(g&&sid.startsWith('item:')){const it=g.inventory[+sid.slice(5)],L=LIGHTS.find(x=>x.id===it&&x.cap);if(L){if(flashCharge(it)<L.cap&&batteries()>0){chargeFlash(it);return}announceAndRender(L.name+': заряд '+flashCharge(it)+'/'+L.cap+' обысков. Работает, пока лежит в рюкзаке.'+(flashCharge(it)<L.cap?' Нужна батарейка.':''));return}}
+ return _doActionL(id);
+};
+// батарейки: китайский и армейский фонари садятся, одна батарейка (из хабара) — полный заряд
+const BATTERY_COST=8;
+function batteries(){return B().mats.battery||0}
+function flashCap(id){return (LIGHTS.find(x=>x.id===id)||{}).cap||0}
+function flashCharge(id){const c=B().fcharge||(B().fcharge={});if(c[id]==null)c[id]=flashCap(id);return c[id]}
+function flashFull(id){(B().fcharge||(B().fcharge={}))[id]=flashCap(id)}
+function flashUse(id){const c=B().fcharge||(B().fcharge={});c[id]=Math.max(0,flashCharge(id)-1);return c[id]===0}
+function chargeFlash(id){
+ const s=B();if(batteries()<=0){announceAndRender('Нет батареек. Ищи в хабаре или купи в Лавке деталей.');return}
+ const L=id?LIGHTS.find(x=>x.id===id):LIGHTS.filter(x=>x.cap&&has(x.id)).sort((a,b)=>flashCharge(a.id)/a.cap-flashCharge(b.id)/b.cap)[0];
+ if(!L||flashCharge(L.id)>=L.cap){announceAndRender('Фонари заряжены.');return}
+ s.mats.battery--;if(!s.mats.battery)delete s.mats.battery;flashFull(L.id);
+ announce('🔋 Поменял батарейку: '+L.name+' — снова на '+L.cap+' обысков. Батареек осталось: '+batteries()+'.');save();render();
+}
+function buyBattery(){const c=survPrice(BATTERY_COST);if(g.money<c){announceAndRender('Не хватает денег: батарейка стоит '+c+' ₽.');return}g.money-=c;addLoot('battery');advance(2);announce('🔋 Купил батарейку за '+c+' ₽. Всего: '+batteries()+'.');save();render()}
 document.head.insertAdjacentHTML('beforeend','<style>'+
 '.pfind{margin:6px 12px 0;padding:8px 11px;border-radius:10px;background:#000b;color:#f1e3c4;font-size:12.5px;max-width:640px}'+
 '.pfhead{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-bottom:5px}.pfhead small{color:#d8c8a6;opacity:.85}'+
