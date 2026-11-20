@@ -4891,5 +4891,37 @@ root.addEventListener('click',e=>{const b=e.target.closest('button,[data-do],[da
 const _actionsForSnd=actionsFor;
 actionsFor=function(id){const a=_actionsForSnd(id);if(id!=='survmenu'||!Array.isArray(a))return a;const b={name:soundOn()?'🔊 Звук: включён':'🔇 Звук: выключен',doit:'fx:sound',sub:'Шаги, обыск, драки, ветер и дождь',alt:false};return a.length?[a[0],b].concat(a.slice(1)):[b]};
 
+/* ===== v6: фоновая мелодия — тихий «дворовый» перебор, днём и ночью разный; в драке молчит ===== */
+function musicOn(){try{return localStorage.getItem('gopnik-music')!=='0'}catch(e){return true}}
+const MUS={next:0,step:0,timer:0,bus:null,mood:null};
+// аккорды (частоты в Гц): ля-минор, ре-минор, до, соль, фа, ми
+const CH={Am:[110,220,261.6,329.6],Dm:[146.8,293.7,349.2,440],C:[130.8,261.6,329.6,392],G:[98,196,246.9,293.7],F:[87.3,174.6,220,261.6],E:[82.4,164.8,207.7,246.9]};
+const PROG={day:['Am','F','C','G','Am','Dm','E','Am'],night:['Am','Dm','Am','E','Dm','Am','E','Am'],winter:['Dm','Am','E','Am','Dm','G','C','E']};
+function musMood(){if(!g||g.fight)return null;if(survNight())return 'night';return winterNow()?'winter':'day'}
+function musTick(){
+ const A=AC;if(!A||A.state!=='running'||!musicOn()||!soundOn()){return}
+ const mood=musMood();
+ if(!MUS.bus){MUS.bus=A.createGain();MUS.bus.gain.value=.0001;MUS.bus.connect(A.destination)}
+ MUS.bus.gain.setTargetAtTime(mood?.05:.0001,A.currentTime,.6);
+ if(!mood){MUS.next=0;return}
+ if(mood!==MUS.mood){MUS.mood=mood;MUS.step=0}
+ const beat=mood==='night'?60/58:60/70,eighth=beat/2;
+ if(MUS.next<A.currentTime)MUS.next=A.currentTime+.1;
+ while(MUS.next<A.currentTime+1.2){
+  const prog=PROG[mood],bar=Math.floor(MUS.step/8)%prog.length,pos=MUS.step%8,ch=CH[prog[bar]],t=MUS.next;
+  const pl=(f,d,v,type)=>{const o=A.createOscillator(),e=A.createGain();o.type=type;o.frequency.value=f;e.gain.setValueAtTime(.0001,t);e.gain.exponentialRampToValueAtTime(v,t+.02);e.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(e);e.connect(MUS.bus);o.start(t);o.stop(t+d+.05)};
+  if(pos===0||pos===4)pl(ch[0],beat*1.8,.9,'triangle');                       // бас
+  const pat=[1,2,3,2,1,3,2,3],f=ch[pat[pos]]*(mood==='winter'&&pos%4===3?2:1);
+  if(!(mood==='night'&&pos%2===1))pl(f,eighth*1.6,.45,'triangle');            // перебор
+  if(pos===0)ch.slice(1).forEach(x=>pl(x*2,beat*3.5,.06,'sine'));             // мягкий «пэд»
+  MUS.next+=eighth;MUS.step++;
+ }
+}
+MUS.timer=setInterval(()=>{try{musTick()}catch(e){}},250);
+const _actionsForMus=actionsFor;
+actionsFor=function(id){const a=_actionsForMus(id);if(id!=='survmenu'||!Array.isArray(a))return a;const b={name:musicOn()?'🎵 Музыка: включена':'🎵 Музыка: выключена',doit:'surv:music',sub:'Тихий перебор — днём, ночью и зимой свой',alt:false};const i=a.findIndex(x=>x.doit==='fx:sound');return i<0?a.concat([b]):a.slice(0,i+1).concat([b],a.slice(i+1))};
+const _doActionMus=doAction;
+doAction=function(id){if(g&&id==='surv:music'){try{localStorage.setItem('gopnik-music',musicOn()?'0':'1')}catch(e){}if(!musicOn()&&MUS.bus&&AC)MUS.bus.gain.setTargetAtTime(.0001,AC.currentTime,.2);else acReady();render();return}return _doActionMus(id)};
+
 render();
 })();</script></body></html>

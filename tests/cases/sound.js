@@ -12,5 +12,8 @@ a.do('fx:sound');st();const off=W.localStorage.getItem('gopnik-sound')==='0';a.d
 made=0;g=st();g.surv.loot={};g.fight=null;store[KEY]=JSON.stringify(g);a=boot();a.do('surv:loot:q5_basement');const m2=made;console.log('3 выключен:',off,lbl,'звуков при обыске:',m2);
 // зимой на улице — ветер (зацикленный фон)
 g=st();delete store['gopnik-sound'];g.day=140;g.surv.cityMode=true;g.surv.atWild='bank';g.loc=null;g.fight=null;g.surv.scene=null;store[KEY]=JSON.stringify(g);loops=0;made=0;a=boot();a.do('city');await new Promise(r=>setTimeout(r,150));console.log('4 зимой на улице фон:',loops,'звуков',made,'html city?',/cityart/.test(a.html()),st().surv.cityMode,st().loc,st().day);
-const ok=btn&&m1>0&&off&&lbl&&m2===0&&loops>0;
+// музыка: после клика в меню идёт перебор; выключили — новые ноты не планируются
+g=st();g.fight=null;g.surv.scene=null;g.minute=14*60;g.day=5;store[KEY]=JSON.stringify(g);a=boot();a.do('surv:menu');const mb=/🎵 Музыка: включена/.test(a.html());made=0;await new Promise(r=>setTimeout(r,700));const mOn=made;
+a.do('surv:music');made=0;await new Promise(r=>setTimeout(r,1500));const mOff=made;a.do('surv:menu');const ml=/🎵 Музыка: выключена/.test(a.html());console.log('5 музыка: кнопка',mb,'| нот за 0,7 с',mOn,'| после выкл',mOff,ml);
+const ok=mb&&mOn>3&&mOff<=1&&ml&&btn&&m1>0&&off&&lbl&&m2===0&&loops>0;
 console.log(ok?'OK':'FAIL');if(!ok)errs.push('sound failed');console.log('errors',errs);process.exit(0);})();
