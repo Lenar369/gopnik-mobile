@@ -2160,7 +2160,7 @@ const RECIPES=[
  {cat:'Снаряжение',id:'home_backpack',need:{cloth:1,leather:1,rope:2},min:90,st:'home',tool:'shiv',out:'home_backpack'},
  {cat:'Снаряжение',id:'sled',need:{planks:3,nails:2,rope:1},min:60,st:'home',base:'workbench',out:'sled'},
  {cat:'Дом',id:'workbench',need:{planks:4,nails:3},min:90,st:'home',build:'workbench',title:'Верстак',icon:'🪚',desc:'Крафт дома вдвое быстрее; открывает биту и санки'},
- {cat:'Дом',id:'heater',need:{spiral:1,brick:2,wire:1},min:60,st:'home',build:'heater',title:'Обогреватель',icon:'♨️',desc:'Дома теплее: сон лечит простуду за ночь, нервы +',art:'warm_heater'},
+ {cat:'Дом',id:'heater',need:{spiral:1,brick:2,wire:1},min:60,st:'home',build:'heater',title:'Обогреватель',icon:'♨️',art:'warm_heater',desc:'Дома теплее: сон лечит простуду за ночь, нервы +',art:'warm_heater'},
  {cat:'Дом',id:'windows',need:{plastic:2,tape:1,paper:2},min:45,st:'home',build:'windows',title:'Утеплённые окна',icon:'🪟',desc:'Сон восстанавливает больше бодрости'},
  {cat:'Дом',id:'radio',need:{wire:2,can:1,battery:1},min:40,st:'home',build:'radio',title:'Антенна для приёмника',icon:'📻',desc:'Новости по утрам: нервы +5 после сна'},
  {cat:'Дом',id:'woodpile',need:{planks:3,coal:2},min:30,st:'home',build:'woodpile',title:'Запас топлива',icon:'🪵',desc:'«Чай у плиты» греет сильнее'},
@@ -4712,6 +4712,17 @@ GOODS_W.flash_beetle=.25;GICON.flash_beetle='🔦';probeAsset('../art/items/flas
 LIGHTS.splice(LIGHTS.findIndex(x=>x.id==='flashlight'),0,{id:'flash_beetle',name:'Фонарик-«жучок»',m:.9});
 FLASH_SHOPS.g_parts.push('flash_beetle');FLASH_SHOPS.m_pawn.push('flash_beetle');
 Object.assign(RARE_FINDS,{wild_dachas:{flash_beetle:.05},wild_sector:{flash_beetle:.05},q5_attic:{flash_beetle:.03}});
+
+/* ===== v6: досвязка арта — обогреватель (ТЗ 01), метка «новое» на кнопке «Герой» (ТЗ 03) ===== */
+probeAsset('../art/items/warm_heater.webp');probeAsset(UI+'nav_alert.webp');
+const _navbarA=navbar;
+navbar=function(){
+ let h=_navbarA();if(!g)return h;
+ let n=0;try{n=(statFree()||0)+(skillFree()||0)}catch(e){}
+ if(n>0)h=h.replace('data-nav="hero"><span>','data-nav="hero"><span class="navwrap">'+(ASSET_OK[UI+'nav_alert.webp']?'<img class="navalert" src="'+UI+'nav_alert.webp" alt="!">':'<i class="navalert">!</i>'));
+ return h;
+};
+document.head.insertAdjacentHTML('beforeend','<style>.navwrap{position:relative;display:inline-block}nav.bottom button.hasnew::after,nav.bottom button.hasnew::before{display:none!important}.navalert{position:absolute;top:-6px;right:-10px;width:20px;height:20px;object-fit:contain;font-style:normal;font-weight:800;color:#fff;background:transparent;line-height:20px;text-align:center}i.navalert{background:#c0392b;border-radius:50%}</style>');
 
 render();
 })();</script></body></html>
