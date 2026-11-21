@@ -5058,5 +5058,14 @@ actionsFor=function(id){const a=_actionsForPL(id);if(id!=='survmenu'||!Array.isA
 const _doActionPL=doAction;
 doAction=function(id){if(g&&id==='surv:musnext'){plNext();render();return}return _doActionPL(id)};
 
+/* ===== v6: новая общая карта города (ТЗ 04 B) — метки районов и мест переставлены под новый кадр ===== */
+(function(){
+ const R=[[500,330],[870,195],[1130,255],[290,170],[650,880],[150,400],[1080,470]];   // 0 Пятый … 6 Центр
+ R.forEach((p,i)=>{CITY_XY[i][0]=p[0];CITY_XY[i][1]=p[1]});
+ const Wp={heat:[1250,715],cellar:[830,370],bank:[290,615],hospital:[1410,110],sector:[1450,850]};
+ for(const k in Wp)if(WILD[k])WILD[k].xy=Wp[k];
+ Object.assign(CITY_EXITS,{north:[1000,70],south:[830,985],east:[1500,600]});
+})();
+
 render();
 })();</script></body></html>
