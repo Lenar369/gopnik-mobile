@@ -3731,7 +3731,7 @@ function vMenu(id){
  }else if(t==='restaurant'){
   it('dinner','🍷','Ужин из трёх блюд',vPrice(65)+' ₽ · сытость +80, тепло +30, нервы +15',g.money<vPrice(65));
   it('coffee','☕','Кофе с десертом',vPrice(25)+' ₽ · бодрость +20, нервы +8',g.money<vPrice(25));
-  it('errand','💼','Поручение «деловых»','2 ч · '+vPrice(70)+' ₽ · раз в день'+(s.vErrand===g.day?' (уже сегодня)':''),s.vErrand===g.day);
+  it('errand','💼','Поручение «деловых»','2 ч · '+vPrice(40)+' ₽ · раз в день'+(s.vErrand===g.day?' (уже сегодня)':''),s.vErrand===g.day);
  }else if(t==='club'){
   it('dance','💃','Танцевать','1 ч · нервы +25, бодрость −10');
   it('cocktail','🍸','Коктейль',vPrice(18)+' ₽ · нервы +15',g.money<vPrice(18));
@@ -3761,7 +3761,7 @@ function vAct(k){
  if(k==='cards'){const st=vPrice(20);if(g.money<st)return;advance(40);const ch=.35+(stat(2)-2)*.05;if(Math.random()<ch){g.money+=st;V.say='Повезло — выиграл '+st+' ₽.';announce('🃏 Выиграл в карты '+st+' ₽.')}else{g.money-=st;S().nerves=clampN(S().nerves-5);V.say='Проиграл '+st+' ₽. Мухлевали, похоже.';announce('🃏 Проиграл в карты '+st+' ₽.')}save();render();return}
  if(k==='dinner'){if(pay(65))eat({food:80,warmth:30,nerves:15},60,'Ужин из трёх блюд');return}
  if(k==='coffee'){if(pay(25))eat({energy:20,nerves:8},20,'Кофе с десертом');return}
- if(k==='errand'){s.vErrand=g.day;advance(120);const m=vPrice(70);g.money+=m;addXP(12,'поручение');V.say='Отвёз конверт по адресу, вопросов не задавал. Заплатили '+m+' ₽.';announce('💼 Поручение «деловых»: +'+m+' ₽.');save();render();return}
+ if(k==='errand'){s.vErrand=g.day;advance(120);const m=vPrice(40);g.money+=m;addXP(12,'поручение');V.say='Отвёз конверт по адресу, вопросов не задавал. Заплатили '+m+' ₽.';announce('💼 Поручение «деловых»: +'+m+' ₽.');save();render();return}
  if(k==='dance'){advance(60);applyFx({nerves:25,energy:-10});V.say='Оттанцевал час. Голова гудит, на душе легче.';save();render();return}
  if(k==='cocktail'){if(pay(18))eat({nerves:15,energy:-2},15,'Коктейль');return}
  if(k==='bratva'){advance(20);const ch=Math.min(.85,.25+(stat(3)-2)*.08+resp()*.02);
@@ -5095,6 +5095,41 @@ actionsFor=function(id){
   return {name:'Купить '+it.name+' · '+c+' ₽',doit:'buy:'+k,sub:(it.stat||'')+(have?' · уже есть':'')+(g.money<c?' · не хватает денег':''),alt:false}});
  if(!a.length)a.push({name:'Сегодня полки пустые',doit:'close',sub:'Загляни в другое место',alt:false});
  a.push({name:'Назад',doit:'close',sub:'',alt:false});return a;
+};
+
+/* ===== v6: баланс подработки — смена 2–4 ч за 15–30 ₽, не каждый день, после дефолта ×1,3 ===== */
+const WORK={
+ work:{name:'Гаражи у Валеры',what:'разгрузил детали',pay:15,h:2},
+ m_workers:{what:'разгружал фуры на рынке',pay:25,h:4},
+ s_luggage:{what:'таскал чемоданы в камере хранения',pay:20,h:3},
+ f_gate:{what:'грузил железо на Ремзаводе',pay:30,h:4},
+ g_job:{what:'менял колёса в шиномонтаже',pay:30,h:4},
+ w_fish:{what:'разделывал рыбу в рыбном ряду',pay:20,h:3},
+ w_watch:{what:'сторожил баржи',pay:25,h:4},
+ c_shop:{what:'разгружал товар в универмаге',pay:20,h:3}
+};
+function workPay(k){return Math.round(WORK[k].pay*(afterDefault()?1.3:1))}
+function workToday(k){let h=0;const str=k+':'+g.day;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h%3!==0}
+function workDone(k){return k==='work'?g.jobDay===g.day:(cityState().work||{})[k]===g.day}
+function doWork(k){
+ const W=WORK[k],s=S();
+ if(workDone(k)){announceAndRender('Сегодня здесь уже отработал смену.');return}
+ if(!workToday(k)){announceAndRender('Сегодня работы нет — приходи завтра.');return}
+ if((s.energy||0)<25||g.stamina<25){announceAndRender('Нет сил на смену — сначала отдохни.');return}
+ if(k==='work')g.jobDay=g.day;else{const w=cityState();w.work=w.work||{};w.work[k]=g.day}
+ const p=workPay(k);advance(W.h*60);g.money+=p;g.stamina=Math.max(5,g.stamina-30);s.energy=clampN(s.energy-30);s.food=clampN((s.food||0)-10);
+ addXP(8,'подработка');announce('💼 '+W.h+' ч '+W.what+'. Заплатили '+p+' ₽. Устал: силы −30, бодрость −30.');save();render();
+}
+const _doActionWk=doAction;
+doAction=function(id){const sid=String(id);
+ if(g&&sid==='work'){doWork('work');return}
+ if(g&&sid.startsWith('world:work:')&&WORK[sid.slice(11)]){doWork(sid.slice(11));return}
+ return _doActionWk(id)};
+const _actionsForWk=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForWk(id);if(!g||!Array.isArray(a))return a;
+ return a.map(b=>{const k=b.doit==='work'?'work':String(b.doit).startsWith('world:work:')?String(b.doit).slice(11):null;if(!k||!WORK[k])return b;
+  const W=WORK[k];return Object.assign({},b,{name:k==='work'?'Разгрузить детали':'Подработка',sub:workToday(k)?W.h+' ч · '+workPay(k)+' ₽ · силы −30':'Сегодня работы нет',alt:false})});
 };
 
 render();
