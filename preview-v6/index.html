@@ -1021,7 +1021,7 @@ function actionsFor(id){if(g.region!==0&&dspot(id))return worldActions(id);let a
  case 'dialog-valera':
  if(g.quests.light===0)add('Взять поручение','acceptlight','Откроет подвал');
  else if(g.quests.light===1)add('Спуститься в подвал','basement','Помоги восстановить свет');
- else if(g.quests.light===2)add('Забрать награду','paylight','50 ₽');break;
+ else if(g.quests.light===2)add('Забрать награду','paylight','20 ₽');break;
  case 'dialog-fight':add('Решить миром','peace','Слова важнее кулаков',true);add('Пошаговая драка','fight');break;
  case 'fight':add('Быстрый удар','attack:fast','90% / −8 сил');add('Обычный удар','attack:normal','70% / −12 сил');add('Сильный удар','attack:heavy','50% / −24 силы');add('Блок','block','Снизить урон',true);add('Уклониться','dodge','От ловкости');add('Сбежать','escape','Побег возможен');add('Договориться','peace','Прекратить драку',true);break;
  case 'closet':add('Закрыть шкаф','close');if(g.inventory.includes('bandage')&&!f.closetBandage)add('Убрать бинт','closetstore');if(f.closetBandage)add('Забрать бинт','closettake');break;
@@ -1139,7 +1139,7 @@ if(id==='valera'){focus='dialog-valera';page=0;render();return}
 if(id==='acceptlight'){g.quests.light=1;advance(10);focus='garage';announceAndRender('Валера разрешил спуститься в подвал и проверить щиток.');return}
 if(id==='basement'){if(!g.quests.light){announceAndRender('Подвал закрыт. Сначала поговори со слесарем Валерой.');return}focus='basement';page=0;render();return}
 if(id==='repair'){if(g.quests.light!==1){announceAndRender('У тебя нет разрешения Валеры на работу со щитком.');return}showStory('Свет в подъезде','Валера показал тебе старый автомат. Причина отключения — перегоревший контакт. Можно осторожно заменить его или попросить инструменты.',[['Проверить контакт','light-check','Аккуратная работа'],['Попросить инструмент','light-help','Помощь мастера']]);return}
-if(id==='paylight'){g.quests.light=3;g.money+=50;advance(10);focus='garage';announceAndRender('Валера заплатил 50 ₽.');return}
+if(id==='paylight'){g.quests.light=3;g.money+=20;advance(10);focus='garage';announceAndRender('Валера заплатил 20 ₽.');return}
 if(id==='work'){if(g.jobDay===g.day){announceAndRender('Сегодня ты уже работал здесь.');return}g.jobDay=g.day;advance(90);g.money+=45;announceAndRender('Ты разгрузил детали и заработал 45 ₽.');return}
 if(id==='dispute'){focus='dialog-fight';page=0;render();return}
 if(id==='fight'){g.fight={hp:65,intent:0,escape:0};focus='fight';page=0;announceAndRender('Началась драка. Уклоняйся, блокируй или попробуй договориться.');return}
@@ -4955,6 +4955,88 @@ root.addEventListener('click',()=>{if(!MUS.timer&&trackEl())MUS.timer=setInterva
 document.addEventListener('visibilitychange',()=>{try{musTick()}catch(e){}});
 const _actionsForTr=actionsFor;
 actionsFor=function(id){const a=_actionsForTr(id);if(id!=='survmenu'||!Array.isArray(a))return a;return a.map(b=>b.doit==='surv:music'?Object.assign({},b,{sub:'«Пацаны нашего двора» · в драке пауза'}):b)};
+
+/* ===== v6: правки после теста 21.11 ===== */
+// 1–3. Картинка места: у мест без своей картинки (дом, спортплощадка, дворы…) — увеличенный кусок новой карты района
+// (лето/зима). Своя картинка — только у заведений, гостиниц и мест на окраинах. Фото подвалов/чердаков — при обыске.
+function mapSrcFor(r){
+ if(!r){const w='../art/maps/yard_winter.webp',su='../art/maps/yard_summer.webp';return winterNow()&&ASSET_OK[w]?w:su}
+ const n=MAPW[r],k='../art/maps/'+n+'_'+(winterNow()?'winter':'summer')+'.webp';return ASSET_OK[k]?k:districtArtSrc(r);
+}
+function hasOwnArt(id){id=String(id||'');return id.startsWith('wild:')||!!VENUES[id]||!!LODGE_ART[id]}
+function placeCrop(id){const p=places.find(x=>x.id===id)||dspot(id);if(!p)return null;const r=places.find(x=>x.id===id)?0:regionForSpot(id);return {src:mapSrcFor(r),x:Math.max(0,Math.min(100,p.x/1032*100)),y:Math.max(0,Math.min(100,p.y/581*100))}}
+function cropStyle(c,zoom){return "background-image:url('"+c.src+"');background-size:"+zoom+"% auto;background-position:"+c.x.toFixed(1)+"% "+c.y.toFixed(1)+"%"}
+const _placeArtF=placeArt;
+placeArt=function(id){return hasOwnArt(id)?_placeArtF(id):null};
+const _placeHtmlF=placeHtml;
+placeHtml=function(){
+ let h=_placeHtmlF();const id=S().place;if(hasOwnArt(id))return h;const c=placeCrop(id);if(!c)return h;
+ return h.replace(/<div class="pimg" style="[^"]*"><\/div>/,'<div class="pimg" style="'+cropStyle(c,260)+'"></div>');
+};
+const _drawDrawerT21=drawDrawer;
+drawDrawer=function(){
+ let h=_drawDrawerT21();if(!g||!focus||!h||hasOwnArt(focus)||h.indexOf('pdrawer')<0)return h;const c=placeCrop(focus);if(!c)return h;
+ return h.replace('<div class="pbody">','<div class="pbody"><div class="pthumb pcrop" style="'+cropStyle(c,420)+'"></div>');
+};
+// 13. «Что можно найти» — внутрь левой колонки, чтобы правая панель действий шла на всю высоту
+placeHtml=(f=>function(){let h=f();const i=h.indexOf('<div class="pfind">');if(i<0)return h;const j=h.indexOf('<div class="plog">',i);const block=h.slice(i,j);h=h.slice(0,i)+h.slice(j);return h.replace('</div><div class="plog">',block+'</div><div class="plog">')})(placeHtml);
+
+// 5, 9. Дорога: «погреться в подъезде» — только в холод; находки реже и почти без еды
+pickRoadEvent=function(){
+ const s=S(),cold=coldRate()>=3||weatherNow()==='snow',pool=['find','dogs','gop','ride'];
+ if(cold)pool.push('warm');if(weatherNow())pool.push('shelter','shelter');if(survNight())pool.push('dogs','gop');
+ const k=pool[Math.floor(Math.random()*pool.length)],ev={k};
+ if(k==='find'){const items=['money','money','cigs','cigs','drink_water','bandage','food_bread'];ev.item=items[Math.floor(Math.random()*items.length)]}
+ return ev;
+};
+
+// 6. Крафт по разделам: сначала разделы, внутри — рецепты и «← Назад к разделам»
+const _craftPanelF=craftPanel;
+const CRAFT_ICO={'Тепло':'🔥','Одежда':'🧥','Еда и лечение':'🍲','Оружие':'🔪','Снаряжение':'🎒','Дом':'🏠'};
+craftPanel=function(){
+ const s=S(),cats=[...new Set(RECIPES.map(r=>r.cat))];
+ if(!s.craftCat||!cats.includes(s.craftCat)){
+  const home=atHome();
+  let h='<div class="line"><strong>'+(home?'🏠 Ты дома: можно брать материалы из ящика, доступны все рецепты.':'🧭 Вне дома — только простые рецепты. Сложное — дома.')+'</strong><div>⚖️ '+carryW()+' / '+carryMax()+' кг</div></div><div class="tilegrid craftcats">';
+  h+=cats.map(c=>{const rs=RECIPES.filter(r=>r.cat===c),can=rs.filter(r=>canCraft(r).ok).length;return '<button class="tile craftcat" data-do="surv:craftcat:'+esc(c)+'"><span class="cci">'+(CRAFT_ICO[c]||'🔨')+'</span><b>'+esc(c)+'</b><small>'+rs.length+' рецепт.'+(can?' · можно сделать: '+can:'')+'</small></button>'}).join('')+'</div>';
+  return panel('🔨 Мастерить',h);
+ }
+ const keep=RECIPES.slice();RECIPES.length=0;keep.filter(r=>r.cat===s.craftCat).forEach(r=>RECIPES.push(r));
+ let h;try{h=_craftPanelF()}finally{RECIPES.length=0;keep.forEach(r=>RECIPES.push(r))}
+ return h.replace('<div class="panel-body">','<div class="panel-body"><div class="line"><button class="act craftback" data-do="surv:craftcat:">← Назад к разделам</button> <b>'+(CRAFT_ICO[s.craftCat]||'')+' '+esc(s.craftCat)+'</b></div>');
+};
+const _doActionCF=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('surv:craftcat:')){S().craftCat=sid.slice(14)||null;save();render();return}if(g&&sid==='surv:view:craft'){S().craftCat=null}return _doActionCF(id)};
+
+// 7. Подписи под цифрами наверху
+plate=function(cls,icon,val,title){return '<div class="lb-plate '+cls+'" title="'+title+'">'+icon+'<span class="pv"><span>'+val+'</span><em>'+title+'</em></span></div>'};
+
+// 10. Опыт за сюжетные шаги — вдвое меньше (первые разговоры и осмотры дома давали много)
+const _progressScoreF=progressScore;
+progressScore=function(){return Math.round(_progressScoreF()/2)};
+
+// 12. Ночь светлее; в часах — «Утро/День/Вечер/Ночь»
+const _landBarF=landBar;
+landBar=function(){const p=partOfDay();return _landBarF().replace('<b>'+p.icon+' '+hourMinute()+'</b>','<b>'+p.icon+' '+hourMinute()+'</b><small class="pod">'+p.label+'</small>')};
+
+// 8. Музыка через WebAudio-громкость: на iPad громкость <audio> не меняется — из-за этого музыка не выключалась
+musTick=function(){
+ if(MUS.bus&&AC){try{MUS.bus.gain.setTargetAtTime(.0001,AC.currentTime,.3)}catch(e){}}
+ const want=!!(g&&musicOn()&&soundOn()&&musMood()&&!document.hidden);const a=trackEl();if(!a)return;
+ if(!TRACK.gain&&AC){try{const src=AC.createMediaElementSource(a);TRACK.gain=AC.createGain();TRACK.gain.gain.value=0;src.connect(TRACK.gain);TRACK.gain.connect(AC.destination);a.volume=1}catch(e){TRACK.gain=null}}
+ if(want){if(a.paused){const p=a.play();if(p&&p.catch)p.catch(()=>{})}if(TRACK.gain)TRACK.gain.gain.setTargetAtTime(TRACK.vol,AC.currentTime,.4);else a.volume=TRACK.vol}
+ else{if(TRACK.gain)TRACK.gain.gain.setTargetAtTime(0,AC.currentTime,.15);if(!a.paused)a.pause()}
+};
+const _doActionMF=doAction;
+doAction=function(id){const r=_doActionMF(id);if(id==='surv:music'||id==='fx:sound'){try{acReady();musTick()}catch(e){}}return r};
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.lb-plate .pv{display:flex;flex-direction:column;line-height:1.05;align-items:flex-start}.lb-plate .pv em{font-size:8.5px;font-style:normal;font-weight:600;color:#cdbb98;letter-spacing:.2px}'+
+'.lb-date .pod{font-size:9px;color:#cdbb98;font-weight:700}'+
+'#root[data-phase="night"] .mapart{filter:brightness(.68) saturate(.8) contrast(1.05) hue-rotate(6deg)!important}#root[data-phase="evening"] .mapart{filter:brightness(.88) sepia(.18) saturate(1.02) contrast(1.05)!important}#root[data-phase="night"] .ambientlight{opacity:.55!important}'+
+'.pcrop{display:block;background-repeat:no-repeat}.craftcats .craftcat{min-height:78px;text-align:left}.craftcat .cci{font-size:26px;display:block}.craftback{display:inline-block;width:auto;padding:6px 12px;margin-right:6px}'+
+'.land .pacts{grid-row:2/-1!important}'+
+'</style>');
 
 render();
 })();</script></body></html>
