@@ -10,11 +10,11 @@ g=a.pin('q5_cafe');let h=a.html();console.log('2 drawer:',(h.match(/drawer-head"
 g=a.do('vn:enter:q5_cafe');h=a.html();console.log('3 inside:',(h.match(/class="bubble">([^<]*)/)||[])[1],'\n  menu:',acts(h));
 g=a.do('vn:do:meal');console.log('4 meal:',g.log[0],'money',g.money,'food',Math.round(g.surv.food));
 g=a.do('vn:do:leave');console.log('5 left',!g.surv.venue);
-for(const [r,id,hour] of [[2,'s_bar',20],[4,'g_bar',3],[6,'c_rest',14],[5,'w_club',23],[2,'hotel',22],[2,'s_bar',10]]){g=st();g.region=r;g.loc=id;g.minute=hour*60;g.money=300;g.surv.venue=null;g.fight=null;store[KEY]=JSON.stringify(g);a=boot();g=a.pin(id);h=a.html();const open=/vn:enter:/.test(h);g=a.do('vn:enter:'+id);h=a.html();console.log('6',id,hour+':00','open',open,'|',(h.match(/class="bubble">([^<]*)/)||[,g.log[0]])[1].slice(0,60),'\n   menu:',acts(h))}
+for(const [r,id,hour] of [[2,'s_bar',20],[4,'g_bar',3],[6,'c_rest',14],[6,'c_cafe',23],[2,'hotel',22],[2,'s_bar',10]]){g=st();g.region=r;g.loc=id;g.minute=hour*60;g.money=300;g.surv.venue=null;g.fight=null;store[KEY]=JSON.stringify(g);a=boot();g=a.pin(id);h=a.html();const open=/vn:enter:/.test(h);g=a.do('vn:enter:'+id);h=a.html();console.log('6',id,hour+':00','open',open,'|',(h.match(/class="bubble">([^<]*)/)||[,g.log[0]])[1].slice(0,60),'\n   menu:',acts(h))}
 // ресторан в кожанке
 g=st();g.region=6;g.loc='c_rest';g.minute=14*60;g.equip['Верх']='coat';g.money=300;g.surv.venue=null;store[KEY]=JSON.stringify(g);a=boot();g=a.do('vn:enter:c_rest');h=a.html();console.log('7 rest w/ coat:',acts(h));g=a.do('vn:do:errand');console.log('  ',g.log[0]);
 // клуб: братва
-g=st();g.region=5;g.loc='w_club';g.minute=23*60;g.surv.venue=null;store[KEY]=JSON.stringify(g);a=boot();g=a.do('vn:enter:w_club');console.log('8 club money',g.money);g=a.do('vn:do:bratva');console.log('  bratva:',g.fight?'fight '+g.fight.type:g.log[0]);
+g=st();g.region=6;g.loc='c_cafe';g.minute=23*60;g.surv.venue=null;store[KEY]=JSON.stringify(g);a=boot();g=a.do('vn:enter:c_cafe');console.log('8 club money',g.money);g=a.do('vn:do:bratva');console.log('  bratva:',g.fight?'fight '+g.fight.type:g.log[0]);
 // бар: слух
 g=st();g.region=2;g.loc='s_bar';g.minute=20*60;g.fight=null;g.surv.venue=null;store[KEY]=JSON.stringify(g);a=boot();g=a.do('vn:enter:s_bar');g=a.do('vn:do:listen');console.log('9 listen:',g.log[0]);g=a.do('vn:do:cards');console.log('  cards:',g.log[0]);
 // гостиница ночлег

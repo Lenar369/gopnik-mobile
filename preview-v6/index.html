@@ -5067,5 +5067,120 @@ doAction=function(id){if(g&&id==='surv:musnext'){plNext();render();return}return
  Object.assign(CITY_EXITS,{north:[1000,70],south:[830,985],east:[1500,600]});
 })();
 
+/* ===== v6: правки после теста 21.11 (вторая партия) ===== */
+// 1. Наверху: у денег без подписи, нервы — мозг
+const _plateF2=plate;
+plate=function(cls,icon,val,title){if(/lb-money/.test(cls))return '<div class="lb-plate '+cls+'" title="'+title+'">'+icon+'<span>'+val+'</span></div>';return _plateF2(cls,icon,val,title)};
+const _hudImgF2=hudImg;
+hudImg=function(k,alt,cls){if(k==='nerves')return '<span class="'+(cls||'needico')+' emo brain">🧠</span>';return _hudImgF2(k,alt,cls)};
+NEED_DEF.forEach(d=>{if(d[0]==='nerves')d[1]='🧠'});
+
+// 2. Комната над шиномонтажом — на крыше автосервиса, не на жилом доме
+(function(){const p=dspot('g_room');if(p){p.x=215;p.y=150}})();
+
+// 9. Клуб — в Центре вместо «Кафе у площади» (у ресторана); из Речного клуб убран
+(function(){
+ const c=dspot('c_cafe');if(c){c.name='Клуб «Полночь»';c.icon='🎶';c.desc='Ночной клуб в подвале у площади: музыка, охрана, «деловые» и братва. Днём закрыт.';c.person='Охранник'}
+ VENUES.c_cafe='club';delete SURV_MEALS.c_cafe;
+ DISTRICTS[5].spots=DISTRICTS[5].spots.filter(p=>p.id!=='w_club');
+})();
+
+// 3. «Люди» — только те, кто там, где ты сейчас; кнопка «Все знакомые»
+const _peoplePanelF2=peoplePanel;
+peoplePanel=function(){
+ const s=S(),tog=(all)=>'<div class="line"><button class="act pplt" data-do="surv:pplall">'+(all?'📍 Только здесь':'👥 Все знакомые')+'</button></div>';
+ if(s.pplAll){return _peoplePanelF2().replace('<div class="panel-body">','<div class="panel-body">'+tog(true))}
+ const rel=g.relations||{},w=cityState(),met=w.met||{};let h=tog(false);
+ if(s.cityMode){h+='<div class="line"><strong>'+(s.atWild&&WILD[s.atWild]?esc(WILD[s.atWild].name):'В дороге')+'</strong><div>Знакомых рядом нет.</div></div>'}
+ else{
+  const r=g.region||0;h+='<div class="line"><strong>📍 '+esc(regions[r])+'</strong></div>';
+  if(r===0){const att=v=>v>=3?'🤝 свой':v>=1?'🙂 знакомый':v<0?'😠 в обиде':'· нейтрально';
+   [['zoya','Тётя Зоя','соседка'],['sanya','Санёк','друг детства'],['valera','Слесарь Валера','гаражи'],['gena','Гена Рыжий','дворовая компания'],['boris','Борис','киоск']].forEach(([k,n,d])=>{h+='<div class="line peopleline"><b>'+n+'</b><small>'+d+'</small><span>'+att(rel[k]||0)+'</span></div>'})}
+  const spots=(DISTRICTS[r]?.spots||[]).filter(p=>p.person);
+  spots.sort((a,b)=>(b.id===g.loc)-(a.id===g.loc));
+  h+=spots.map(p=>{const known=!!met[p.id],N=known?NPC(p.id):null;
+   return '<div class="line peopleline'+(p.id===g.loc?' here':'')+'"><b>'+esc(p.person)+(p.id===g.loc?' · 📍 тут':'')+'</b><small>'+esc(p.name)+(N&&N.job?' · 📋 '+esc(jobText(p.id,N.job)):'')+(N&&N.debt?' · 💵 долг '+N.debt+' ₽':'')+'</small><span>'+(known?relWord(N.rel)+' ('+N.rel+')':'не знаком')+'</span></div>'}).join('');
+  if(r!==0&&!spots.length)h+='<div class="line">Здесь никого не знаешь.</div>';
+ }
+ const P=s.parcels||[];if(P.length)h+='<div class="line"><strong>📦 Посылки</strong>'+P.map(p=>'<div>'+esc(personOf(p.from))+' → '+esc(personOf(p.to))+' ('+esc(dspot(p.to).name)+', '+esc(regions[regionForSpot(p.to)])+') · до '+p.until+'-го дня · '+p.pay+' ₽</div>').join('')+'</div>';
+ return '<section class="overlay"><header class="panel-head"><h2>Люди</h2><button data-nav="map">×</button></header><div class="panel-body">'+h+'</div></section>';
+};
+
+// 4. Пригородный автобус на окраины и обратно — дорого
+function suburbBus(k){const w=WILD[k];return w&&sheetOf(w.xy)!=='city'}
+function busFare(){return survPrice(25)}
+const _actionsForF2=actionsFor;
+actionsFor=function(id){
+ const a=_actionsForF2(id);if(!g||!Array.isArray(a))return a;const s=S(),t=s.trip,sid=String(id);
+ if(sid.startsWith('wild:')&&!t){const k=sid.slice(5);if(s.atWild!==k&&suburbBus(k)){const c=cityCost('w:'+k,'foot');const i=a.findIndex(x=>String(x.doit).startsWith('surv:walk:'));const b={name:'🚌 Пригородный автобус',doit:'surv:sbus:w:'+k,sub:Math.round(c.minutes*.22)+20+' мин · '+busFare()+' ₽',alt:false};if(i>=0)a.splice(i+1,0,b)}}
+ if(sid.startsWith('cityd:')&&!t&&s.atWild&&suburbBus(s.atWild)){const d=+sid.slice(6),c=cityCost(d,'foot');const i=a.findIndex(x=>String(x.doit).startsWith('surv:walk:'));const b={name:'🚌 Пригородный автобус в город',doit:'surv:sbus:'+d,sub:Math.round(c.minutes*.22)+20+' мин · '+busFare()+' ₽',alt:false};if(i>=0)a.splice(i+1,0,b)}
+ // 10. чай у плиты — два раза в день
+ if(id==='home'){const n=(s.tea&&s.tea.day===g.day)?s.tea.n:0;for(const b of a)if(b.doit==='surv:hometea')b.sub=n>=2?'Сегодня уже пил чай дважды':b.sub+' · осталось '+(2-n)+' раз(а) сегодня',b.alt=false}
+ return a;
+};
+const _survActionF2=survAction;
+survAction=function(id){
+ const s=S();
+ if(id==='surv:hometea'){const n=(s.tea&&s.tea.day===g.day)?s.tea.n:0;if(n>=2){announceAndRender('Чай сегодня уже пил дважды. Завтра.');return}s.tea={day:g.day,n:n+1}}
+ if(String(id).startsWith('surv:sbus:')){
+  const to=String(id).slice(10),dest=to.startsWith('w:')?to:+to,c=cityCost(dest,'foot'),fare=busFare();
+  if(g.money<fare){announceAndRender('Не хватает на билет: '+fare+' ₽.');return}
+  g.money-=fare;s.mode='bus';try{advance(Math.round(c.minutes*.22)+20)}finally{s.mode=null}
+  clearTimeout(tripTimer);s.trip=null;arrive(dest,'пригородным автобусом, '+fare+' ₽');return;
+ }
+ if(id==='surv:pplall'){s.pplAll=!s.pplAll;save();render();return}
+ return _survActionF2(id);
+};
+
+// 5. Остановка Пятого квартала: без старой поездки «Вокзальный · гостиница»
+const _actionsForF2b=actionsFor;
+actionsFor=function(id){const a=_actionsForF2b(id);if(!Array.isArray(a))return a;return a.filter(b=>b.doit!=='travel-hotel')};
+
+// 6. Кафе, бар, клуб: «Войти» сразу открывает заведение (раньше надо было войти два раза)
+const _doActionF2=doAction;
+doAction=function(id){
+ const f=focus;const r=_doActionF2(id);
+ if(g&&id==='pl:enter'&&f&&VENUES[f]&&S().place===f&&!S().venue&&vOpen(f))vEnter(f);
+ return r;
+};
+
+// 8. Милиция и участковый — портрет милиционера
+const _npcAvaF2=npcAva;
+npcAva=function(id){if(id==='q5_police'||id==='c_police'){const a=FIGHTER_DIR+'police.webp';if(ASSET_OK[a])return '<span class="ava big foe npc"><img src="'+a+'" alt=""></span>'}return _npcAvaF2(id)};
+const _copHtmlF2=copHtml;
+copHtml=function(){const a=FIGHTER_DIR+'police.webp';const h=_copHtmlF2();return ASSET_OK[a]?h.replace('<span class="ava big foe"><i>👮</i></span>','<span class="ava big foe"><img src="'+a+'" alt=""></span>'):h};
+
+// дорожные события: вернуть патрули (сломались прошлой правкой)
+const _pickRoadEventF2=pickRoadEvent;
+pickRoadEvent=function(){if(Math.random()<copChance()*2.5)return {k:'cop'};return _pickRoadEventF2()};
+
+// 7. Дождь реалистичнее: косые капли разной длины и скорости, всплески, мокрая картинка
+const RAIN={cv:null,drops:[],spl:[],raf:0};
+function rainOn(){return !!(g&&weatherNow()==='rain'&&!S().sleeping&&view==='map')}
+function rainLoop(){
+ const cv=RAIN.cv;if(!cv)return;const on=rainOn();cv.style.opacity=on?1:0;
+ if(!on){RAIN.raf=requestAnimationFrame(rainLoop);return}
+ const W=cv.width=cv.clientWidth,H=cv.height=cv.clientHeight,x=cv.getContext('2d');
+ if(RAIN.drops.length<220)for(let i=0;i<6;i++)RAIN.drops.push({x:Math.random()*W*1.2,y:-20-Math.random()*H,l:10+Math.random()*22,v:9+Math.random()*9,a:.18+Math.random()*.35});
+ x.clearRect(0,0,W,H);x.lineCap='round';
+ for(const d of RAIN.drops){x.strokeStyle='rgba(200,220,255,'+d.a+')';x.lineWidth=d.l>24?1.4:1;x.beginPath();x.moveTo(d.x,d.y);x.lineTo(d.x-d.l*.25,d.y+d.l);x.stroke();d.x-=d.v*.25;d.y+=d.v;
+  if(d.y>H*(.55+Math.random()*.45)){if(Math.random()<.35)RAIN.spl.push({x:d.x,y:d.y,r:1,t:1});d.x=Math.random()*W*1.2;d.y=-20-Math.random()*60}}
+ for(const p of RAIN.spl){x.strokeStyle='rgba(210,230,255,'+(.35*p.t)+')';x.lineWidth=1;x.beginPath();x.ellipse(p.x,p.y,p.r*2.2,p.r*.8,0,0,Math.PI*2);x.stroke();p.r+=.35;p.t-=.06}
+ RAIN.spl=RAIN.spl.filter(p=>p.t>0);RAIN.raf=requestAnimationFrame(rainLoop);
+}
+if(!/jsdom/i.test(navigator.userAgent||'')&&typeof requestAnimationFrame==='function'&&!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+ RAIN.cv=document.createElement('canvas');RAIN.cv.className='rainfx';document.body.appendChild(RAIN.cv);RAIN.raf=requestAnimationFrame(rainLoop);
+}
+const _renderF2=render;
+render=function(){const r=_renderF2();try{root.classList.toggle('raining',!!(g&&weatherNow()==='rain'))}catch(e){}return r};
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.lbico.brain,.needico.brain{font-size:19px;line-height:1;display:inline-block;width:auto}'+
+'.lb-plate{min-width:0}.lb-stats .lb-plate .pv em{max-width:none}'+
+'.peopleline.here{border-left:3px solid #ffd36a;padding-left:6px}.pplt{width:auto;display:inline-block;padding:6px 12px}'+
+'.rainfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:6;opacity:0;transition:opacity .8s}'+
+'.raining .wx-rain{opacity:0!important}.raining .mapart{filter:brightness(.82) saturate(.75) contrast(1.05)!important}.raining .pimg{filter:brightness(.82) saturate(.75)}'+
+'</style>');
+
 render();
 })();</script></body></html>
