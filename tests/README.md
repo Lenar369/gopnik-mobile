@@ -11,3 +11,7 @@ node run.js        # проверить preview-v6
 Другой файл: `node run.js ../preview-v7/index.html`.
 
 **Правило:** перед каждой отправкой изменений игры в GitHub — `node run.js`, и только если «Все сценарии прошли».
+
+
+## Данные в отдельных файлах (21.11.2026)
+`run.js` перед прогоном собирает `preview-v6/index.html` и `preview-v6/data/*.js` в один файл `tests/.bundle.html` (`bundle.js`) — jsdom внешние скрипты не грузит. Отдельный сценарий запускать так: `node bundle.js ../preview-v6/index.html .bundle.html && node cases/<имя>.js .bundle.html`.

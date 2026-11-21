@@ -114,20 +114,12 @@
 .regionpin.selected-path{background:#71562f;color:#ffebbd;box-shadow:0 0 0 5px #d9ad5f88,0 3px 17px #000c}
 .regionpin .pintext{background:#171b1bf0;box-shadow:0 3px 11px #000a}
 .mapart{image-rendering:auto;object-fit:fill}
-</style></head><body><div id="root"></div><script>
-(()=>{'use strict';
+</style></head><body><div id="root"></div><script src="data/items.js"></script><script src="data/recipes.js"></script><script src="data/loot.js"></script><script src="data/shops.js"></script><script src="data/places.js"></script><script src="data/enemies.js"></script><script src="data/quests.js"></script><script>
+(()=>{const GD=window.GD;'use strict';
 const root=document.getElementById('root'),KEY='gopnik-kazan-1998-survival-v6',V4_KEY='gopnik-kazan-1998-open-city-v5',LEGACY_KEY='gopnik-kazan-1998-chapter2-v4';
 const origins={ordinary:{label:'Обычный парень',stats:[2,2,5,1],home:'С семьёй',desc:'Мама оставила записку и попросила помочь соседке.'},gop:{label:'Гопник',stats:[3,2,2,3],home:'С бабушкой и братом',desc:'Санёк зовёт на лавочку: во дворе пропал Дамир.'},thief:{label:'Вор-одиночка',stats:[1,4,4,1],home:'Снимает комнату',desc:'В прихожей появился чужой конверт с пометкой склада.'},frost:{label:'Отморозок',stats:[5,3,1,1],home:'У родственника',desc:'Словесный конфликт возле гаражей едва не закончился дракой.'}};
-const places=[
-{id:'home',name:'Твой дом',icon:'🏠',x:195,y:227,text:'Знакомая квартира. Здесь можно оставить вещи и поговорить с близкими.'},
-{id:'house12',name:'Дом №12',icon:'🏢',x:696,y:225,text:'В этом доме исчезли бумаги Дамира. Нужно восстановить события ночи.'},
-{id:'court',name:'Главный двор',icon:'🪑',x:499,y:323,text:'Лавочки, соседские разговоры и старые знакомства.'},
-{id:'play',name:'Спортплощадка',icon:'⚽',x:228,y:472,text:'Турники, игра на асфальте и спор двух компаний.'},
-{id:'kiosk',name:'Киоск',icon:'🛒',x:716,y:395,text:'Киоск Бориса, покупки и сведения о ночной разгрузке.'},
-{id:'garage',name:'Гаражи',icon:'🔧',x:902,y:140,text:'Машины, слесарь Валера, следы старой грузовой машины.'},
-{id:'stop',name:'Остановка',icon:'🚌',x:901,y:462,text:'Остановка и расписание. Другие районы появятся позже.'},
-{id:'back',name:'Дальний двор',icon:'🌙',x:196,y:91,text:'Тихие дворы, задний проход и следы неизвестной машины.'}];
-const goods={hat:{name:'Кепка',slot:'Голова',cost:30,stat:'тепло +10%'},sneak:{name:'Кроссовки',slot:'Обувь',cost:60,stat:'удобная обувь'},coat:{name:'Кожанка',slot:'Верх',cost:100,stat:'тепло +25%'},glasses:{name:'Очки',slot:'Аксессуар',cost:40,stat:'солидный вид'},wrench:{name:'Гаечный ключ',slot:'Инструмент',cost:55,stat:'пригодится в гараже'},bandage:{name:'Бинт',slot:null,cost:20,stat:'+20 HP'}};
+const places=GD.places;
+const goods=GD.goods;
 const regions=['Пятый квартал','Старый рынок','Вокзальный','Заводской','Гаражный','Речной','Центр города'];
 let g=load(),view='map',focus=null,page=0,message='',noticeAt=0,selectedOrigin='ordinary';let zoom=1,px=0,py=0,viewportW=0,viewportH=0,drag=null,chosenDest=null;
 function load(){
@@ -468,92 +460,8 @@ function c2Answer(id){
 
 // OPEN CITY V5. Independent layer: data-driven districts, transport, activities, vehicles.
 const SP=(id,name,icon,x,y,desc,role='',person='')=>({id,name,icon,x,y,desc,role,person});
-const DISTRICTS={
- 1:{name:'Старый рынок',tag:'Торговля, склады и дворовые истории',palette:['#948b6b','#604a3a','#aa7559'],
- spots:[
- SP('m_rows','Торговые ряды','🛒',225,195,'Между палатками спорят продавцы. Лиля собирает чеки и наблюдает за грузчиками.','shop','Лиля'),
- SP('m_pawn','Комиссионка','⌚',480,122,'Часы, старые куртки и вещи без коробок. Не все продавцы рассказывают правду.','shop','Альберт'),
- SP('m_cafe','Рыночный буфет','☕',740,348,'Запах пирожков, сильный чай и разговоры о ценах.','rest','Гульфия'),
- SP('m_depot','Складская контора','📦',860,183,'Со склада выносят ящики. Закрытые кабинеты доступны только по делу.','','Кладовщик'),
- SP('m_workers','Биржа подработок','🧤',469,453,'Небольшая очередь за разгрузкой. Работу предлагают на день.','work','Бригадир'),
- SP('m_side','Задние ряды','🧺',153,410,'Пыльная дорога за палатками, где товар прячут от дождя.','','Сторож'),
- SP('m_stop','Рыночная остановка','🚏',873,487,'Отсюда можно уехать в любой район города.','travel') ]},
- 2:{name:'Вокзальный',tag:'Рельсы, гостиницы и дальние поездки',palette:['#7c8b8a','#565d69','#9b8573'],
- spots:[
- SP('s_station','Привокзальная площадь','🚉',233,206,'Под часами вокзала встречаются пассажиры, носильщики и милиционер.','','Билетёр'),
- SP('s_platform','Перрон','🚆',515,134,'Поезда уходят по расписанию. В вагонном окне мелькает знакомое лицо.','','Проводница'),
- SP('s_ticket','Кассы','🎫',305,426,'Очередь за билетами и объявления о задержке поездов.','','Кассирша'),
- SP('s_cafe','Закусочная','🥣',631,338,'Горячий суп, дешёвый чай и разговоры дальнобойщиков.','rest','Повар'),
- SP('hotel','Гостиница у вокзала','🏨',862,218,'Небольшая гостиница. Комната на восемь часов или до утра.','hotel','Администратор'),
- SP('s_luggage','Камера хранения','🧳',837,465,'Выдают багаж по номеркам и проверяют старые журналы.','','Смотритель'),
- SP('s_stop','Трамвайная остановка','🚋',120,461,'Трамвай и автобус ведут в другие районы.','travel') ]},
- 3:{name:'Заводской',tag:'Проходная, цеха и общежития',palette:['#7b8582','#66665d','#867b68'],
- spots:[
- SP('f_gate','Проходная Ремзавода','🏭',178,199,'У проходной рабочие спорят о невыплаченной зарплате. Внутри нужна пропускная отметка.','','Раиса Харисовна'),
- SP('f_dorm','Общежитие','🛏️',683,431,'Общага рабочих. Есть комната для приезжих, в коридорах сохнут куртки.','lodging15','Комендант'),
- SP('f_canteen','Заводская столовая','🥣',480,406,'Запах компота. В обед тут проще всего узнать новости смены.','rest','Повариха'),
- SP('f_repair','Ремонтный цех','🔩',823,159,'Инструменты, сварка и слесарные верстаки.','','Токарь Фарид'),
- SP('f_warehouse','Склад материалов','📋',456,167,'За решёткой лежат ведомости и описи поставок.','','Ночной кладовщик'),
- SP('f_boiler','Котельная','♨️',160,473,'За котельной узкий проход и старые трубы.','','Электрик'),
- SP('f_stop','Заводская остановка','🚏',884,487,'Отсюда автобус идёт к рынку, вокзалу и в центр.','travel') ]},
- 4:{name:'Гаражный',tag:'Мастерские, боксы и старые машины',palette:['#97836b','#6c6154','#9c7866'],
- spots:[
- SP('g_mech','Бокс Ильдара','🔧',184,185,'Механик Ильдар ремонтирует моторы. Тут может начаться история твоей ВАЗ-2106.','','Ильдар'),
- SP('g_market','Автобарахолка','🚙',484,146,'Ряды бамперов, шин и б/у деталей.','shop','Продавец Бахтияр'),
- SP('g_scrap','Разборка','⚙️',821,190,'Запчасти среди остовов машин, старых дверей и стёкол.','','Сторож'),
- SP('g_parts','Лавка деталей','🔋',421,370,'Полки аккумуляторов, ремней и свечей.','shop','Захар'),
- SP('g_gas','Заправка','⛽',795,415,'Топливная колонка. Здесь заправляют автомобили.','fuel','Заправщик'),
- SP('g_job','Шиномонтаж','🛞',166,449,'Подработка: менять колёса и таскать шины.','work','Мастер'),
- SP('g_park','Стоянка','🅿️',622,510,'Можно осмотреть собственную машину и проверить её состояние.','parking','Сторож'),
- SP('g_stop','Гаражная остановка','🚏',916,498,'Автобусы и такси до других частей города.','travel') ]},
- 5:{name:'Речной',tag:'Причал, баржи и вечерние встречи',palette:['#63898a','#4d6a73','#b1a189'],
- spots:[
- SP('w_quay','Большой причал','⚓',189,210,'Скрипят доски настила, рыбаки переговариваются с грузчиками.','','Капитан'),
- SP('w_boat','Лодочный сарай','🛶',456,165,'Весла, канаты и запертые ящики у воды.','','Плотник'),
- SP('w_cafe','Прибрежное кафе','🍲',724,366,'Окна смотрят на воду. За столом можно переночевать в дальней комнате.','lodging20','Хозяйка'),
- SP('w_fish','Рыбный ряд','🐟',212,446,'Рыбаки и рыночные ящики, сырые сети сушатся на ветру.','shop','Пётр'),
- SP('w_warehouse','Речной склад','📦',832,185,'Тёмный ангар у воды. Некоторые двери открывают только с разрешения.','','Складчик'),
- SP('w_watch','Сторожевая будка','🔦',547,466,'Одинокий сторож следит за пришвартованными баржами.','work','Седой сторож'),
- SP('w_stop','Речная остановка','🚏',907,496,'Дорога в остальные районы города.','travel') ]},
- 6:{name:'Центр города',tag:'Площадь, магазины и официальные дела',palette:['#96a3a0','#656d70','#b39a82'],
- spots:[
- SP('c_square','Центральная площадь','🏙️',233,226,'Площадь между административными зданиями. Здесь встречаются разные люди.','','Дворник'),
- SP('c_book','Книжный магазин','📚',439,147,'Подержанные книги, газеты и объявления на стекле.','shop','Продавщица'),
- SP('c_bank','Сберкасса','🏦',731,240,'Очереди, платежи и платёжные ведомости.','','Кассир'),
- SP('c_cafe','Кафе у площади','☕',545,425,'Здесь могут встретиться предприниматели, журналисты и работники контор.','rest','Официант'),
- SP('c_archive','Городской архив','🗂️',851,109,'Открытая читальня и закрытые служебные шкафы.','','Архивистка'),
- SP('c_med','Медпункт','🩹',181,461,'Лечение мелких травм и бинты.','heal','Медсестра'),
- SP('c_shop','Универмаг','🏬',838,449,'Одежда, инструменты и товары под крышей.','shop','Продавец'),
- SP('c_stop','Центральная остановка','🚎',960,517,'Автобусы, трамваи, такси и дорога домой.','travel') ]}
-};
-const CQUESTS={
-1:[
-{title:'Потерянный товар',from:'m_rows',find:'m_depot',back:'m_rows',begin:'Лиля просит найти ящик с тканью. В накладной отметили разгрузку, но на прилавке ничего нет.',found:'На складе ящик спрятали за пустыми поддонами. Никакой кражи: номера ячеек перепутаны.',end:'Лиля возвращает ящик на прилавок и благодарит тебя.',reward:45},
-{title:'Часы без хозяина',from:'m_pawn',find:'m_cafe',back:'m_pawn',begin:'В комиссионку принесли часы без ремешка. Продавец не хочет брать чужую вещь без проверки.',found:'Хозяин часов оставил их в буфете. Повариха узнаёт царапину на крышке.',end:'Часы вернули владельцу. Альберт теперь доверяет тебе.',reward:30},
-{title:'Рыночный должок',from:'m_side',find:'m_workers',back:'m_side',begin:'Продавец просит разобраться с долгом за разгрузку — без угроз.',found:'Бригадир показывает расчёт. Денег не украли: работники ждут подписанную ведомость.',end:'Стороны договариваются о честном сроке выплаты.',reward:40}
-],
-2:[
-{title:'Письмо не туда',from:'s_station',find:'s_luggage',back:'s_station',begin:'Билетёр нашёл письмо с неправильным адресом. Внутри может быть чужая тайна.',found:'По журналу камеры хранения нашёлся правильный адресат; письмо не пришлось вскрывать.',end:'Билетёр передал письмо человеку, который ждал его с утра.',reward:35},
-{title:'Не тот чемодан',from:'s_ticket',find:'s_platform',back:'s_ticket',begin:'Женщина получила чужой чемодан и боится опоздать на поезд.',found:'На перроне обнаружились две одинаковые сумки. Бирки перепутал носильщик.',end:'Чемоданы возвращены владельцам без ссоры.',reward:45}
-],
-3:[
-{title:'Невыплаченная смена',from:'f_gate',find:'f_dorm',back:'f_gate',begin:'Раиса просит записать показания рабочего по потерянной зарплатной ведомости.',found:'В общежитии слесарь показывает корешок смены с печатью.',end:'Раиса принимает копию документа и обещает проверить выплаты.',reward:45},
-{title:'Старый турникет',from:'f_repair',find:'f_warehouse',back:'f_repair',begin:'Токарь просит законно восстановить пропускную карточку ученика.',found:'Кладовщик находит учётный номер и оформляет запрос через проходную.',end:'Пропуск восстановлен без обхода охраны.',reward:35},
-{title:'Сосед по общаге',from:'f_dorm',find:'f_canteen',back:'f_dorm',begin:'Комендант просит разобраться со ссорой из-за койко-места.',found:'В столовой нашёлся журнал распределения комнат. Ошиблись в номере секции.',end:'Соседи мирятся, а комендант оставляет для тебя свободное место.',reward:30}
-],
-4:[
-{title:'Сломанный стартер',from:'g_mech',find:'g_parts',back:'g_mech',begin:'Ильдар просит найти исправный контакт стартера для старой машины.',found:'В лавке обнаружилась нужная клемма, спрятанная среди списанных деталей.',end:'Стартер снова крутит. Ильдар предлагает тебе дешевле ремонт.',reward:45},
-{title:'Магнитофон Ильдара',from:'g_market',find:'g_scrap',back:'g_market',begin:'Продавец ищет рабочую головку от старого магнитофона.',found:'На разборке нашлась целая деталь; запись ещё можно восстановить.',end:'Магнитофон работает, и все удивляются, что кассета не зажевалась.',reward:40},
-{title:'Гараж не продаётся',from:'g_job',find:'g_park',back:'g_job',begin:'Рабочий хочет сохранить арендованный бокс, который хозяин обещал другому.',found:'Сторож показывает старую квитанцию об оплаченной аренде.',end:'Спор удалось решить по документу, без драки.',reward:35}
-],
-5:[
-{title:'Ночной сторож',from:'w_watch',find:'w_warehouse',back:'w_watch',begin:'Сторож не может понять, кто по ночам портит запоры у склада.',found:'У склада обнаружилась ржавая петля: дверь открывал ветер, а не вор.',end:'Сторож меняет крепление, лишних подозрений больше нет.',reward:40},
-{title:'Пустая лодка',from:'w_quay',find:'w_boat',back:'w_quay',begin:'К причалу принесло лодку без хозяина. Нужно выяснить, кто её потерял.',found:'В лодочном сарае сохранился номер лодки и запись о рыбаке.',end:'Лодку вернули владельцу, а не продали неизвестным.',reward:35}
-],
-6:[
-{title:'Очередь в сберкассу',from:'c_bank',find:'c_archive',back:'c_bank',begin:'Пожилая женщина не может найти копию платёжки и стоит в очереди второй день.',found:'Архивистка находит запись в журнале под старым номером.',end:'Сберкасса подтверждает платёж, очередь становится короче.',reward:30},
-{title:'Потерянная книга',from:'c_book',find:'c_cafe',back:'c_book',begin:'Продавщица просит найти библиотечный сборник, забытый покупателем.',found:'Книга лежит под столиком кафе; внутри чужая газетная вырезка.',end:'Книга вернулась на полку, продавщица благодарит за честность.',reward:35}
-]};
+const DISTRICTS=GD.DISTRICTS;
+const CQUESTS=GD.CQUESTS;
 const CITY_COORDS=[[2.6,3.1],[1.0,2.0],[3.6,1.1],[4.3,2.7],[2.4,4.9],[4.7,4.5],[2.6,.5]];
 function cityState(){
  if(!g.world||typeof g.world!=='object')g.world={};
@@ -1299,43 +1207,9 @@ window.addEventListener('resize',()=>{if(g&&view==='map'){let el=document.getEle
    Поверх v5: потребности героя, еда/питьё/лекарства, тёплые вещи, сезоны,
    дефолт 17.08.1998, опыт/уровни, смерть и возрождение рядом.
    Старые функции не переписаны — обёрнуты. Описание: SURVIVAL_DESIGN.md */
-const SUP={
- food_bread:{name:'Хлеб',icon:'🍞',cost:3,fx:{food:20}},
- food_sausage:{name:'Колбаса варёная',icon:'🌭',cost:15,fx:{food:30,nerves:3}},
- food_stew:{name:'Тушёнка',icon:'🥫',cost:12,fx:{food:40}},
- food_noodles:{name:'Лапша быстрая',icon:'🍜',cost:5,fx:{food:25,warmth:5}},
- food_potato:{name:'Картошка',icon:'🥔',cost:6,fx:{food:30}},
- food_pasta:{name:'Макароны',icon:'🍝',cost:7,fx:{food:35}},
- food_pickles:{name:'Солёные огурцы',icon:'🥒',cost:10,fx:{food:12,nerves:5}},
- food_sprats:{name:'Шпроты',icon:'🐟',cost:9,fx:{food:25}},
- drink_water:{name:'Вода',icon:'💧',cost:4,fx:{food:2,energy:5}},
- drink_tea:{name:'Чай',icon:'🫖',cost:6,fx:{warmth:15,energy:15,nerves:5}},
- drink_beer:{name:'Пиво',icon:'🍺',cost:8,fx:{food:5,nerves:15,energy:-5}},
- drink_vodka:{name:'Водка',icon:'🍾',cost:25,fx:{warmth:25,nerves:25,hp:-5},risky:true},
- cigs:{name:'Сигареты',icon:'🚬',cost:6,fx:{nerves:20,hp:-1}},
- med_pills:{name:'Аспирин',icon:'💊',cost:12,fx:{hp:5},cure:true},
- med_cough:{name:'Микстура',icon:'🧴',cost:15,fx:{warmth:5},cure:true},
- med_iodine:{name:'Йод',icon:'🟤',cost:5,fx:{hp:8}},
- med_kit:{name:'Аптечка',icon:'🧰',cost:60,fx:{hp:50},cure:true},
- bandage:{name:'Бинт',icon:'🩹',cost:20,fx:{hp:20}}
-};
-const SURV_SHOPS={
- kiosk:{title:'Киоск: продукты',items:['food_bread','food_sausage','food_noodles','food_pasta','food_sprats','drink_water','drink_tea','drink_beer','drink_vodka','cigs','bandage']},
- m_rows:{title:'Ряды: продукты',items:['food_bread','food_potato','food_pasta','food_pickles','food_sausage','food_stew','drink_tea','cigs']},
- s_station:{title:'Ларёк у вокзала',items:['food_bread','food_noodles','drink_water','drink_beer','cigs']},
- f_warehouse:{title:'Склад: тушёнка по-тихому',items:['food_stew','food_potato']},
- g_gas:{title:'Ларёк на заправке',items:['food_noodles','drink_water','drink_tea','cigs']},
- w_fish:{title:'Рыбный ряд',items:['food_sprats','food_potato','food_bread']},
- c_shop:{title:'Универмаг: продукты',items:['food_bread','food_sausage','food_stew','food_noodles','drink_tea','drink_water']},
- c_med:{title:'Аптечный пункт',items:['med_pills','med_cough','med_iodine','bandage','med_kit']}
-};
-const SURV_MEALS={
- m_cafe:{name:'Пирожки с чаем',cost:12,fx:{food:35,warmth:15,energy:5}},
- s_cafe:{name:'Сосиски с пюре',cost:14,fx:{food:40,warmth:10}},
- f_canteen:{name:'Комплексный обед',cost:10,fx:{food:50,warmth:10}},
- w_cafe:{name:'Уха',cost:14,fx:{food:40,warmth:25}},
- c_cafe:{name:'Пельмени',cost:18,fx:{food:50,warmth:20,nerves:5}}
-};
+const SUP=GD.SUP;
+const SURV_SHOPS=GD.SURV_SHOPS;
+const SURV_MEALS=GD.SURV_MEALS;
 Object.assign(goods,{
  ushanka:{name:'Шапка-ушанка',slot:'Голова',cost:60,stat:'тепло +20%'},
  downjacket:{name:'Пуховик',slot:'Верх',cost:180,stat:'тепло +35%'},
@@ -2090,16 +1964,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '</style>');
 
 /* ===== v6 этап Б: хабар, вес, обыск мест, крафт, ящик дома, скупщик ===== */
-const MAT={
- rags:{name:'Тряпки',icon:'🩳',w:.3,p:1},planks:{name:'Доски',icon:'🪵',w:1.5,p:2},nails:{name:'Гвозди',icon:'📌',w:.2,p:2},
- wire:{name:'Проволока',icon:'➰',w:.3,p:2},bottle:{name:'Пустая бутылка',icon:'🍾',w:.4,p:1},can:{name:'Жестяная банка',icon:'🥫',w:.1,p:1},
- pipe:{name:'Обрезок трубы',icon:'📏',w:1.2,p:3},scrap:{name:'Металлолом',icon:'⚙️',w:2,p:4},rope:{name:'Верёвка',icon:'🪢',w:.3,p:2},
- tape:{name:'Изолента',icon:'📼',w:.1,p:3},cloth:{name:'Старое одеяло',icon:'🛏️',w:1,p:3},wool:{name:'Старый свитер',icon:'🧶',w:.6,p:3},
- paper:{name:'Газеты',icon:'📰',w:.2,p:1},coal:{name:'Уголь',icon:'⚫',w:1,p:2},brick:{name:'Кирпич',icon:'🧱',w:2,p:1},
- spiral:{name:'Спираль от плитки',icon:'🌀',w:.2,p:5},battery:{name:'Батарейка',icon:'🔋',w:.1,p:3},glass:{name:'Стекло',icon:'🪟',w:.3,p:1},
- leather:{name:'Кусок кожи',icon:'👜',w:.4,p:4},plastic:{name:'Плёнка',icon:'🛍️',w:.2,p:1},spirit:{name:'Спирт',icon:'🧪',w:.5,p:6},
- herbs:{name:'Сушёные травы',icon:'🌿',w:.1,p:2},matches:{name:'Спички',icon:'🔥',w:.05,p:2,art:'warm_matches'}
-};
+const MAT=GD.MAT;
 function matPath(id){return '../art/items/'+(MAT[id].art||'mat_'+id)+'.webp'}
 Object.keys(MAT).forEach(id=>probeAsset(matPath(id)));
 
@@ -2136,57 +2001,11 @@ const GOODS_W={sack:.3,home_backpack:1.2,sled:4,crowbar:1.5,flashlight:.4,shiv:.
 
 /* ---- рецепты ---- */
 // st: где можно делать (any — везде, home — дома), tool: нужный инструмент, out: что получится, base: улучшение дома
-const RECIPES=[
- {cat:'Тепло',id:'campfire',need:{planks:2,paper:1,matches:1},min:15,st:'any',out:'campfire'},
- {cat:'Тепло',id:'hot_bottle',need:{bottle:1},min:10,st:'home',out:'hot_bottle'},
- {cat:'Тепло',id:'paper_lining',need:{paper:2},min:5,st:'any',out:'paper_lining'},
- {cat:'Тепло',id:'torch',need:{planks:1,rags:1,spirit:1},min:10,st:'any',out:'torch'},
- {cat:'Одежда',id:'wool_hat',need:{wool:1},min:40,st:'home',out:'wool_hat'},
- {cat:'Одежда',id:'mittens',need:{wool:1,rags:1},min:40,st:'home',out:'mittens'},
- {cat:'Одежда',id:'blanket_vest',need:{cloth:1,rope:1},min:50,st:'home',tool:'shiv',out:'blanket_vest'},
- {cat:'Одежда',id:'wrapped_boots',need:{rags:2,plastic:1,tape:1},min:25,st:'any',out:'wrapped_boots'},
- {cat:'Еда и лечение',id:'bandage',need:{rags:2},min:10,st:'any',out:'bandage'},
- {cat:'Еда и лечение',id:'compress',need:{spirit:1,rags:1},min:10,st:'any',out:'compress'},
- {cat:'Еда и лечение',id:'herbal_tea',need:{herbs:1,drink_water:1},min:15,st:'home',out:'herbal_tea'},
- {cat:'Еда и лечение',id:'baked_potato',need:{food_potato:1,planks:1,matches:1},min:30,st:'any',out:'baked_potato'},
- {cat:'Еда и лечение',id:'stew_soup',need:{food_stew:1,food_potato:1,drink_water:1},min:40,st:'home',out:'stew_soup'},
- {cat:'Еда и лечение',id:'rusks',need:{food_bread:1},min:30,st:'home',out:'rusks',n:2},
- {cat:'Оружие',id:'shiv',need:{scrap:1,tape:1},min:30,st:'any',out:'shiv'},
- {cat:'Оружие',id:'pipe_club',need:{pipe:1,tape:1},min:15,st:'any',out:'pipe_club'},
- {cat:'Оружие',id:'nail_bat',need:{planks:1,nails:3},min:30,st:'home',base:'workbench',out:'nail_bat'},
- {cat:'Снаряжение',id:'crowbar',need:{pipe:1,scrap:1},min:45,st:'home',tool:'wrench',out:'crowbar'},
- {cat:'Снаряжение',id:'flashlight',need:{battery:2,can:1,wire:1,glass:1},min:40,st:'home',out:'flashlight'},
- {cat:'Снаряжение',id:'sack',need:{plastic:2,rope:1},min:20,st:'any',out:'sack'},
- {cat:'Снаряжение',id:'home_backpack',need:{cloth:1,leather:1,rope:2},min:90,st:'home',tool:'shiv',out:'home_backpack'},
- {cat:'Снаряжение',id:'sled',need:{planks:3,nails:2,rope:1},min:60,st:'home',base:'workbench',out:'sled'},
- {cat:'Дом',id:'workbench',need:{planks:4,nails:3},min:90,st:'home',build:'workbench',title:'Верстак',icon:'🪚',desc:'Крафт дома вдвое быстрее; открывает биту и санки'},
- {cat:'Дом',id:'heater',need:{spiral:1,brick:2,wire:1},min:60,st:'home',build:'heater',title:'Обогреватель',icon:'♨️',art:'warm_heater',desc:'Дома теплее: сон лечит простуду за ночь, нервы +',art:'warm_heater'},
- {cat:'Дом',id:'windows',need:{plastic:2,tape:1,paper:2},min:45,st:'home',build:'windows',title:'Утеплённые окна',icon:'🪟',desc:'Сон восстанавливает больше бодрости'},
- {cat:'Дом',id:'radio',need:{wire:2,can:1,battery:1},min:40,st:'home',build:'radio',title:'Антенна для приёмника',icon:'📻',desc:'Новости по утрам: нервы +5 после сна'},
- {cat:'Дом',id:'woodpile',need:{planks:3,coal:2},min:30,st:'home',build:'woodpile',title:'Запас топлива',icon:'🪵',desc:'«Чай у плиты» греет сильнее'},
-];
+const RECIPES=GD.RECIPES;
 const RECIPE_BY=Object.fromEntries(RECIPES.map(r=>[r.id,r]));
 
 /* ---- места для вылазок (привязаны к местам районов) ---- */
-const LOOT={
- q5_basement:{at:'house12',name:'Подвал дома №12',t:{pipe:3,rags:3,bottle:3,can:2,wire:2,coal:2,food_potato:1,spirit:1}},
- q5_attic:{at:'home',name:'Чердак своего дома',t:{cloth:2,wool:3,paper:3,rope:2,leather:1,battery:1,glass:1}},
- q5_dumpster:{at:'kiosk',name:'Мусорные баки за киоском',t:{bottle:4,can:4,paper:3,rags:2,plastic:3,food_bread:1,cigs:1}},
- city_rooftop:{at:'court',name:'Крыша девятиэтажки',t:{wire:4,glass:2,battery:2,plastic:2,tape:1},cold:true},
- market_backrows:{at:'m_side',name:'Пустые задние ряды',t:{plastic:4,rope:3,rags:2,can:2,herbs:3,matches:1}},
- market_crates:{at:'m_depot',name:'Склад тары',t:{planks:5,nails:3,rope:2,plastic:2}},
- station_warehouse:{at:'s_platform',name:'Заброшенный пакгауз',t:{planks:4,nails:2,rope:2,coal:3,scrap:2}},
- station_wagons:{at:'s_platform',name:'Тупик с вагонами',t:{coal:4,scrap:3,planks:2,cloth:1,spirit:1},cold:true},
- factory_hall:{at:'f_repair',name:'Заброшенный цех',t:{scrap:4,wire:3,spiral:2,pipe:2,tape:2,spirit:1}},
- factory_scrap:{at:'f_warehouse',name:'Свалка металлолома',t:{scrap:5,pipe:3,wire:2,battery:1,brick:2},cold:true},
- factory_boiler:{at:'f_boiler',name:'Котельная',t:{coal:4,pipe:2,brick:3,spiral:1,tape:1}},
- garage_junkyard:{at:'g_scrap',name:'Разборка',t:{scrap:4,battery:2,glass:3,wire:2,leather:2,plastic:1},cold:true},
- garage_abandoned:{at:'g_park',name:'Ничейный гараж',t:{tape:2,nails:2,spirit:2,rope:2,battery:1,glass:1,food_stew:1}},
- river_boathouse:{at:'w_boat',name:'Лодочный сарай',t:{rope:4,planks:3,plastic:2,cloth:2,matches:1}},
- river_flooded:{at:'w_warehouse',name:'Полузатопленный склад',t:{planks:3,can:3,bottle:2,cloth:2,food_stew:1,drink_water:1}},
- center_construction:{at:'c_square',name:'Долгострой',t:{brick:4,planks:3,nails:3,wire:2,pipe:2,plastic:2},cold:true},
- center_archive_yard:{at:'c_archive',name:'Двор архива',t:{paper:5,cloth:2,planks:2,glass:2,leather:1}}
-};
+const LOOT=GD.LOOT;
 Object.keys(LOOT).forEach(k=>probeAsset('../art/loot/'+k+'.webp'));
 
 /* ---- состояние ---- */
@@ -2390,16 +2209,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '</style>');
 
 /* ===== v6: места вылазок на карте города (между районами) ===== */
-const WILD={
- heat:{name:'Теплотрасса за гаражами',icon:'♨️',xy:[880,800],warm:true,fb:'./maps/factory.webp',desc:'Трубы в драной стекловате, от них идёт тепло. Здесь греются бродяги и прячут всякое.',t:{pipe:3,rags:3,bottle:2,can:2,wool:1,matches:1,cigs:1}},
- sector:{name:'Брошенный дом в частном секторе',icon:'🏚️',xy:[1290,560],fb:'../art/loot/q5_attic.webp',desc:'Покосившийся дом за забором, хозяева давно уехали. Чердак и сарай не заперты.',t:{cloth:3,wool:2,planks:3,nails:2,glass:1,food_potato:2,herbs:2}},
- dachas:{name:'Дачный посёлок',icon:'🏡',xy:[1420,820],desc:'Зимой здесь никого. Летом — сторож и собаки. В сараях — инструмент и заготовки.',t:{planks:3,rope:2,food_potato:3,food_pickles:1,herbs:3,nails:2,tape:1}},
- camp:{name:'Заброшенный пионерлагерь',icon:'⛺',xy:[330,50],desc:'Облупленные корпуса в лесу, столовая без окон, медпункт с выбитой дверью.',t:{cloth:3,planks:2,glass:2,paper:2,med_pills:1,bandage:1,wool:1}},
- dump:{name:'Городская свалка',icon:'🗑️',xy:[120,950],fb:'./maps/garage.webp',desc:'Горы мусора до горизонта, вороньё и дым. Найти можно что угодно — и нарваться тоже.',t:{scrap:4,bottle:3,can:4,plastic:3,battery:2,wire:2,leather:1,glass:2}},
- bank:{name:'Насыпь у Волги',icon:'🌊',xy:[520,660],fb:'./maps/river.webp',desc:'Железнодорожная насыпь над водой: выброшенные шпалы, обрывки сетей, перевёрнутые лодки.',t:{planks:3,rope:3,coal:2,plastic:2,scrap:1,matches:1}},
- hospital:{name:'Долгострой больницы',icon:'🏗️',xy:[1335,195],fb:'./maps/center.webp',desc:'Бетонный каркас в девять этажей. Строители бросили всё в 1991-м.',t:{brick:4,wire:3,pipe:2,nails:3,plastic:2,spiral:1,tape:1}},
- cellar:{name:'Подвал старой пятиэтажки',icon:'🧱',xy:[830,560],fb:'../art/loot/q5_basement.webp',warm:true,desc:'Тёплый подвал: трубы отопления, сухо даже зимой. Ящики, старые вещи жильцов, а иногда чьи-то заначки.',t:{pipe:2,rags:3,cloth:2,can:2,food_stew:1,food_potato:2,drink_water:1,rope:1,spirit:1}}
-};
+const WILD=GD.WILD;
 for(const[k,w]of Object.entries(WILD)){LOOT['wild_'+k]={at:null,name:w.name,t:w.t,cold:!w.indoor&&!w.warm};probeAsset('../art/loot/wild_'+k+'.webp')}
 function migrateWild(){const s=g&&S();if(s&&s.atWild==='bunker')s.atWild='cellar';if(s&&s.trip&&s.trip.to==='w:bunker')s.trip.to='w:cellar';if(s&&s.trip&&s.trip.from==='w:bunker')s.trip.from='w:cellar'}
 function wildArt(k){const a='../art/loot/wild_'+k+'.webp';return ASSET_OK[a]?a:WILD[k].fb||null}
@@ -2478,15 +2288,7 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 
 /* ===== v6: драки — разные противники, оружие, предметы в бою, последствия, уважение района ===== */
 // n — сколько человек, hp — здоровье каждого, dmg — сила удара, acc — меткость, talk — можно договориться (сложность), pay — откуп ₽
-const ENEMY={
- shpana:{name:'Шпана',icon:'🧢',n:1,hp:40,dmg:[4,8],acc:.7,talk:2,pay:15,run:.65,xp:20,resp:2,loot:{money:[5,20],items:{cigs:2,food_bread:1}},style:[.3,.5,.2]},
- drunk:{name:'Пьяный мужик',icon:'🍾',n:1,hp:35,dmg:[5,11],acc:.5,talk:1,pay:10,run:.8,xp:15,resp:1,loot:{money:[3,15],items:{drink_vodka:2,cigs:1}},style:[.2,.4,.4]},
- gop3:{name:'Компания гопников',icon:'🚬',n:3,hp:30,dmg:[3,7],acc:.65,talk:3,pay:30,run:.5,xp:45,resp:5,loot:{money:[15,45],items:{cigs:2,drink_beer:2}},style:[.4,.4,.2]},
- dogs:{name:'Стая собак',icon:'🐕',n:2,hp:22,dmg:[4,9],acc:.75,talk:0,pay:0,run:.4,xp:25,resp:1,loot:{money:[0,0],items:{}},style:[.6,.3,.1],bite:true},
- watchman:{name:'Сторож',icon:'🔦',n:1,hp:50,dmg:[6,11],acc:.6,talk:2,pay:20,run:.7,xp:25,resp:0,loot:{money:[10,30],items:{drink_tea:1,food_bread:1}},style:[.2,.6,.2]},
- bum:{name:'Бродяга',icon:'🧥',n:1,hp:28,dmg:[3,7],acc:.55,talk:1,pay:5,run:.8,xp:12,resp:0,loot:{money:[0,8],mats:{rags:2,bottle:2,can:1,matches:1}},style:[.3,.4,.3]},
- bratki:{name:'Братки',icon:'🕶️',n:2,hp:60,dmg:[10,17],acc:.75,talk:5,pay:80,run:.35,xp:90,resp:10,loot:{money:[60,120],items:{cigs:2,drink_vodka:1}},style:[.3,.3,.4]}
-};
+const ENEMY=GD.ENEMY;
 const INTENT=[['fast','финтит — частые слабые удары','лучше блок'],['normal','целится в голову','лучше блок'],['heavy','замахивается со всей силы','лучше увернуться']];
 const WEAPON_FX={shiv:{dmg:4,bleed:.35,name:'режет'},pipe_club:{dmg:5},knuckles:{dmg:3,acc:.1},nail_bat:{dmg:7,stun:.3}};
 function stat(i){return (origins[g.origin]||origins.ordinary||{stats:[2,2,2,2]}).stats[i]||2}
