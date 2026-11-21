@@ -1,0 +1,10 @@
+{
+ "name": "Гопник: Казань 1998",
+ "short_name": "Гопник 1998",
+ "start_url": "./",
+ "display": "fullscreen",
+ "orientation": "landscape",
+ "background_color": "#100f0e",
+ "theme_color": "#141210",
+ "icons": [{"src": "../art/ui/portrait_gop.webp", "sizes": "256x256", "type": "image/webp"}]
+}

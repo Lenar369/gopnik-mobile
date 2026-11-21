@@ -5333,5 +5333,36 @@ document.head.insertAdjacentHTML('beforeend','<style>'+
 '.tutbtns{display:flex;gap:8px;justify-content:space-between}.tutbtns button{padding:8px 12px;border-radius:8px;border:1px solid #8a6a40;background:#2b241b;color:#f1e3c4;font-weight:700;cursor:pointer}.tutbtns .nx{background:#4b7a43;border-color:#9fd08f}.tutbtns .sk{margin-left:auto;background:transparent;border-color:transparent;color:#cdbb98}'+
 '</style>');
 
+/* ===== v6: масштаб карты двумя пальцами (и щипком на тачпаде) ===== */
+const PINCH={pts:new Map(),st:null};
+function mapMinZoom(v){const h=cityOn()?CMWH:581;return Math.max(v.clientWidth/1032,v.clientHeight/h)}
+function pinchApply(mx,my,nz,st){const v=document.getElementById('maphost');if(!v)return;const r=v.getBoundingClientRect();const lo=root.classList.contains('land')||cityOn()?mapMinZoom(v):.55;
+ nz=Math.max(lo,Math.min(lo*4,nz));const wx=(st.mx-r.left-st.px)/st.zoom,wy=(st.my-r.top-st.py)/st.zoom;zoom=nz;px=mx-r.left-wx*nz;py=my-r.top-wy*nz;applyMap()}
+document.addEventListener('pointerdown',e=>{const v=e.target.closest&&e.target.closest('#maphost');if(!v||e.pointerType==='mouse')return;PINCH.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(PINCH.pts.size===2){const [a,b]=[...PINCH.pts.values()];PINCH.st={d:Math.hypot(a.x-b.x,a.y-b.y)||1,zoom,px,py,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};drag=null;v.classList.remove('dragging');e.stopPropagation()}},true);
+document.addEventListener('pointermove',e=>{if(!PINCH.pts.has(e.pointerId))return;PINCH.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(PINCH.st&&PINCH.pts.size>=2){const [a,b]=[...PINCH.pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);pinchApply((a.x+b.x)/2,(a.y+b.y)/2,PINCH.st.zoom*d/PINCH.st.d,PINCH.st);drag=null;const v=document.getElementById('maphost');if(v){v.dataset.justDragged='1';setTimeout(()=>{v.dataset.justDragged=''},250)}e.stopPropagation()}},true);
+function pinchEnd(e){PINCH.pts.delete(e.pointerId);if(PINCH.pts.size<2)PINCH.st=null}
+document.addEventListener('pointerup',pinchEnd,true);document.addEventListener('pointercancel',pinchEnd,true);
+// тачпад/колесо с Ctrl — тоже масштаб
+document.addEventListener('wheel',e=>{const v=e.target.closest&&e.target.closest('#maphost');if(!v||!e.ctrlKey)return;e.preventDefault();const st={zoom,px,py,mx:e.clientX,my:e.clientY};pinchApply(e.clientX,e.clientY,zoom*Math.exp(-e.deltaY*.01),st)},{passive:false});
+// Safari (iPad/iPhone): жест щипка без pointer-событий двух пальцев
+document.addEventListener('gesturestart',e=>{if(e.target.closest&&e.target.closest('#maphost'))e.preventDefault()},{passive:false});
+
+/* ===== v6: горизонтальный режим — полный экран и поворот (где браузер разрешает), подсказка «поверни» ===== */
+function wantLandscape(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen&&matchMedia('(pointer:coarse)').matches)d.requestFullscreen({navigationUI:'hide'}).then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{});else if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}
+const _doActionLand=doAction;
+doAction=function(id){const sid=String(id);if(sid==='ttl:continue'||sid==='start'||sid==='ttl:tutorial')wantLandscape();return _doActionLand(id)};
+function rotateCheck(){
+ let o=document.getElementById('rotov');const need=!!(g&&!TTL.screen&&matchMedia('(pointer:coarse)').matches&&innerHeight>innerWidth*1.05&&!sessionStorage.getItem('gopnik-portrait-ok'));
+ if(!need){if(o)o.remove();return}
+ if(!o){o=document.createElement('div');o.id='rotov';o.innerHTML='<div class="rotbox"><div class="rotico">📱↻</div><b>Поверни устройство</b><p>Игра сделана для горизонтального экрана.</p><button>Играть вертикально</button></div>';document.body.appendChild(o);o.querySelector('button').onclick=()=>{try{sessionStorage.setItem('gopnik-portrait-ok','1')}catch(e){}o.remove()}}
+}
+addEventListener('resize',rotateCheck);addEventListener('orientationchange',()=>setTimeout(rotateCheck,300));
+const _renderRot=render;render=function(){const r=_renderRot();try{rotateCheck()}catch(e){}return r};
+document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><style>'+
+'#rotov{position:fixed;inset:0;z-index:400;background:#0d0b09f2;display:flex;align-items:center;justify-content:center;text-align:center;color:#f1e3c4;padding:24px}.rotbox b{font-size:20px;display:block;margin:10px 0 6px}.rotbox p{color:#cdbb98;margin:0 0 16px}.rotico{font-size:54px;animation:rotw 1.6s ease-in-out infinite}@keyframes rotw{50%{transform:rotate(-90deg)}}.rotbox button{padding:10px 16px;border-radius:9px;border:1px solid #8a6a40;background:#2b241b;color:#cdbb98;font-weight:700}'+
+'</style>');
+
 render();
 })();</script></body></html>
