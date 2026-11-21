@@ -1,0 +1,33 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'ru.calcul369.gopnik'
+    buildFeatures { buildConfig true }
+    compileSdk 36
+    defaultConfig {
+        applicationId 'ru.calcul369.gopnik'
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+    }
+    signingConfigs {
+        release {
+            if (System.getenv('GOPNIK_KEYSTORE')) {
+                storeFile file(System.getenv('GOPNIK_KEYSTORE'))
+                storePassword System.getenv('GOPNIK_STORE_PASSWORD')
+                keyAlias System.getenv('GOPNIK_KEY_ALIAS')
+                keyPassword System.getenv('GOPNIK_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes { release { signingConfig signingConfigs.release } }
+}
+tasks.register('prepareGame', Copy) {
+    from(rootProject.projectDir.parentFile) {
+        include 'preview-v6/**', 'art/**', 'kazan/assets/audio/**'
+        exclude 'art/drafts/**', 'art/incoming/**', 'art/reference/**', 'art/src/**'
+        exclude '**/*.md', '**/*.svgpart', '**/*.py'
+    }
+    into 'src/main/assets/game'
+}
+tasks.named('preBuild').configure { dependsOn 'prepareGame' }
