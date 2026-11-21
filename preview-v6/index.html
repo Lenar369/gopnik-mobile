@@ -5061,5 +5061,41 @@ placeArt=function(id){const n=LODGE_ART[id];if(n){const own=VENUE_DIR+n+'_'+(win
 const _lodgeSleepArt=lodgeSleep;
 lodgeSleep=function(id,mode,safe){const before=g.log[0];_lodgeSleepArt(id,mode,safe);const n=LODGE_ART[id],k=n&&VENUE_DIR+n+'_interior.webp';if(k&&ASSET_OK[k]&&g.log[0]!==before&&/^🛏️/.test(g.log[0])){const s=S();s.scene='loot';s.sceneData={img:k,title:'🛏️ '+citySpotName(id),text:String(g.log[0]).replace(/^🛏️ /,'')};save();render()}};
 
+/* ===== v6: магазин вещей — свой товар в каждом месте, цены ×2 после дефолта, самоделки не продаются ===== */
+const SHOP_GOODS={
+ kiosk:['hat','gloves','glasses'],
+ m_rows:['hat','sneak','coat','ushanka','gloves','winterboots','downjacket'],
+ m_pawn:['glasses','coat','wrench'],
+ g_market:['wrench','coat','winterboots'],
+ g_parts:['wrench'],
+ w_fish:['ushanka','gloves','winterboots'],
+ c_book:['glasses'],
+ c_shop:['hat','sneak','downjacket','ushanka','winterboots','gloves','glasses']
+};
+const _doActionShop=doAction;
+doAction=function(id){
+ if(g&&id==='shop'){S().shopAt=focus==='shop'?S().shopAt:(focus||g.loc)}
+ if(g&&String(id).startsWith('buy:')){
+  const k=String(id).slice(4),it=goods[k],list=SHOP_GOODS[S().shopAt]||[];
+  if(!it||!list.includes(k)){announceAndRender('Здесь такого не продают.');return}
+  const c=survPrice(it.cost);
+  if(g.money<c){announceAndRender('Не хватает денег: '+it.name+' стоит '+c+' ₽.');return}
+  if(g.inventory.length>=20){announceAndRender('Рюкзак полон.');return}
+  g.money-=c;g.inventory.push(k);advance(5);announce('💰 Купил: '+it.name+' за '+c+' ₽.');save();render();return;
+ }
+ return _doActionShop(id);
+};
+const _drawDrawerShop=drawDrawer;
+drawDrawer=function(){let h=_drawDrawerShop();if(g&&focus==='shop'&&h){const at=S().shopAt,nm=(places.find(p=>p.id===at)||dspot(at)||{}).name;if(nm)h=h.replace('Киоск Бориса','🛍️ '+nm+': вещи')}return h};
+const _actionsForShop=actionsFor;
+actionsFor=function(id){
+ if(!g||id!=='shop')return _actionsForShop(id);
+ const at=S().shopAt,list=SHOP_GOODS[at]||[];
+ const a=list.map(k=>{const it=goods[k],c=survPrice(it.cost),have=g.inventory.includes(k)||Object.values(g.equip||{}).includes(k);
+  return {name:'Купить '+it.name+' · '+c+' ₽',doit:'buy:'+k,sub:(it.stat||'')+(have?' · уже есть':'')+(g.money<c?' · не хватает денег':''),alt:false}});
+ if(!a.length)a.push({name:'Сегодня полки пустые',doit:'close',sub:'Загляни в другое место',alt:false});
+ a.push({name:'Назад',doit:'close',sub:'',alt:false});return a;
+};
+
 render();
 })();</script></body></html>
