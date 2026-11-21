@@ -5132,5 +5132,27 @@ actionsFor=function(id){
   const W=WORK[k];return Object.assign({},b,{name:k==='work'?'Разгрузить детали':'Подработка',sub:workToday(k)?W.h+' ч · '+workPay(k)+' ₽ · силы −30':'Сегодня работы нет',alt:false})});
 };
 
+/* ===== v6: музыка — трек «Пацаны нашего двора» (mp3 от ChatGPT) вместо синтезированных мелодий ===== */
+const TRACK_SRC='../kazan/assets/audio/Gopnik_Patsany_Nashego_Dvora.mp3';
+const TRACK={el:null,vol:.35};
+function trackEl(){
+ if(TRACK.el)return TRACK.el;if(typeof Audio==='undefined'||/jsdom/i.test(navigator.userAgent||''))return null;
+ const a=new Audio();a.src=TRACK_SRC;a.loop=true;a.preload='auto';a.volume=0;TRACK.el=a;return a;
+}
+function trackFade(to){const a=TRACK.el;if(!a)return;clearInterval(TRACK.fade);TRACK.fade=setInterval(()=>{const v=a.volume+(to>a.volume?.03:-.03);if(Math.abs(to-a.volume)<=.03){a.volume=to;clearInterval(TRACK.fade);if(to===0)a.pause()}else a.volume=Math.max(0,Math.min(1,v))},60)}
+// синтез больше не играет: только решаем, звучит ли трек
+musTick=function(){
+ if(MUS.bus&&AC){try{MUS.bus.gain.setTargetAtTime(.0001,AC.currentTime,.3)}catch(e){}}
+ const want=!!(g&&musicOn()&&soundOn()&&musMood()&&!document.hidden);
+ TRACK.want=want;const a=trackEl();if(!a)return;
+ if(want){if(a.paused){const p=a.play();if(p&&p.catch)p.catch(()=>{})}if(a.volume<TRACK.vol-.01&&!TRACK.up){TRACK.up=true;TRACK.down=false;trackFade(TRACK.vol)}}
+ else if(!a.paused&&!TRACK.down){TRACK.down=true;TRACK.up=false;trackFade(0)}
+};
+// трек можно запустить только после нажатия — запускаем таймер при первом клике
+root.addEventListener('click',()=>{if(!MUS.timer&&trackEl())MUS.timer=setInterval(()=>{try{musTick()}catch(e){}},300);try{musTick()}catch(e){}},true);
+document.addEventListener('visibilitychange',()=>{try{musTick()}catch(e){}});
+const _actionsForTr=actionsFor;
+actionsFor=function(id){const a=_actionsForTr(id);if(id!=='survmenu'||!Array.isArray(a))return a;return a.map(b=>b.doit==='surv:music'?Object.assign({},b,{sub:'«Пацаны нашего двора» · в драке пауза'}):b)};
+
 render();
 })();</script></body></html>

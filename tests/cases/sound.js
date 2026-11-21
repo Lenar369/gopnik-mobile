@@ -17,5 +17,6 @@ g=st();g.fight=null;g.surv.scene=null;g.minute=14*60;g.day=5;store[KEY]=JSON.str
 a.do('surv:music');made=0;await new Promise(r=>setTimeout(r,1500));const mOff=made;a.do('surv:menu');const ml=/🎵 Музыка: выключена/.test(a.html());console.log('5 музыка: кнопка',mb,'| нот за 0,7 с',mOn,'| после выкл',mOff,ml);
 // ночью — «Ночной район» (больше голосов: бас, ударные, подложка)
 g=st();delete store['gopnik-music'];g.fight=null;g.surv.scene=null;g.minute=23*60;store[KEY]=JSON.stringify(g);a=boot();a.do('surv:menu');made=0;noises=0;await new Promise(r=>setTimeout(r,700));const mN=noises;console.log('6 ночью ударных за 0,7 с:',mN);
-const ok=mN>2&&mb&&mOn>3&&mOff<=1&&ml&&btn&&m1>0&&off&&lbl&&m2===0&&loops>0;
+
+const ok=mN<=1&&mOn<=1&&mb&&mOff<=1&&ml&&btn&&m1>0&&off&&lbl&&m2===0&&loops>0;
 console.log(ok?'OK':'FAIL');if(!ok)errs.push('sound failed');console.log('errors',errs);process.exit(0);})();
