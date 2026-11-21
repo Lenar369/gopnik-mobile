@@ -1272,7 +1272,7 @@ function needsTick(m){
   const v=s[k],lv=v<=0?2:v<30?1:0,was=s.warned[k]||0;
   if(lv>was){
    const tips={food:'Поешь: киоск, рынок, столовые или дом.',warmth:'Зайди в помещение или надень тёплое.',energy:'Нужен сон или горячий чай.',nerves:'Сигарета, пиво, чай или сон.'};
-   survNote(ico+' '+label+(lv===2?' на нуле — теряешь здоровье! ':' на исходе. ')+tips[k]);
+   survNote(k==='warmth'?(ico+' '+(lv===2?'Холод −100 — замерзаешь, теряешь здоровье! ':'Холод ниже −70 — замерзаешь. ')+tips[k]):(ico+' '+label+(lv===2?' на нуле — теряешь здоровье! ':' на исходе. ')+tips[k]));
   }
   if(lv>was||v>40)s.warned[k]=v>40?0:Math.max(lv,was);
  });
@@ -1479,7 +1479,7 @@ viewPanel=function(){
  if(view==='hero'){
   const li=levelInfo();
   const extra='<div class="line"><strong>⭐ Уровень '+li.lvl+'</strong> · опыт '+li.progress+'/'+(li.need||'—')+' (всего '+li.xp+')</div>'+needsBars()+
-   '<div class="line">📅 '+dateText()+' · '+seasonName()+' · на улице '+(coldRate()?'−'+Math.round(coldRate()*(1-insulation()))+' тепла/ч':'тепло')+(afterDefault()?' · 📉 после дефолта':'')+'</div>'+
+   '<div class="line">📅 '+dateText()+' · '+seasonName()+' · на улице '+(coldRate()?'холод −'+Math.round(coldRate()*(1-insulation()))+' в час':'не холодно')+(afterDefault()?' · 📉 после дефолта':'')+'</div>'+
    (s.cold?'<div class="line">🤧 Простуда: силы и тепло уходят быстрее.</div>':'')+
    (s.deaths?'<div class="line">☠ Потерь сознания: '+s.deaths+'</div>':'');
   const k=h.lastIndexOf('</div></section>');if(k>0)h=h.slice(0,k)+extra+h.slice(k);
@@ -5204,6 +5204,134 @@ advance=function(m){
  if(g&&m>0&&gameDate().toISOString().slice(0,10)!==k0&&gameDate().getUTCFullYear()===1998){const d=gameDate();for(const [mm,dd,t] of DEF_RUMORS)if(d.getUTCMonth()===mm&&d.getUTCDate()===dd)announce(t)}
  return r;
 };
+
+/* ===== v6: «Холод» вместо «Тепло» — шкала 0 (тепло) … −100 (замерзаешь) ===== */
+NEED_DEF.forEach(d=>{if(d[0]==='warmth'){d[1]='❄️';d[2]='Холод'}});
+function coldVal(v){v=Math.round(v);return v>=100?'0':'−'+(100-v)}
+const _hudImgCold=hudImg;
+hudImg=function(k,alt,cls){if(k==='warmth')return '<span class="'+(cls||'needico')+' emo brain">❄️</span>';return _hudImgCold(k,alt,cls)};
+const _plateCold=plate;
+plate=function(cls,icon,val,title){if(title==='Холод')val=coldVal(val);return _plateCold(cls,icon,val,title).replace('<div class="lb-plate ','<div data-t="'+title+'" class="lb-plate ')};
+needsBars=function(){const s=S();return NEED_DEF.map(([k,ico,label])=>{const v=Math.round(s[k]),cold=k==='warmth';
+ return '<div class="line needline"><strong>'+hudImg(k,ico,'needico big')+' '+label+'</strong><span class="needbar'+(cold?' coldbar':'')+'"><i style="width:'+(cold?100-v:v)+'%" class="'+(v<=10?'crit':v<30?'low':'')+'"></i></span><b>'+(cold?coldVal(v):v)+'</b></div>'}).join('')};
+needsChips=function(){const s=S();return '<span class="needs" aria-label="Потребности героя">'+NEED_DEF.map(([k,ico,label])=>{const v=Math.round(s[k]);return '<span class="need '+(v<=10?'crit':v<30?'low':'')+'" title="'+label+'">'+hudImg(k,ico)+(k==='warmth'?coldVal(v):v)+'</span>'}).join('')+(s.cold?'<span class="need low" title="Простуда">🤧</span>':'')+'</span>'};
+
+/* ===== v6: главное меню, новая игра (имя, 4 героя), настройки, выход, обучение слайдами ===== */
+const TTL={screen:(window.__WALK_MS==null)?'title':null,err:''};
+function hasSave(){try{return !!localStorage.getItem(KEY)}catch(e){return false}}
+function ttlWrap(inner){return '<section class="ttl"><div class="ttlbg"></div><div class="ttlbox">'+inner+'</div></section>'}
+function titleHtml(){
+ const cont=g||hasSave();
+ const b=(d,t,cls)=>'<button class="ttlbtn'+(cls?' '+cls:'')+'" data-do="'+d+'">'+t+'</button>';
+ return ttlWrap('<h1>ГОПНИК</h1><h2>Казань · 1998</h2><p class="ttlsub">Выживи в городе 90-х: двор, районы, окраины, дефолт и зима.</p><div class="ttlmenu">'+
+  (cont?b('ttl:continue','▶ Продолжить игру','main'):'')+b('ttl:new','🆕 Новая игра',cont?'':'main')+b('ttl:tutorial','📖 Обучение')+b('ttl:settings','⚙️ Настройки')+b('ttl:exit','🚪 Выход')+'</div>');
+}
+function settingsHtml(){
+ const row=(t,on,d)=>'<button class="ttlbtn tog'+(on?' on':'')+'" data-do="'+d+'">'+t+'<span>'+(on?'включено':'выключено')+'</span></button>';
+ return ttlWrap('<h2>⚙️ Настройки</h2><div class="ttlmenu">'+row('🎵 Музыка',musicOn(),'ttl:music')+row('🔊 Звуки',soundOn(),'ttl:sound')+'<button class="ttlbtn" data-do="ttl:home">← Назад</button></div>');
+}
+function byeHtml(){return ttlWrap('<h2>До встречи!</h2><p class="ttlsub">Игра сохранена. Можно закрыть вкладку.</p><div class="ttlmenu"><button class="ttlbtn" data-do="ttl:home">← В главное меню</button></div>')}
+function newGameHtml(){
+ const UI6='../art/ui/';
+ const cards=Object.entries(origins).map(([k,v])=>{
+  const st=v.stats.map((n,i)=>'<div class="ngst"><span>'+STAT_NAMES[i]+'</span><i><u style="width:'+Math.min(100,n*20)+'%"></u></i><b>'+n+'</b></div>').join('');
+  return '<button class="ngcard'+(selectedOrigin===k?' sel':'')+'" data-origin="'+k+'"><img src="'+UI6+'portrait_'+k+'.webp" alt=""><b>'+esc(v.label)+'</b><small>'+esc(v.home)+'</small></button>';
+ }).join('');
+ const o=origins[selectedOrigin]||origins.ordinary;
+ const st=o.stats.map((n,i)=>'<div class="ngst"><span>'+STAT_NAMES[i]+'</span><i><u style="width:'+Math.min(100,n*20)+'%"></u></i><b>'+n+'</b></div>').join('');
+ return ttlWrap('<h2>🆕 Новая игра</h2><label class="nglab">Имя героя<input id="nickname" maxlength="22" placeholder="Как тебя зовут во дворе?" autocomplete="off"></label>'+
+  (TTL.err?'<div class="ngerr">'+esc(TTL.err)+'</div>':'')+'<div class="ngcards">'+cards+'</div>'+
+  '<div class="ngabout"><b>'+esc(o.label)+'</b> · '+esc(o.home)+'<p>'+esc(o.desc)+'</p>'+st+'</div>'+
+  '<div class="ttlmenu row"><button class="ttlbtn" data-do="ttl:home">← Назад</button><button class="ttlbtn main" data-do="start">Начать игру →</button></div>');
+}
+showSetup=function(){root.innerHTML=newGameHtml()};
+const _renderTtl=render;
+render=function(){
+ if(TTL.screen==='title'){root.innerHTML=titleHtml();return}
+ if(TTL.screen==='settings'){root.innerHTML=settingsHtml();return}
+ if(TTL.screen==='bye'){root.innerHTML=byeHtml();return}
+ return _renderTtl();
+};
+const _doActionTtl=doAction;
+doAction=function(id){
+ const sid=String(id);
+ if(sid.startsWith('ttl:')){
+  const a=sid.slice(4);
+  if(a==='continue'){if(!g)g=load();TTL.screen=null;root.dataset.initializedMap='';focus=null;view='map';render();return}
+  if(a==='new'){TTL.err='';if(g){try{localStorage.setItem(BACKUP_KEY,JSON.stringify(g))}catch(e){}}g=null;TTL.screen=null;render();return}
+  if(a==='home'){if(g)save();TTL.screen='title';render();return}
+  if(a==='settings'){TTL.screen='settings';render();return}
+  if(a==='music'){try{localStorage.setItem('gopnik-music',musicOn()?'0':'1')}catch(e){}try{acReady();musTick()}catch(e){}render();return}
+  if(a==='sound'){try{localStorage.setItem('gopnik-sound',soundOn()?'0':'1')}catch(e){}try{musTick()}catch(e){}render();return}
+  if(a==='exit'){if(g)save();try{window.close()}catch(e){}TTL.screen='bye';render();return}
+  if(a==='tutorial'){if(!g){g=load();if(!g){selectedOrigin='ordinary';root.innerHTML='<input id="nickname" value="Новичок">';start()}}TTL.screen=null;root.dataset.initializedMap='';focus=null;view='map';render();setTimeout(()=>tutStart(),300);return}
+ }
+ if(sid==='start'&&!g){const inp=document.getElementById('nickname');if(inp&&!inp.value.trim()&&window.__WALK_MS==null){TTL.err='Впиши имя героя.';render();return}TTL.err='';TTL.screen=null;
+  const r=_doActionTtl(id);let seen=false;try{seen=!!localStorage.getItem('gopnik-tut')}catch(e){}if(!seen&&window.__WALK_MS==null)setTimeout(()=>tutStart(),500);return r}
+ return _doActionTtl(id);
+};
+// в меню игры: «Главное меню», «Обучение»; новая игра — без тестовых вариантов
+const _actionsForTtl=actionsFor;
+actionsFor=function(id){const a=_actionsForTtl(id);if(id!=='survmenu'||!Array.isArray(a))return a;
+ const out=a.map(b=>b.doit==='surv:newgame'?Object.assign({},b,{sub:'Начать сначала: имя и герой'}):b);
+ out.push({name:'📖 Обучение',doit:'ttl:tutorial',sub:'Что значат кнопки и значки',alt:false},{name:'🏠 Главное меню',doit:'ttl:home',sub:'Игра сохранится',alt:false});return out};
+
+// --- обучение слайдами: окно с пояснением, нужная кнопка подсвечивается ---
+const TUT=[
+ {t:'👋 Добро пожаловать',x:'Казань, 1998. Тебе надо выжить: есть, греться, спать, зарабатывать — и разобраться, куда пропал Дамир. Сейчас покажу, что где.'},
+ {s:'.lb-hero',t:'🧍 Твой герой',x:'Портрет, уровень и опыт. Опыт идёт за дела, драки и задания. Новый уровень — очки характеристик (кнопка «Персонаж»).'},
+ {s:'.lb-hp',t:'❤️ Здоровье',x:'Если упадёт до 0 — потеряешь сознание и часть вещей и денег. Лечат бинт, аптечка, медпункт и сон.'},
+ {s:'.lb-stamina',t:'⚡ Силы',x:'Тратятся в драках и на работе. Восстанавливаются отдыхом и сном.'},
+ {s:'[data-t="Сытость"]',t:'🍞 Сытость',x:'Это еда. Падает со временем. Если дойдёт до 0 — начнёшь терять здоровье. Ешь из рюкзака, дома, в кафе и столовых.'},
+ {s:'[data-t="Холод"]',t:'❄️ Холод',x:'0 — тебе тепло. Зимой и в дождь на улице холод опускается до −100 — тогда теряешь здоровье и можно простыть. Греют дом, тёплая одежда, чай, костёр.'},
+ {s:'[data-t="Бодрость"]',t:'☕ Бодрость',x:'Сон и отдых. Если 0 — силы не восстанавливаются, теряешь здоровье. Спи дома, в гостинице или в укрытии.'},
+ {s:'[data-t="Нервы"]',t:'🧠 Нервы',x:'Падают ночью на улице, в драках и неприятностях. Помогают чай, сигареты, пиво, сон, праздники.'},
+ {s:'.lb-money',t:'₽ Деньги',x:'Подработка, поручения, задания, хабар скупщику. С 17 августа дефолт — цены вдвое выше, а платят столько же. Копи заранее!'},
+ {s:'.lb-date',t:'📅 Дата и время',x:'День и ночь, времена года. Ночью опаснее, заведения работают по часам. Игра начинается 1 мая 1998.'},
+ {s:'.lb-menu',t:'⚙️ Меню',x:'Сохранение, настройки музыки и звука, главное меню, это обучение.'},
+ {s:'.pin',t:'📍 Места на карте',x:'Нажми на значок — откроется окно места. «Войти» — внутрь: справа действия, слева что можно найти.'},
+ {s:'.city-open,[data-do="city"]',t:'🌍 Карта города',x:'Переход между районами: пешком (долго, бывают события в пути), автобусом, на такси. На окраины — пригородный автобус.'},
+ {s:'[data-nav="bag"]',t:'🎒 Инвентарь',x:'Еда и лекарства (нажми — съешь), вещи (нажми — надень), хабар и вес рюкзака. Перегруз — идёшь медленнее.'},
+ {s:'[data-nav="hero"]',t:'🧍 Персонаж',x:'Характеристики, навыки и умения. Красный «!» — есть свободные очки.'},
+ {s:'[data-nav="quests"]',t:'📜 Задания',x:'Сюжет, взятые задания и серьёзные дела.'},
+ {s:'[data-nav="people"]',t:'👥 Люди',x:'Кто есть там, где ты стоишь: знакомые, отношения, поручения.'},
+ {s:'[data-nav="log"]',t:'📖 Дневник',x:'Всё, что произошло. Если что-то пропустил — смотри здесь.'},
+ {t:'🔦 Обыск и крафт',x:'В подвалах, на чердаках и свалках ищи хабар. Без фонарика почти ничего не видно. Из хабара — «Крафт»: одежда, еда, снаряжение. Удачи, пацан!'}
+];
+let TUTI=-1;
+function tutStart(){TUTI=0;try{localStorage.setItem('gopnik-tut','1')}catch(e){}tutShow()}
+function tutEnd(){TUTI=-1;const o=document.getElementById('tutov');if(o)o.remove()}
+function tutShow(){
+ let o=document.getElementById('tutov');if(TUTI<0||TUTI>=TUT.length){tutEnd();return}
+ if(!o){o=document.createElement('div');o.id='tutov';document.body.appendChild(o);o.addEventListener('click',e=>{const b=e.target.closest('[data-tut]');if(!b)return;e.stopPropagation();const a=b.dataset.tut;if(a==='next')TUTI++;else if(a==='prev')TUTI=Math.max(0,TUTI-1);else TUTI=TUT.length;tutShow()})}
+ const st=TUT[TUTI];let el=null;if(st.s)for(const q of st.s.split(','))if((el=document.querySelector(q))&&el.getBoundingClientRect().width)break;else el=null;
+ const r=el?el.getBoundingClientRect():null,W=innerWidth,H=innerHeight;
+ let spot=r?'<div class="tutspot" style="left:'+(r.left-6)+'px;top:'+(r.top-6)+'px;width:'+(r.width+12)+'px;height:'+(r.height+12)+'px"></div>':'<div class="tutdim"></div>';
+ const bw=Math.min(380,W-24);let bx=r?Math.min(W-bw-12,Math.max(12,r.left+r.width/2-bw/2)):(W-bw)/2;let by=r?(r.top>H/2?null:r.bottom+16):H/2-90;
+ const pos='left:'+bx+'px;'+(by==null?'bottom:'+(H-r.top+16)+'px':'top:'+by+'px')+';width:'+bw+'px';
+ o.innerHTML=spot+'<div class="tutbox" style="'+pos+'"><div class="tutn">'+(TUTI+1)+' / '+TUT.length+'</div><b>'+st.t+'</b><p>'+st.x+'</p><div class="tutbtns">'+(TUTI?'<button data-tut="prev">← Назад</button>':'<span></span>')+'<button data-tut="skip" class="sk">Пропустить</button><button data-tut="next" class="nx">'+(TUTI===TUT.length-1?'Понятно ✓':'Далее →')+'</button></div></div>';
+}
+addEventListener('resize',()=>{if(TUTI>=0)tutShow()});
+
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.coldbar i{background:linear-gradient(90deg,#7fb4ff,#2f6fd6)!important}'+
+'.ttl{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:auto;z-index:50;padding:16px}'+
+'.ttlbg{position:fixed;inset:0;background:linear-gradient(#0009,#000c),url("../art/maps/city_summer.webp") center/cover no-repeat;filter:saturate(.9)}'+
+'.ttlbox{position:relative;width:min(560px,100%);text-align:center;padding:22px 18px;border-radius:14px;background:#120f0cd9;border:1px solid #8a6a40;box-shadow:0 10px 40px #000c}'+
+'.ttl h1{margin:0;font:900 54px/1 Georgia,serif;letter-spacing:6px;color:#e9bd77;text-shadow:0 3px 0 #000,0 0 22px #e9bd7744}.ttl h2{margin:6px 0 10px;color:#f1e3c4;font-size:20px;letter-spacing:2px}'+
+'.ttlsub{color:#cdbb98;margin:0 0 14px;font-size:14px}.ttlmenu{display:flex;flex-direction:column;gap:8px;max-width:340px;margin:0 auto}.ttlmenu.row{flex-direction:row;max-width:none;justify-content:center;margin-top:12px}'+
+'.ttlbtn{padding:12px 16px;border-radius:10px;border:1px solid #8a6a40;background:linear-gradient(#3a2f22,#231c14);color:#f1e3c4;font:700 16px system-ui;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}'+
+'.ttlbtn.main{background:linear-gradient(#4b7a43,#2c4a27);border-color:#9fd08f}.ttlbtn.tog span{font-size:12px;color:#cdbb98}.ttlbtn.tog.on span{color:#9fe08f}'+
+'.nglab{display:block;text-align:left;color:#cdbb98;font-size:13px;margin:0 0 10px}.nglab input{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:9px;border:1px solid #8a6a40;background:#0c0a08;color:#fff;font:600 16px system-ui;box-sizing:border-box}'+
+'.ngerr{color:#ff9a7a;font-weight:700;margin:-4px 0 8px;text-align:left}'+
+'.ngcards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.ngcard{padding:8px 6px;border-radius:10px;border:2px solid #5a4a36;background:#1d1812;color:#f1e3c4;cursor:pointer}.ngcard img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px}.ngcard b{display:block;font-size:13px}.ngcard small{color:#cdbb98;font-size:11px}.ngcard.sel{border-color:#ffd36a;box-shadow:0 0 0 2px #ffd36a55}'+
+'.ngabout{text-align:left;margin-top:10px;padding:10px 12px;border-radius:10px;background:#0006;color:#f1e3c4;font-size:13px}.ngabout p{margin:4px 0 8px;color:#cdbb98}'+
+'.ngst{display:grid;grid-template-columns:120px 1fr 22px;gap:8px;align-items:center;margin:3px 0}.ngst i{height:8px;border-radius:4px;background:#3a3027;overflow:hidden}.ngst u{display:block;height:100%;background:linear-gradient(90deg,#c08a3e,#ffd36a)}'+
+'@media (max-width:560px){.ngcards{grid-template-columns:repeat(2,1fr)}.ttl h1{font-size:40px}}'+
+'#tutov{position:fixed;inset:0;z-index:300}.tutdim{position:fixed;inset:0;background:#000a}.tutspot{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px #000b,0 0 0 3px #ffd36a,0 0 18px #ffd36a;pointer-events:none;transition:all .25s}'+
+'.tutbox{position:fixed;padding:12px 14px;border-radius:12px;background:#1d1812;border:1px solid #ffd36a;color:#f1e3c4;box-shadow:0 8px 30px #000c}.tutbox b{font-size:16px}.tutbox p{margin:6px 0 10px;font-size:14px;line-height:1.45}.tutn{float:right;color:#cdbb98;font-size:12px}'+
+'.tutbtns{display:flex;gap:8px;justify-content:space-between}.tutbtns button{padding:8px 12px;border-radius:8px;border:1px solid #8a6a40;background:#2b241b;color:#f1e3c4;font-weight:700;cursor:pointer}.tutbtns .nx{background:#4b7a43;border-color:#9fd08f}.tutbtns .sk{margin-left:auto;background:transparent;border-color:transparent;color:#cdbb98}'+
+'</style>');
 
 render();
 })();</script></body></html>
