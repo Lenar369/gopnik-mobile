@@ -10,6 +10,7 @@
 | `shops.js` | `SURV_SHOPS` — что где продаётся (id из `SUP`); `SURV_MEALS` — горячая еда |
 | `places.js` | `places` — Пятый квартал; `DISTRICTS` — районы 1–6, места `SP(id, имя, значок, x, y, описание, роль, человек)` |
 | `enemies.js` | `ENEMY` — противники: hp, урон, меткость, откуп, опыт, добыча |
+| `music.js` | `MUSIC` — список треков {title, src}; mp3 класть в `art/music/` |
 | `quests.js` | `CQUESTS` — задания районов (`reward` — ₽) |
 
 ## Правила
