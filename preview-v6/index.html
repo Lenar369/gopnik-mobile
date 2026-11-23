@@ -5364,5 +5364,307 @@ document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifes
 '#rotov{position:fixed;inset:0;z-index:400;background:#0d0b09f2;display:flex;align-items:center;justify-content:center;text-align:center;color:#f1e3c4;padding:24px}.rotbox b{font-size:20px;display:block;margin:10px 0 6px}.rotbox p{color:#cdbb98;margin:0 0 16px}.rotico{font-size:54px;animation:rotw 1.6s ease-in-out infinite}@keyframes rotw{50%{transform:rotate(-90deg)}}.rotbox button{padding:10px 16px;border-radius:9px;border:1px solid #8a6a40;background:#2b241b;color:#cdbb98;font-weight:700}'+
 '</style>');
 
+/* ===== v6: «кто держит район» — шаг 1: компании районов, их старшие, отношение, «Ты с какого района?» ===== */
+// Всё выдуманное. Отношение компании = уважение района (S().resp[r], от −20 до 50).
+const CREWS={
+ 0:{name:'Пятаки',boss:'Гена Рыжий',icon:'🧢',who:'свои, дворовые'},
+ 1:{name:'Рыночные',boss:'Шакир',icon:'💰',who:'доят ларьки, любят деньги',spot:[640,330],base:'gop3'},
+ 2:{name:'Привокзальные',boss:'Дым',icon:'🚬',who:'залётные, шустрые, тащат всё',spot:[560,330],base:'shpana'},
+ 3:{name:'Заводские',boss:'Бугор',icon:'🔩',who:'работяги, сильные, за честь',spot:[620,420],base:'gop3',hp:1.25},
+ 4:{name:'Гаражные',boss:'Маслёнок',icon:'🔧',who:'при машинах и запчастях',spot:[560,450],base:'gop3'},
+ 5:{name:'Береговые',boss:'Боцман',icon:'⚓',who:'лодки, рыба, контрабанда',spot:[170,400],base:'gop3'},
+ 6:{name:'Центровые',boss:'Студент',icon:'🕶️',who:'при «деловых», при деньгах',spot:[500,310],base:'gop3',hp:1.15}
+};
+for(const r of [1,2,3,4,5,6]){
+ const C=CREWS[r],B=ENEMY[C.base];
+ DISTRICTS[r].spots.push(SP('crew_'+r,'Пацаны: «'+C.name+'»',C.icon,C.spot[0],C.spot[1],'Здесь держатся '+C.name.toLowerCase()+' — '+C.who+'. Старший — '+C.boss+'. Чужих не любят.','',C.boss));
+ ENEMY['crew'+r]=Object.assign({},B,{name:'«'+C.name+'»',one:'Пацан из «'+C.name+'»',icon:C.icon,n:Math.max(2,B.n),hp:Math.round(B.hp*(C.hp||1)),resp:4,xp:Math.round(B.xp*1.2),art:C.base});
+ FOE_EMO['crew'+r]=C.icon;
+}
+function crewWord(v){return v<0?'😠 враги':v<10?'· чужой':v<25?'🙂 знают':'🤝 свой'}
+function crewInfo(r){const C=CREWS[r],v=(S().resp||{})[r]||0;return {C,v,word:r===0?'🤝 свой':crewWord(v)}}
+// картинка драки для компании — как у гопников
+const _avatarCr=avatar;avatar=function(kind,cls){const E=ENEMY[kind];return _avatarCr(E&&E.art?E.art:kind,cls)};
+const _foeArtCr=foeArt;foeArt=function(type){const E=ENEMY[type];return _foeArtCr(E&&E.art?E.art:type)};
+// «Ты с какого района?» — в чужом районе, если тебя тут не знают; не чаще раза в день на район
+function crewCheck(where){
+ if(!g||g.fight)return false;if(window.__WALK_MS!=null&&!window.__CREW_TEST)return false;const s=S(),r=g.region||0;if(!r||s.cityMode||s.venue||s.dlg||s.cop||s.scene)return false;
+ const v=(s.resp||{})[r]||0;if(v>=10)return false;s.crewDay=s.crewDay||{};if(s.crewDay[r]===g.day)return false;
+ const ch=(where==='arrive'?.35:.12)*(survNight()?1.6:1)*(v<0?1.5:1);if(Math.random()>=ch)return false;
+ s.crewDay[r]=g.day;const C=CREWS[r];
+ startFight('crew'+r,{text:'Трое из «'+C.name+'» перегораживают дорогу: «Ты с какого района? Чё здесь забыл?»'});
+ if(g.fight)g.fight.crew=r;save();render();return true;
+}
+const _arriveCr=arrive;
+arrive=function(d,how){_arriveCr(d,how);if(typeof d==='number'&&d)setTimeout(()=>{try{crewCheck('arrive')}catch(e){}},50)};
+const _doActionCr=doAction;
+doAction=function(id){const r=_doActionCr(id);if(g&&id==='pl:enter'&&!S().venue)try{crewCheck('place')}catch(e){}return r};
+// итог встречи
+const _fightEndCr=fightEnd;
+fightEnd=function(res){
+ const r=g.fight&&g.fight.crew;_fightEndCr(res);if(!r)return;const C=CREWS[r];
+ if(res==='talk'){addResp(3);announce('🗣️ «'+C.name+'»: «Ладно, нормальный пацан. Проходи». Тебя здесь запомнили.')}
+ else if(res==='pay'){announce('💸 Откупился от «'+C.name+'». Уважения не прибавилось.')}
+ else if(res==='run'||res==='flee'){addResp(-2);announce('🏃 Сбежал от «'+C.name+'». В районе будут смеяться.')}
+ else if(res==='win'){announce('👊 Отбился от «'+C.name+'». '+C.boss+' про тебя узнает.')}
+ save();render();
+};
+// «Люди»: кто держит район и как к тебе относятся
+const _peoplePanelCr=peoplePanel;
+peoplePanel=function(){let h=_peoplePanelCr();const s=S();if(s.pplAll||s.cityMode)return h;const r=g.region||0,I=crewInfo(r);
+ const block='<div class="line crewline"><strong>'+I.C.icon+' Район держат «'+esc(I.C.name)+'»</strong><div>Старший — '+esc(I.C.boss)+' · '+esc(I.C.who)+'</div><div class="crewrel">Отношение: <b>'+I.word+'</b>'+(r?' ('+I.v+')':'')+'</div>'+(r&&I.v<10?'<small>Пока тебя здесь не знают — могут докопаться. Свои: от 10 — знают, от 25 — свой.</small>':'')+'</div>';
+ return h.replace(/(<div class="line"><strong>📍 [^<]*<\/strong><\/div>)/,'$1'+block)};
+document.head.insertAdjacentHTML('beforeend','<style>.crewline{border:1px solid #8a6a40;border-radius:10px;background:#2a20168c}.crewrel{margin-top:4px}.crewline small{color:#cdbb98}</style>');
+
+/* ===== v6: «кто держит район» — шаг 2: поручения старших и бонусы «своего» ===== */
+function crewRel(r){if(!r)return 30;return (S().resp||{})[r]||0}
+function crewOwn(r){return crewRel(r)>=25}
+function crewKnown(r){return crewRel(r)>=10}
+const CJOBS={
+ shuher:{t:'Постоять на шухере',d:at=>'ночью (21:00–5:00) постоять на шухере у «'+citySpotName(at)+'», 2 часа',resp:3,pay:15},
+ zalet:{t:'Разобраться с залётными',d:at=>'у «'+citySpotName(at)+'» крутятся чужие — разберись',resp:5,pay:0,foe:'gop3'},
+ debt:{t:'Выбить долг',d:at=>'у «'+citySpotName(at)+'» сидит должник — забери 30 ₽, половина твоя',resp:4,pay:15,foe:'drunk'},
+ parcel:{t:'Отнести свёрток',d:at=>'отнести свёрток старшему в «'+citySpotName(at)+'» ('+regions[regionForSpot(at)]+'), не вскрывать',resp:3,pay:20}
+};
+function CJ(){return S().cjob||null}
+function cjobText(){const J=CJ();if(!J)return '';const C=CREWS[J.r],D=CJOBS[J.k];return C.icon+' '+C.boss+' («'+C.name+'»): '+(J.step==='back'?'дело сделано — вернись к старшему.':D.d(J.at))+' · до конца '+J.until+'-го дня'}
+function cjobGive(r){
+ const s=S();if(CJ()){announceAndRender('Сначала закончи прошлое дело.');return}
+ if(crewRel(r)<0){announceAndRender(CREWS[r].boss+': «С тобой у нас разговор другой». Сначала помирись.');return}
+ s.cjobDay=s.cjobDay||{};if(s.cjobDay[r]===g.day){announceAndRender(CREWS[r].boss+': «На сегодня всё. Заходи завтра».');return}
+ const keys=Object.keys(CJOBS),k=keys[(g.day+r)%keys.length];
+ let at;if(k==='parcel'){const others=[1,2,3,4,5,6].filter(x=>x!==r);at='crew_'+others[(g.day*7+r)%others.length]}
+ else{const sp=DISTRICTS[r].spots.filter(p=>!/^crew_/.test(p.id)&&p.role!=='travel');at=sp[(g.day*3+r)%sp.length].id}
+ s.cjob={r,k,at,until:g.day+2,step:'go'};s.cjobDay[r]=g.day;advance(10);
+ announce('📋 '+CREWS[r].boss+' даёт дело: '+CJOBS[k].d(at)+'.');save();render();
+}
+function cjobDone(){
+ const s=S(),J=CJ();if(!J||J.step!=='back')return;const D=CJOBS[J.k],C=CREWS[J.r],p=D.pay?survPrice(D.pay):0;
+ s.resp=s.resp||{};s.resp[J.r]=Math.max(-20,Math.min(50,(s.resp[J.r]||0)+D.resp));g.money+=p;addXP(15,'дело для пацанов');s.cjob=null;advance(10);
+ announce('🤝 '+C.boss+': «Красавчик». «'+C.name+'» +'+D.resp+(p?', +'+p+' ₽':'')+'.');save();render();
+}
+const _actionsForCJ=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForCJ(id);if(!g||!Array.isArray(a)||g.fight)return a;const J=CJ(),sid=String(id),add=[];
+ const m=/^crew_(\d)$/.exec(sid);
+ if(m){const r=+m[1],C=CREWS[r];
+  if(J&&J.r===r&&J.step==='back')add.push({name:'🤝 Доложить старшему',doit:'cj:done',sub:'Дело сделано',alt:true});
+  else if(J&&J.r===r)add.push({name:'📋 Дело в работе',doit:'cj:info',sub:CJOBS[J.k].t,alt:false});
+  else if(!J)add.push({name:'📋 Спросить дело у старшего',doit:'cj:give:'+r,sub:crewRel(r)<0?'с врагами не разговаривают':'отношение «'+C.name+'» растёт',alt:crewRel(r)>=0});
+ }
+ if(J&&J.step==='go'&&J.at===sid){
+  if(J.k==='shuher')add.push({name:'👀 Постоять на шухере',doit:'cj:act',sub:'2 часа · только ночью',alt:true});
+  if(J.k==='zalet')add.push({name:'👊 Разобраться с залётными',doit:'cj:act',sub:'Драка',alt:true});
+  if(J.k==='debt')add.push({name:'💵 Выбить долг',doit:'cj:act',sub:'Должник не обрадуется',alt:true});
+  if(J.k==='parcel')add.push({name:'📦 Отдать свёрток',doit:'cj:act',sub:'От «'+CREWS[J.r].name+'»',alt:true});
+ }
+ return add.concat(a);
+};
+function cjobAct(){
+ const s=S(),J=CJ();if(!J||J.step!=='go')return;
+ if(J.k==='shuher'){if(!survNight()){announceAndRender('На шухер — только ночью, с 21:00.');return}advance(120);if(Math.random()<.2){addHeat(5,'стоял на шухере');announce('🚨 Мимо проехал наряд — запомнили тебя. Но пацаны успели.')}J.step='back';announce('👀 Отстоял на шухере два часа. Дело сделано — вернись к старшему.');save();render();return}
+ if(J.k==='parcel'){J.step='back';advance(10);announce('📦 Отдал свёрток. «Передай, что всё ровно». Вернись к старшему.');save();render();return}
+ startFight(CJOBS[J.k].foe,{text:J.k==='debt'?'Должник поднимается: «Какой ещё долг? Вали отсюда!»':'Залётные оборачиваются: «Тебе чего, местный?»'});if(g.fight)g.fight.cjob=1;save();render();
+}
+const _fightEndCJ=fightEnd;
+fightEnd=function(res){const t=g.fight&&g.fight.cjob;_fightEndCJ(res);const J=CJ();if(!t||!J)return;
+ if(res==='win'||res==='talk'){J.step='back';announce('✔️ '+(J.k==='debt'?'Долг выбит.':'Залётные ушли.')+' Вернись к старшему.')}
+ else announce('Не вышло. Дело ещё не закрыто — можно попробовать снова.');save();render()};
+const _advanceCJ=advance;
+advance=function(m){const r=_advanceCJ.apply(this,arguments);if(g&&m>0){const J=CJ();if(J&&g.day>J.until){const C=CREWS[J.r];S().resp[J.r]=Math.max(-20,((S().resp||{})[J.r]||0)-2);S().cjob=null;announce('⌛ Не сделал дело для «'+C.name+'». '+C.boss+' недоволен (−2).')}}return r};
+const _doActionCJ=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('cj:')){const p=sid.split(':');if(p[1]==='give')cjobGive(+p[2]);else if(p[1]==='act')cjobAct();else if(p[1]==='done')cjobDone();else announceAndRender(cjobText());return}return _doActionCJ(id)};
+// «Задания» и «Люди»
+const _viewPanelCJ=viewPanel;
+viewPanel=function(){let h=_viewPanelCJ();if(g&&view==='quests'&&CJ()){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>👊 Дело для пацанов</strong><div class="bqline"><small>'+esc(cjobText())+'</small></div></div>'+h.slice(i+24)}return h};
+const _peoplePanelCJ=peoplePanel;
+peoplePanel=function(){let h=_peoplePanelCJ();const r=g.region||0;if(S().pplAll||S().cityMode)return h;
+ const bon=crewOwn(r)?'Свой: скидка 20% в ларьках района, патрули реже, пацаны могут подтянуться в драке.':crewKnown(r)?'Знают: скидка 10% в ларьках района.':'Бонусов нет — сначала заслужи уважение (дела старшего, честные разборки).';
+ return h.replace('<div class="crewrel">','<div class="crewbon">'+bon+'</div><div class="crewrel">')};
+
+// бонусы «своего»: скидка в ларьках района, меньше патрулей, подмога в драке
+function crewDisc(){const r=g.region||0;return S().cityMode?0:crewOwn(r)?.2:crewKnown(r)?.1:0}
+const _buySupplyCJ=buySupply;
+buySupply=function(id,spot){const m0=g.money,d=crewDisc();_buySupplyCJ(id,spot);const paid=m0-g.money;if(d&&paid>0){const back=Math.max(1,Math.round(paid*d));g.money+=back;g.log[0]=String(g.log[0])+' Скидка своим: −'+back+' ₽.';save();render()}};
+const _copChanceCJ=copChance;
+copChance=function(){const c=_copChanceCJ();return crewOwn(g.region||0)&&!S().cityMode?c*.6:c};
+const _startFightCJ=startFight;
+startFight=function(type,opt){_startFightCJ(type,opt);const F=g&&g.fight,r=g&&(g.region||0);
+ if(!F||(window.__WALK_MS!=null&&!window.__CREW_TEST)||S().cityMode||!crewOwn(r)||/^crew|police|brigade|dumpking/.test(type)||Math.random()>=.35)return;
+ const C=CREWS[r];if(F.m.length>1){F.m[F.m.length-1]=0;announce('🤝 Подтянулись свои — «'+C.name+'» увели одного.')}else{F.m[0]=Math.round(F.m[0]*.6);announce('🤝 Подтянулись свои — «'+C.name+'» придержали противника.')}
+ save();render()};
+document.head.insertAdjacentHTML('beforeend','<style>.crewbon{margin-top:4px;color:#9fe08f;font-size:12.5px}</style>');
+
+/* ===== v6: «кто держит район» — шаг 3: вражда компаний и разборка за Пятый квартал ===== */
+const RIVAL={1:2,2:1,3:4,4:3,5:6,6:5};
+function rivalHit(r,n){const rv=RIVAL[r];if(!rv||n<=0)return;const s=S();s.resp=s.resp||{};const loss=Math.ceil(n/2),before=s.resp[rv]||0;s.resp[rv]=Math.max(-20,before-loss);
+ if(before>=0&&s.resp[rv]<0)announce('😠 «'+CREWS[rv].name+'» косо смотрят: ты помогаешь их врагам — «'+CREWS[r].name+'».')}
+const _addRespRv=addResp;
+addResp=function(n){const r=g.region||0;_addRespRv(n);if(n>0&&!S().cityMode)rivalHit(r,n)};
+const _cjobDoneRv=cjobDone;
+cjobDone=function(){const J=CJ();const r=J&&J.r,b=r?((S().resp||{})[r]||0):0;_cjobDoneRv();if(r){const d=((S().resp||{})[r]||0)-b;rivalHit(r,d);save();render()}};
+const _peoplePanelRv=peoplePanel;
+peoplePanel=function(){let h=_peoplePanelRv();const r=g.region||0;if(S().pplAll||S().cityMode||!RIVAL[r])return h;const rv=RIVAL[r];
+ return h.replace('<div class="crewbon">','<div class="crewriv">⚔️ Враждуют с «'+esc(CREWS[rv].name)+'» ('+esc(regions[rv])+'): поможешь одним — другие станут холоднее.</div><div class="crewbon">')};
+
+// --- разборка за Пятый квартал: после дефолта чужие лезут во двор ---
+function turfAggressor(){const s=S(),R=s.resp||{};let best=1,bv=1e9;for(const r of [1,2,3,4,5,6]){const v=R[r]||0;if(v<bv){bv=v;best=r}}return best}
+function turfAllies(){const R=S().resp||{};return [1,2,3,4,5,6].filter(r=>r!==S().turf.by&&(R[r]||0)>=25)}
+const _advanceTurf=advance;
+advance=function(m){const r=_advanceTurf.apply(this,arguments);
+ if(g&&m>0&&!S().turf&&(window.__WALK_MS==null||window.__CREW_TEST)&&gameDate()>=new Date(Date.UTC(1998,7,24))){const by=turfAggressor();S().turf={st:'go',by,day:g.day};
+  announce('🚨 Гена Рыжий прибежал: «Залётные с «'+CREWS[by].name+'» полезли к нам во двор — ларёк Бориса трясут, малых гоняют! Надо решать, пока не обнаглели. Приходи на Главный двор».')}
+ return r};
+function turfHint(){const T=S().turf;if(!T)return '';const C=CREWS[T.by];if(T.st==='won')return '✅ Двор отстояли — «'+C.name+'» больше не лезут.';if(T.st==='paid')return '💸 Откупились от «'+C.name+'». Двор свой, но во дворе это запомнили.';if(T.st==='peace')return '🤝 Договорились с «'+C.name+'». Двор свой.';
+ return 'Залётные с «'+C.name+'» ('+regions[T.by]+') трясут Пятый квартал. Решай на Главном дворе: собрать своих, договориться или откупиться.'+(T.lost?' (прошлый раз не вышло — пока они здесь, у Бориса всё на 30% дороже)':'')}
+const _actionsForTurf=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForTurf(id);const T=g&&S().turf;if(!T||T.st!=='go'||id!=='court'||g.fight||!Array.isArray(a))return a;
+ const C=CREWS[T.by],al=turfAllies(),rel=(S().resp||{})[T.by]||0,pay=survPrice(80);
+ return [{name:'👊 Собрать своих и выйти на «'+C.name+'»',doit:'turf:fight',sub:'Драка · с тобой: Пятаки'+(al.length?' + '+al.map(r=>'«'+CREWS[r].name+'»').join(', '):'')+' · чем больше «своих» районов, тем легче',alt:true},
+  {name:'🤝 Договориться со старшим «'+C.name+'»',doit:'turf:talk',sub:rel>=10?'Тебя у них знают — должны послушать':'Тебя у них не знают — нужен «Авторитет» или уважение «'+C.name+'» от 10',alt:false},
+  {name:'💸 Откупиться',doit:'turf:pay',sub:pay+' ₽ · уйдут, но во дворе это не забудут',alt:false}].concat(a);
+};
+function turfAct(k){
+ const s=S(),T=s.turf;if(!T||T.st!=='go')return;const C=CREWS[T.by];
+ if(k==='pay'){const p=survPrice(80);if(g.money<p){announceAndRender('Не хватает: нужно '+p+' ₽.');return}g.money-=p;T.st='paid';s.resp=s.resp||{};s.resp[0]=Math.max(-20,(s.resp[0]||0)-5);g.relations.gena=(g.relations.gena||0)-1;advance(30);announce('💸 Отдал '+p+' ₽ — «'+C.name+'» ушли. Гена плюнул: «Откупаемся теперь, да?»');save();render();return}
+ if(k==='talk'){const rel=(s.resp||{})[T.by]||0,ch=rel>=10?.85:Math.max(.1,Math.min(.7,.2+(stat(3)-2)*.08));advance(40);
+  if(Math.random()<ch){T.st='peace';s.resp[T.by]=Math.min(50,rel+3);addXP(120,'разборка без драки');g.relations.gena=(g.relations.gena||0)+1;announce('🤝 Поговорил со старшим «'+C.name+'» ('+C.boss+') по-людски. «Ладно, ваш двор — ваш». Ушли без драки.');save();render();return}
+  announce('🗣️ '+C.boss+' даже слушать не стал: «Иди отсюда, пока цел». Остаётся драться или платить.');save();render();return}
+ if(k==='fight'){const al=turfAllies(),E=ENEMY['crew'+T.by];
+  ENEMY.turf=Object.assign({},E,{name:'Залётные «'+C.name+'»',n:Math.max(1,4-al.length),hp:Math.round(E.hp*1.4*Math.pow(.85,al.length)),xp:E.xp*3,resp:6,art:E.art||'gop3'});FOE_EMO.turf=C.icon;
+  startFight('turf',{text:'Во дворе стоят '+C.name.toLowerCase()+'. '+(al.length?'За спиной у тебя — свои пацаны и '+al.map(r=>'«'+CREWS[r].name+'»').join(', ')+'. ':'За спиной — только Пятаки. ')+C.boss+': «Ну давай, местный».'});if(g.fight)g.fight.turf=1;save();render()}
+}
+const _fightEndTurf=fightEnd;
+fightEnd=function(res){const t=g.fight&&g.fight.turf;_fightEndTurf(res);const T=S().turf;if(!t||!T)return;const C=CREWS[T.by];
+ if(res==='win'||res==='talk'){T.st='won';const s=S();s.resp[0]=Math.min(50,(s.resp[0]||0)+10);s.resp[T.by]=Math.max(-20,(s.resp[T.by]||0)-5);g.money+=survPrice(50);addXP(250,'отстоял двор');s.nerves=clampN(s.nerves+20);g.relations.gena=(g.relations.gena||0)+2;
+  announce('🏆 Двор отстояли! «'+C.name+'» ушли и больше не сунутся. Гена: «Ну ты дал! Теперь двор держим мы». Борис отсыпал '+survPrice(50)+' ₽.')}
+ else{T.lost=g.day;announce('Не вышло — '+C.name.toLowerCase()+' пока остаются. Отлежись и попробуй снова.')}
+ save();render()};
+// пока залётные во дворе — у Бориса дороже
+const _buySupplyTurf=buySupply;
+buySupply=function(id,spot){const T=S().turf,hold=T&&T.st==='go'&&T.lost&&(g.region||0)===0;const m0=g.money;_buySupplyTurf(id,spot);if(hold&&m0>g.money){const extra=Math.min(g.money,Math.round((m0-g.money)*.3));g.money-=extra;g.log[0]=String(g.log[0])+' Залётные «'+CREWS[T.by].name+'» берут своё: +'+extra+' ₽.';save();render()}};
+const _doActionTurf=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('turf:')){turfAct(sid.slice(5));return}return _doActionTurf(id)};
+const _viewPanelTurf=viewPanel;
+viewPanel=function(){let h=_viewPanelTurf();const T=g&&S().turf;if(T&&view==='quests'){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>🏚️ Разборка за Пятый квартал</strong><div class="bqline"><small>'+esc(turfHint())+'</small></div></div>'+h.slice(i+24)}return h};
+document.head.insertAdjacentHTML('beforeend','<style>.crewriv{margin-top:4px;color:#ffb38a;font-size:12.5px}</style>');
+
+/* ===== v6: портреты старших и компаний — из готовых картинок (art/npc, art/fighters) ===== */
+const CREW_FACE={1:FIGHTER_DIR+'bratki.webp',2:'../art/npc/g_park.webp',3:'../art/npc/g_job.webp',4:'../art/npc/f_repair.webp',5:'../art/npc/s_station.webp',6:'../art/npc/g_parts.webp'};
+const CREW_GANG={1:'gop3',2:'shpana',3:'brigade',4:'gop3',5:'gop3',6:'bratki'};
+for(const r in CREW_FACE)probeAsset(CREW_FACE[r]);
+for(const r in CREW_GANG)if(ENEMY['crew'+r])ENEMY['crew'+r].art=CREW_GANG[r];
+const _npcAvaCF=npcAva;
+npcAva=function(id){const m=/^crew_(\d)$/.exec(String(id));if(m&&CREW_FACE[m[1]]&&ASSET_OK[CREW_FACE[m[1]]])return '<span class="ava big foe npc"><img src="'+CREW_FACE[m[1]]+'" alt=""></span>';return _npcAvaCF(id)};
+const _turfActCF=turfAct;
+turfAct=function(k){_turfActCF(k);if(ENEMY.turf){const T=S().turf;if(T)ENEMY.turf.art=CREW_GANG[T.by]||'gop3'}};
+// окно места старшего — его портрет вместо куска карты
+const _placeHtmlCF=placeHtml;
+placeHtml=function(){let h=_placeHtmlCF();const m=/^crew_(\d)$/.exec(String(S().place||''));if(!m)return h;const f=CREW_FACE[m[1]];if(!f||!ASSET_OK[f])return h;
+ return h.replace('<div class="ptext">','<div class="ptext"><img class="crewface" src="'+f+'" alt="">')};
+document.head.insertAdjacentHTML('beforeend','<style>.crewface{float:left;width:84px;height:84px;object-fit:cover;border-radius:50%;border:3px solid #c9a46a;margin:0 10px 6px 12px;box-shadow:0 3px 10px #000a}</style>');
+
+/* ===== v6: серьёзное дело №5 «Чужая территория» — даёт Маслёнок («Гаражные») ===== */
+Object.assign(BQ,{alien:{giver:'crew_4',lvl:5,title:'Чужая территория',ico:'🚧',
+ pitch:'«Слушай, дело есть. «Заводские» у нас ящик с инструментом увели — весь ключ, головки, съёмники. Держат у себя, на «Складе материалов» за проходной. Для них это так, трофей, а нам без него хоть гаражи закрывай. Сходи на их территорию и верни. Как — сам решай: тихо ночью, по-хорошему через Бугра или по-плохому. Только помни: ты там чужой». (4 дня)'}});
+const _bqCanA=bqCan;
+bqCan=function(k){if(k!=='alien')return _bqCanA(k);const Q0=Q()[k];if(Q0)return {ok:false,why:Q0.done?'уже сделано':Q0.fail?'провалено':'в работе'};if(levelInfo().lvl<BQ.alien.lvl)return {ok:false,why:'нужен '+BQ.alien.lvl+'-й уровень'};if(((S().resp||{})[4]||0)<10&&NPC('crew_4').rel<40)return {ok:false,why:'«Гаражные» должны тебя знать (уважение 10+)'};return {ok:true}};
+const _bqStartA=bqStart;
+bqStart=function(k){_bqStartA(k);if(k==='alien'){const q=Q().alien;q.until=g.day+4;save()}};
+const _bqHintA=bqHint;
+bqHint=function(k){if(k!=='alien')return _bqHintA(k);const q=Q()[k];if(!q)return '';if(q.done)return '✅ выполнено';if(q.fail)return '❌ провалено';
+ if(q.st==='go')return 'Заводской район, «Склад материалов»: пробраться ночью, договориться с Бугром (старший «Заводских») или забрать силой. Срок: до конца '+q.until+'-го дня.';
+ if(q.st==='carry')return 'Ящик у тебя. Неси Маслёнку («Пацаны: «Гаражные»», Гаражный район)'+(q.hunt?' — «Заводские» ищут тебя, по дороге могут встретить.':'.')+' Срок: до конца '+q.until+'-го дня.';return ''};
+const _actionsForA=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForA(id);if(!g||g.fight||!Array.isArray(a))return a;const q=Q().alien;if(!q||q.done||q.fail)return a;const add=[];
+ if(q.st==='go'&&id==='f_warehouse'){
+  add.push(survNight()?{name:'🌙 Пробраться за ящиком',doit:'bq:alien:sneak',sub:'Ловкость · «Заводские» заметят — драка',alt:true}:{name:'🌙 Пробраться — только ночью',doit:'bq:alien:wait',sub:'Дождаться 21:00',alt:false});
+  add.push({name:'👊 Забрать силой',doit:'bq:alien:force',sub:'Драка с «Заводскими» · они запомнят',alt:false});
+ }
+ if(q.st==='go'&&id==='crew_3'){const v=(S().resp||{})[3]||0,p=survPrice(40);add.push({name:'🤝 Попросить ящик у Бугра',doit:'bq:alien:ask',sub:v>=10?'Тебя знают · '+p+' ₽ «за хранение»':'Ты им чужой — сначала заработай уважение «Заводских» (10+)',alt:v>=10})}
+ if(q.st==='carry'&&id==='crew_4')add.push({name:'📦 Отдать ящик Маслёнку',doit:'bq:alien:give',sub:'Дело закрыто',alt:true});
+ return add.concat(a);
+};
+const _bqActA=bqAct;
+bqAct=function(k,act){
+ if(k!=='alien')return _bqActA(k,act);const q=Q().alien;if(!q)return;const s=S();s.resp=s.resp||{};
+ const fight=(txt,hard)=>{const E=ENEMY.crew3;ENEMY.alienfoe=Object.assign({},E,{name:'«Заводские» на складе',n:hard?3:2,hp:Math.round(E.hp*(hard?1.2:1)),resp:0});FOE_EMO.alienfoe=E.icon;startFight('alienfoe',{text:txt});if(g.fight)g.fight.quest='alien';save();render()};
+ if(act==='wait'){const now=g.minute,then=21*60;advance(then<=now?1440-now+then:then-now);announceAndRender('Стемнело. Склад освещён одним фонарём.');return}
+ if(act==='sneak'){advance(40);const ch=Math.max(.15,Math.min(.85,.3+(stat(1)-2)*.08+(((s.resp[3]||0)>=10)?.2:0)+(has('flash_beetle')||has('flashlight')?.05:0)));
+  if(Math.random()<ch){q.st='carry';q.how='sneak';announce('🌙 Перелез через забор, нашёл ящик под брезентом и ушёл тихо. Никто не видел.');save();render();return}
+  q.hunt=true;fight('Под ногой хрустнуло стекло. «А ну стоять! Ты чей такой?» — двое «Заводских» уже бегут.',false);return}
+ if(act==='force'){q.hunt=true;fight('Заходишь на склад средь бела дня. «Заводские» поднимаются: «Ты охренел? Это наша территория».',true);return}
+ if(act==='ask'){if((s.resp[3]||0)<10){announceAndRender('Бугор: «Ты кто вообще? Чужому не отдам. Покажи себя — потом поговорим».');return}const p=survPrice(40);if(g.money<p){announceAndRender('Бугор: «'+p+' ₽ за хранение, и забирай». Денег не хватает.');return}
+  g.money-=p;advance(30);q.st='carry';q.how='ask';announce('🤝 Бугор: «Ладно, раз ты нормальный. Передай Маслёнку — пусть своих лучше смотрит». Ящик у тебя.');save();render();return}
+ if(act==='give'){const how=q.how;s.resp[4]=Math.min(50,(s.resp[4]||0)+8);rivalHit(4,8);if(how==='force'||how==='fight')s.resp[3]=Math.max(-20,(s.resp[3]||0)-8);g.money+=survPrice(70);addRel('crew_4',10);
+  bqDone('alien','Маслёнок обнял ящик как родного: «Ну ты красавчик! Теперь ты у «Гаражных» свой». «Гаражные» +8, '+survPrice(70)+' ₽.'+(how==='ask'?' С «Заводскими» разошлись мирно.':how==='sneak'?' «Заводские» так и не поняли, кто это был.':' «Заводские» тебя запомнили.'),220);return}
+};
+const _fightEndA=fightEnd;
+fightEnd=function(res){const tag=g.fight&&g.fight.quest;_fightEndA(res);if(tag!=='alien')return;const q=Q().alien;if(!q)return;
+ if(res==='win'){q.st='carry';q.how='force';announce('📦 Отбился и вынес ящик. «Заводские» этого не забудут.')}
+ else if(res==='talk'){q.st='carry';q.how='ask';announce('🗣️ Заговорил зубы — отдали ящик, лишь бы ушёл.')}
+ else announce('Не вышло. Ящик ещё на складе — можно попробовать снова.');save();render()};
+// по дороге с ящиком «Заводские» могут встретить
+const _arriveA=arrive;
+arrive=function(d,how){_arriveA(d,how);const q=Q().alien;if(!q||q.st!=='carry'||!q.hunt||typeof d!=='number'||d===3||d===4||g.fight)return;if(Math.random()<.35&&(window.__WALK_MS==null||window.__CREW_TEST)){const E=ENEMY.crew3;ENEMY.alienfoe=Object.assign({},E,{name:'«Заводские» в погоне',n:2,resp:0});startFight('alienfoe',{text:'«Вон он, с нашим ящиком!» — «Заводские» догнали.'});if(g.fight)g.fight.quest='alienchase';save();render()}};
+const _advanceA=advance;
+advance=function(m){const r=_advanceA.apply(this,arguments);if(g&&m>0){const q=Q().alien;if(q&&!q.done&&!q.fail&&q.until&&g.day>q.until){S().resp=S().resp||{};S().resp[4]=Math.max(-20,(S().resp[4]||0)-5);bqFail('alien','Не успел вернуть ящик. Маслёнок: «Я на тебя надеялся».')}}return r};
+
+/* ===== v6: серьёзное дело №3 «Сестра Гульфии» — даёт Гульфия (Рыночный буфет) ===== */
+Object.assign(BQ,{sister:{giver:'m_cafe',lvl:4,title:'Сестра Гульфии',ico:'👧',
+ pitch:'«Беда у меня… Сестрёнка, Ильсия, шестнадцать лет — третий день дома не ночует. Ушла с каким-то парнем, сказала «в город, к подружке». Милиция говорит — нагуляется, вернётся. А я сердцем чую — плохо дело. Найди её, а? Я тебе по гроб жизни обязана». (5 дней)'}});
+const _bqCanS=bqCan;
+bqCan=function(k){if(k!=='sister')return _bqCanS(k);const Q0=Q()[k];if(Q0)return {ok:false,why:Q0.done?'уже сделано':Q0.fail?'провалено':'в работе'};if(levelInfo().lvl<BQ.sister.lvl)return {ok:false,why:'нужен '+BQ.sister.lvl+'-й уровень'};if(NPC('m_cafe').rel<25)return {ok:false,why:'Гульфия должна тебе доверять (25+)'};return {ok:true}};
+const _bqStartS=bqStart;
+bqStart=function(k){_bqStartS(k);if(k==='sister'){Q().sister.until=g.day+5;save()}};
+const _bqHintS=bqHint;
+bqHint=function(k){if(k!=='sister')return _bqHintS(k);const q=Q()[k];if(!q)return '';if(q.done)return '✅ выполнено';if(q.fail)return '❌ провалено';
+ const u=' Срок: до конца '+q.until+'-го дня.';
+ if(q.st==='go')return 'Ильсию видели у вокзала. Расспроси кассиршу («Кассы», Вокзальный) или «Привокзальных» — они всех приезжих знают.'+u;
+ if(q.st==='camp')return 'Ильсия уехала пригородным на север, к пионерлагерю. Ищи в корпусах «Заброшенного пионерлагеря» (северная окраина). С фонарём проще.'+u;
+ if(q.st==='found')return 'Ильсия в лагере, с ней парень, который задолжал братве. Реши, как её забрать.'+u;
+ if(q.st==='escort')return 'Ильсия с тобой — веди её домой, к Гульфии, в «Рыночный буфет» (Старый рынок). Идёт медленно.'+u;return ''};
+const _actionsForS=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForS(id);if(!g||g.fight||!Array.isArray(a))return a;const q=Q().sister;if(!q||q.done||q.fail)return a;const add=[];
+ if(q.st==='go'&&id==='s_ticket')add.push({name:'🎫 Спросить кассиршу про девушку',doit:'bq:sister:ticket',sub:'Смекалка · или '+survPrice(10)+' ₽ «за беспокойство»',alt:true});
+ if(q.st==='go'&&id==='crew_2')add.push({name:'🚬 Спросить у «Привокзальных»',doit:'bq:sister:crew',sub:((S().resp||{})[2]||0)>=10?'Тебя знают — скажут':'Чужому не скажут (нужно уважение 10+)',alt:((S().resp||{})[2]||0)>=10});
+ if(q.st==='camp'&&id==='wild:camp'&&S().atWild==='camp')add.push({name:'🔦 Искать Ильсию по корпусам',doit:'bq:sister:search',sub:(searchLight().id?'С фонарём — быстрее':'Без света — долго')+' · 1–3 ч',alt:true});
+ if(q.st==='found'&&id==='wild:camp'&&S().atWild==='camp'){const p=survPrice(60);
+  add.push({name:'🗣️ Уговорить её уйти',doit:'bq:sister:talk',sub:'Авторитет · парень будет против',alt:true},{name:'💸 Отдать долг за парня',doit:'bq:sister:pay',sub:p+' ₽ · тогда отпустят обоих',alt:false},{name:'👊 Забрать силой',doit:'bq:sister:fight',sub:'Парень и его дружки',alt:false})}
+ if(q.st==='escort'&&id==='m_cafe')add.push({name:'👧 Вернуть Ильсию сестре',doit:'bq:sister:home',sub:'Дело закрыто',alt:true});
+ return add.concat(a);
+};
+const _bqActS=bqAct;
+bqAct=function(k,act){
+ if(k!=='sister')return _bqActS(k,act);const q=Q().sister;if(!q)return;const s=S();
+ if(act==='ticket'){const ch=Math.max(.25,Math.min(.9,.35+(stat(2)-2)*.08));advance(20);
+  if(Math.random()<ch){q.st='camp';announce('🎫 Кассирша вспомнила: «Худенькая, в джинсовке? С парнем на пригородный брали, до пионерлагеря, на север». Есть след!');save();render();return}
+  const p=survPrice(10);if(g.money>=p){g.money-=p;q.st='camp';announce('🎫 Кассирша: «Ну раз заплатил… С парнем уехала, пригородным на север, к старому лагерю».');save();render();return}
+  announceAndRender('Кассирша отмахнулась: «Тут сотни людей за день». Денег «за беспокойство» нет.');return}
+ if(act==='crew'){if(((s.resp||{})[2]||0)<10){announceAndRender('Дым: «Ты кто такой, чтоб тебе рассказывать?»');return}advance(20);q.st='camp';announce('🚬 Дым: «Видел. С Ринатом-«Шнурком» уехала, он братве должен, прячется. На север подались, в старый лагерь».');save();render();return}
+ if(act==='search'){const lt=searchLight();advance(lt.id?60:180);q.st='found';announce('🔦 В дальнем корпусе — свет свечки. Ильсия и худой парень на продавленных койках. Парень вскакивает: «Ты от кого?! От братвы?»');save();render();return}
+ if(act==='talk'){const ch=Math.max(.2,Math.min(.85,.35+(stat(3)-2)*.08));advance(30);
+  if(Math.random()<ch){q.st='escort';q.how='talk';announce('🗣️ Поговорил по-людски. Ильсия заплакала: «Он сказал, ненадолго…» Парень остался — а она идёт с тобой. Веди её к Гульфии.');save();render();return}
+  announce('Парень упёрся: «Никуда она не пойдёт!» — и позвал дружков.');startFight('shpana',{text:'Из соседнего корпуса выходят дружки «Шнурка».'});if(g.fight)g.fight.quest='sister';save();render();return}
+ if(act==='pay'){const p=survPrice(60);if(g.money<p){announceAndRender('Не хватает: нужно '+p+' ₽.');return}g.money-=p;advance(20);q.st='escort';q.how='pay';announce('💸 Отдал за «Шнурка» '+p+' ₽ — «передай братве, что я в расчёте». Ильсия идёт с тобой.');save();render();return}
+ if(act==='fight'){startFight('gop3',{text:'«Шнурок» свистнул — из темноты выходят его дружки.'});if(g.fight)g.fight.quest='sister';save();render();return}
+ if(act==='home'){addRel('m_cafe',20);g.money+=survPrice(50);s.sisterMeal=true;
+  bqDone('sister','Гульфия обняла сестру и долго не отпускала: «Спасибо тебе… Теперь у меня в буфете ты всегда сыт — пирожки бесплатно». +'+survPrice(50)+' ₽.'+(q.how==='fight'?' Про «Шнурка» лучше не вспоминать.':''),250);return}
+};
+const _fightEndS=fightEnd;
+fightEnd=function(res){const tag=g.fight&&g.fight.quest;_fightEndS(res);if(tag!=='sister')return;const q=Q().sister;if(!q)return;
+ if(res==='win'||res==='talk'){q.st='escort';q.how='fight';announce('👧 Дружки разбежались. Ильсия, дрожа, идёт с тобой. Веди её к Гульфии.')}
+ else announce('Не вышло — Ильсия осталась в лагере. Можно попробовать снова.');save();render()};
+// вести Ильсию — медленнее
+const _walkMultS=walkMult;walkMult=function(){return _walkMultS()*(qStage('sister')==='escort'?.7:1)};
+// награда: бесплатные пирожки в буфете Гульфии
+const _eatMealS=eatMeal;
+eatMeal=function(spot){if(spot==='m_cafe'&&S().sisterMeal){const m0=g.money;_eatMealS(spot);if(g.money<m0){g.money=m0;g.log[0]=String(g.log[0])+' Гульфия денег не взяла.';save();render()}return}return _eatMealS(spot)};
+const _advanceS3=advance;
+advance=function(m){const r=_advanceS3.apply(this,arguments);if(g&&m>0){const q=Q().sister;if(q&&!q.done&&!q.fail&&q.until&&g.day>q.until){addRel('m_cafe',-15);bqFail('sister','Не успел. Ильсия вернулась сама через неделю — худая, молчаливая. Гульфия с тобой больше не разговаривает.')}}return r};
+
 render();
 })();</script></body></html>
