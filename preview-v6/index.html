@@ -5364,5 +5364,57 @@ document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifes
 '#rotov{position:fixed;inset:0;z-index:400;background:#0d0b09f2;display:flex;align-items:center;justify-content:center;text-align:center;color:#f1e3c4;padding:24px}.rotbox b{font-size:20px;display:block;margin:10px 0 6px}.rotbox p{color:#cdbb98;margin:0 0 16px}.rotico{font-size:54px;animation:rotw 1.6s ease-in-out infinite}@keyframes rotw{50%{transform:rotate(-90deg)}}.rotbox button{padding:10px 16px;border-radius:9px;border:1px solid #8a6a40;background:#2b241b;color:#cdbb98;font-weight:700}'+
 '</style>');
 
+/* ===== v6: «кто держит район» — шаг 1: компании районов, их старшие, отношение, «Ты с какого района?» ===== */
+// Всё выдуманное. Отношение компании = уважение района (S().resp[r], от −20 до 50).
+const CREWS={
+ 0:{name:'Пятаки',boss:'Гена Рыжий',icon:'🧢',who:'свои, дворовые'},
+ 1:{name:'Рыночные',boss:'Шакир',icon:'💰',who:'доят ларьки, любят деньги',spot:[640,330],base:'gop3'},
+ 2:{name:'Привокзальные',boss:'Дым',icon:'🚬',who:'залётные, шустрые, тащат всё',spot:[560,330],base:'shpana'},
+ 3:{name:'Заводские',boss:'Бугор',icon:'🔩',who:'работяги, сильные, за честь',spot:[620,420],base:'gop3',hp:1.25},
+ 4:{name:'Гаражные',boss:'Маслёнок',icon:'🔧',who:'при машинах и запчастях',spot:[560,450],base:'gop3'},
+ 5:{name:'Береговые',boss:'Боцман',icon:'⚓',who:'лодки, рыба, контрабанда',spot:[170,400],base:'gop3'},
+ 6:{name:'Центровые',boss:'Студент',icon:'🕶️',who:'при «деловых», при деньгах',spot:[500,310],base:'gop3',hp:1.15}
+};
+for(const r of [1,2,3,4,5,6]){
+ const C=CREWS[r],B=ENEMY[C.base];
+ DISTRICTS[r].spots.push(SP('crew_'+r,'Пацаны: «'+C.name+'»',C.icon,C.spot[0],C.spot[1],'Здесь держатся '+C.name.toLowerCase()+' — '+C.who+'. Старший — '+C.boss+'. Чужих не любят.','',C.boss));
+ ENEMY['crew'+r]=Object.assign({},B,{name:'«'+C.name+'»',one:'Пацан из «'+C.name+'»',icon:C.icon,n:Math.max(2,B.n),hp:Math.round(B.hp*(C.hp||1)),resp:4,xp:Math.round(B.xp*1.2),art:C.base});
+ FOE_EMO['crew'+r]=C.icon;
+}
+function crewWord(v){return v<0?'😠 враги':v<10?'· чужой':v<25?'🙂 знают':'🤝 свой'}
+function crewInfo(r){const C=CREWS[r],v=(S().resp||{})[r]||0;return {C,v,word:r===0?'🤝 свой':crewWord(v)}}
+// картинка драки для компании — как у гопников
+const _avatarCr=avatar;avatar=function(kind,cls){const E=ENEMY[kind];return _avatarCr(E&&E.art?E.art:kind,cls)};
+const _foeArtCr=foeArt;foeArt=function(type){const E=ENEMY[type];return _foeArtCr(E&&E.art?E.art:type)};
+// «Ты с какого района?» — в чужом районе, если тебя тут не знают; не чаще раза в день на район
+function crewCheck(where){
+ if(!g||g.fight)return false;if(window.__WALK_MS!=null&&!window.__CREW_TEST)return false;const s=S(),r=g.region||0;if(!r||s.cityMode||s.venue||s.dlg||s.cop||s.scene)return false;
+ const v=(s.resp||{})[r]||0;if(v>=10)return false;s.crewDay=s.crewDay||{};if(s.crewDay[r]===g.day)return false;
+ const ch=(where==='arrive'?.35:.12)*(survNight()?1.6:1)*(v<0?1.5:1);if(Math.random()>=ch)return false;
+ s.crewDay[r]=g.day;const C=CREWS[r];
+ startFight('crew'+r,{text:'Трое из «'+C.name+'» перегораживают дорогу: «Ты с какого района? Чё здесь забыл?»'});
+ if(g.fight)g.fight.crew=r;save();render();return true;
+}
+const _arriveCr=arrive;
+arrive=function(d,how){_arriveCr(d,how);if(typeof d==='number'&&d)setTimeout(()=>{try{crewCheck('arrive')}catch(e){}},50)};
+const _doActionCr=doAction;
+doAction=function(id){const r=_doActionCr(id);if(g&&id==='pl:enter'&&!S().venue)try{crewCheck('place')}catch(e){}return r};
+// итог встречи
+const _fightEndCr=fightEnd;
+fightEnd=function(res){
+ const r=g.fight&&g.fight.crew;_fightEndCr(res);if(!r)return;const C=CREWS[r];
+ if(res==='talk'){addResp(3);announce('🗣️ «'+C.name+'»: «Ладно, нормальный пацан. Проходи». Тебя здесь запомнили.')}
+ else if(res==='pay'){announce('💸 Откупился от «'+C.name+'». Уважения не прибавилось.')}
+ else if(res==='run'||res==='flee'){addResp(-2);announce('🏃 Сбежал от «'+C.name+'». В районе будут смеяться.')}
+ else if(res==='win'){announce('👊 Отбился от «'+C.name+'». '+C.boss+' про тебя узнает.')}
+ save();render();
+};
+// «Люди»: кто держит район и как к тебе относятся
+const _peoplePanelCr=peoplePanel;
+peoplePanel=function(){let h=_peoplePanelCr();const s=S();if(s.pplAll||s.cityMode)return h;const r=g.region||0,I=crewInfo(r);
+ const block='<div class="line crewline"><strong>'+I.C.icon+' Район держат «'+esc(I.C.name)+'»</strong><div>Старший — '+esc(I.C.boss)+' · '+esc(I.C.who)+'</div><div class="crewrel">Отношение: <b>'+I.word+'</b>'+(r?' ('+I.v+')':'')+'</div>'+(r&&I.v<10?'<small>Пока тебя здесь не знают — могут докопаться. Свои: от 10 — знают, от 25 — свой.</small>':'')+'</div>';
+ return h.replace(/(<div class="line"><strong>📍 [^<]*<\/strong><\/div>)/,'$1'+block)};
+document.head.insertAdjacentHTML('beforeend','<style>.crewline{border:1px solid #8a6a40;border-radius:10px;background:#2a20168c}.crewrel{margin-top:4px}.crewline small{color:#cdbb98}</style>');
+
 render();
 })();</script></body></html>
