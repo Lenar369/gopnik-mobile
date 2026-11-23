@@ -13,7 +13,7 @@ a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={}});let h=a.html();const pin=/
 let met=null;for(let i=0;i<40&&!met;i++){a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={};g.surv.crewDay={};g.day=10+i});a.pin('m_rows');g=a.do('pl:enter');if(g.fight&&g.fight.crew)met=g.fight}
 console.log('1 метка старшего',pin,'| встреча',met&&met.type,met&&met.crew);
 // «свой» — не трогают
-let none=true;for(let i=0;i<30;i++){a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={1:30};g.surv.crewDay={};g.day=50+i});a.pin('m_rows');g=a.do('pl:enter');if(g.fight)none=false}
+let none=true;for(let i=0;i<30;i++){a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={1:30};g.surv.crewDay={};g.day=50+i});a.pin('m_rows');g=a.do('pl:enter');if(g.fight&&g.fight.crew)none=false}
 console.log('2 своему не докапываются:',none);
 // Люди
 a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={1:12};g.surv.pplAll=false});a.do('surv:view:people');h=a.html();const ppl=/Район держат «Рыночные»/.test(h)&&/знают/.test(h)&&/Шакир/.test(h);console.log('3 люди:',ppl);
