@@ -5565,5 +5565,52 @@ placeHtml=function(){let h=_placeHtmlCF();const m=/^crew_(\d)$/.exec(String(S().
  return h.replace('<div class="ptext">','<div class="ptext"><img class="crewface" src="'+f+'" alt="">')};
 document.head.insertAdjacentHTML('beforeend','<style>.crewface{float:left;width:84px;height:84px;object-fit:cover;border-radius:50%;border:3px solid #c9a46a;margin:0 10px 6px 12px;box-shadow:0 3px 10px #000a}</style>');
 
+/* ===== v6: серьёзное дело №5 «Чужая территория» — даёт Маслёнок («Гаражные») ===== */
+Object.assign(BQ,{alien:{giver:'crew_4',lvl:5,title:'Чужая территория',ico:'🚧',
+ pitch:'«Слушай, дело есть. «Заводские» у нас ящик с инструментом увели — весь ключ, головки, съёмники. Держат у себя, на «Складе материалов» за проходной. Для них это так, трофей, а нам без него хоть гаражи закрывай. Сходи на их территорию и верни. Как — сам решай: тихо ночью, по-хорошему через Бугра или по-плохому. Только помни: ты там чужой». (4 дня)'}});
+const _bqCanA=bqCan;
+bqCan=function(k){if(k!=='alien')return _bqCanA(k);const Q0=Q()[k];if(Q0)return {ok:false,why:Q0.done?'уже сделано':Q0.fail?'провалено':'в работе'};if(levelInfo().lvl<BQ.alien.lvl)return {ok:false,why:'нужен '+BQ.alien.lvl+'-й уровень'};if(((S().resp||{})[4]||0)<10&&NPC('crew_4').rel<40)return {ok:false,why:'«Гаражные» должны тебя знать (уважение 10+)'};return {ok:true}};
+const _bqStartA=bqStart;
+bqStart=function(k){_bqStartA(k);if(k==='alien'){const q=Q().alien;q.until=g.day+4;save()}};
+const _bqHintA=bqHint;
+bqHint=function(k){if(k!=='alien')return _bqHintA(k);const q=Q()[k];if(!q)return '';if(q.done)return '✅ выполнено';if(q.fail)return '❌ провалено';
+ if(q.st==='go')return 'Заводской район, «Склад материалов»: пробраться ночью, договориться с Бугром (старший «Заводских») или забрать силой. Срок: до конца '+q.until+'-го дня.';
+ if(q.st==='carry')return 'Ящик у тебя. Неси Маслёнку («Пацаны: «Гаражные»», Гаражный район)'+(q.hunt?' — «Заводские» ищут тебя, по дороге могут встретить.':'.')+' Срок: до конца '+q.until+'-го дня.';return ''};
+const _actionsForA=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForA(id);if(!g||g.fight||!Array.isArray(a))return a;const q=Q().alien;if(!q||q.done||q.fail)return a;const add=[];
+ if(q.st==='go'&&id==='f_warehouse'){
+  add.push(survNight()?{name:'🌙 Пробраться за ящиком',doit:'bq:alien:sneak',sub:'Ловкость · «Заводские» заметят — драка',alt:true}:{name:'🌙 Пробраться — только ночью',doit:'bq:alien:wait',sub:'Дождаться 21:00',alt:false});
+  add.push({name:'👊 Забрать силой',doit:'bq:alien:force',sub:'Драка с «Заводскими» · они запомнят',alt:false});
+ }
+ if(q.st==='go'&&id==='crew_3'){const v=(S().resp||{})[3]||0,p=survPrice(40);add.push({name:'🤝 Попросить ящик у Бугра',doit:'bq:alien:ask',sub:v>=10?'Тебя знают · '+p+' ₽ «за хранение»':'Ты им чужой — сначала заработай уважение «Заводских» (10+)',alt:v>=10})}
+ if(q.st==='carry'&&id==='crew_4')add.push({name:'📦 Отдать ящик Маслёнку',doit:'bq:alien:give',sub:'Дело закрыто',alt:true});
+ return add.concat(a);
+};
+const _bqActA=bqAct;
+bqAct=function(k,act){
+ if(k!=='alien')return _bqActA(k,act);const q=Q().alien;if(!q)return;const s=S();s.resp=s.resp||{};
+ const fight=(txt,hard)=>{const E=ENEMY.crew3;ENEMY.alienfoe=Object.assign({},E,{name:'«Заводские» на складе',n:hard?3:2,hp:Math.round(E.hp*(hard?1.2:1)),resp:0});FOE_EMO.alienfoe=E.icon;startFight('alienfoe',{text:txt});if(g.fight)g.fight.quest='alien';save();render()};
+ if(act==='wait'){const now=g.minute,then=21*60;advance(then<=now?1440-now+then:then-now);announceAndRender('Стемнело. Склад освещён одним фонарём.');return}
+ if(act==='sneak'){advance(40);const ch=Math.max(.15,Math.min(.85,.3+(stat(1)-2)*.08+(((s.resp[3]||0)>=10)?.2:0)+(has('flash_beetle')||has('flashlight')?.05:0)));
+  if(Math.random()<ch){q.st='carry';q.how='sneak';announce('🌙 Перелез через забор, нашёл ящик под брезентом и ушёл тихо. Никто не видел.');save();render();return}
+  q.hunt=true;fight('Под ногой хрустнуло стекло. «А ну стоять! Ты чей такой?» — двое «Заводских» уже бегут.',false);return}
+ if(act==='force'){q.hunt=true;fight('Заходишь на склад средь бела дня. «Заводские» поднимаются: «Ты охренел? Это наша территория».',true);return}
+ if(act==='ask'){if((s.resp[3]||0)<10){announceAndRender('Бугор: «Ты кто вообще? Чужому не отдам. Покажи себя — потом поговорим».');return}const p=survPrice(40);if(g.money<p){announceAndRender('Бугор: «'+p+' ₽ за хранение, и забирай». Денег не хватает.');return}
+  g.money-=p;advance(30);q.st='carry';q.how='ask';announce('🤝 Бугор: «Ладно, раз ты нормальный. Передай Маслёнку — пусть своих лучше смотрит». Ящик у тебя.');save();render();return}
+ if(act==='give'){const how=q.how;s.resp[4]=Math.min(50,(s.resp[4]||0)+8);rivalHit(4,8);if(how==='force'||how==='fight')s.resp[3]=Math.max(-20,(s.resp[3]||0)-8);g.money+=survPrice(70);addRel('crew_4',10);
+  bqDone('alien','Маслёнок обнял ящик как родного: «Ну ты красавчик! Теперь ты у «Гаражных» свой». «Гаражные» +8, '+survPrice(70)+' ₽.'+(how==='ask'?' С «Заводскими» разошлись мирно.':how==='sneak'?' «Заводские» так и не поняли, кто это был.':' «Заводские» тебя запомнили.'),220);return}
+};
+const _fightEndA=fightEnd;
+fightEnd=function(res){const tag=g.fight&&g.fight.quest;_fightEndA(res);if(tag!=='alien')return;const q=Q().alien;if(!q)return;
+ if(res==='win'){q.st='carry';q.how='force';announce('📦 Отбился и вынес ящик. «Заводские» этого не забудут.')}
+ else if(res==='talk'){q.st='carry';q.how='ask';announce('🗣️ Заговорил зубы — отдали ящик, лишь бы ушёл.')}
+ else announce('Не вышло. Ящик ещё на складе — можно попробовать снова.');save();render()};
+// по дороге с ящиком «Заводские» могут встретить
+const _arriveA=arrive;
+arrive=function(d,how){_arriveA(d,how);const q=Q().alien;if(!q||q.st!=='carry'||!q.hunt||typeof d!=='number'||d===3||d===4||g.fight)return;if(Math.random()<.35&&(window.__WALK_MS==null||window.__CREW_TEST)){const E=ENEMY.crew3;ENEMY.alienfoe=Object.assign({},E,{name:'«Заводские» в погоне',n:2,resp:0});startFight('alienfoe',{text:'«Вон он, с нашим ящиком!» — «Заводские» догнали.'});if(g.fight)g.fight.quest='alienchase';save();render()}};
+const _advanceA=advance;
+advance=function(m){const r=_advanceA.apply(this,arguments);if(g&&m>0){const q=Q().alien;if(q&&!q.done&&!q.fail&&q.until&&g.day>q.until){S().resp=S().resp||{};S().resp[4]=Math.max(-20,(S().resp[4]||0)-5);bqFail('alien','Не успел вернуть ящик. Маслёнок: «Я на тебя надеялся».')}}return r};
+
 render();
 })();</script></body></html>
