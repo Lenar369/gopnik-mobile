@@ -5612,5 +5612,59 @@ arrive=function(d,how){_arriveA(d,how);const q=Q().alien;if(!q||q.st!=='carry'||
 const _advanceA=advance;
 advance=function(m){const r=_advanceA.apply(this,arguments);if(g&&m>0){const q=Q().alien;if(q&&!q.done&&!q.fail&&q.until&&g.day>q.until){S().resp=S().resp||{};S().resp[4]=Math.max(-20,(S().resp[4]||0)-5);bqFail('alien','Не успел вернуть ящик. Маслёнок: «Я на тебя надеялся».')}}return r};
 
+/* ===== v6: серьёзное дело №3 «Сестра Гульфии» — даёт Гульфия (Рыночный буфет) ===== */
+Object.assign(BQ,{sister:{giver:'m_cafe',lvl:4,title:'Сестра Гульфии',ico:'👧',
+ pitch:'«Беда у меня… Сестрёнка, Ильсия, шестнадцать лет — третий день дома не ночует. Ушла с каким-то парнем, сказала «в город, к подружке». Милиция говорит — нагуляется, вернётся. А я сердцем чую — плохо дело. Найди её, а? Я тебе по гроб жизни обязана». (5 дней)'}});
+const _bqCanS=bqCan;
+bqCan=function(k){if(k!=='sister')return _bqCanS(k);const Q0=Q()[k];if(Q0)return {ok:false,why:Q0.done?'уже сделано':Q0.fail?'провалено':'в работе'};if(levelInfo().lvl<BQ.sister.lvl)return {ok:false,why:'нужен '+BQ.sister.lvl+'-й уровень'};if(NPC('m_cafe').rel<25)return {ok:false,why:'Гульфия должна тебе доверять (25+)'};return {ok:true}};
+const _bqStartS=bqStart;
+bqStart=function(k){_bqStartS(k);if(k==='sister'){Q().sister.until=g.day+5;save()}};
+const _bqHintS=bqHint;
+bqHint=function(k){if(k!=='sister')return _bqHintS(k);const q=Q()[k];if(!q)return '';if(q.done)return '✅ выполнено';if(q.fail)return '❌ провалено';
+ const u=' Срок: до конца '+q.until+'-го дня.';
+ if(q.st==='go')return 'Ильсию видели у вокзала. Расспроси кассиршу («Кассы», Вокзальный) или «Привокзальных» — они всех приезжих знают.'+u;
+ if(q.st==='camp')return 'Ильсия уехала пригородным на север, к пионерлагерю. Ищи в корпусах «Заброшенного пионерлагеря» (северная окраина). С фонарём проще.'+u;
+ if(q.st==='found')return 'Ильсия в лагере, с ней парень, который задолжал братве. Реши, как её забрать.'+u;
+ if(q.st==='escort')return 'Ильсия с тобой — веди её домой, к Гульфии, в «Рыночный буфет» (Старый рынок). Идёт медленно.'+u;return ''};
+const _actionsForS=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForS(id);if(!g||g.fight||!Array.isArray(a))return a;const q=Q().sister;if(!q||q.done||q.fail)return a;const add=[];
+ if(q.st==='go'&&id==='s_ticket')add.push({name:'🎫 Спросить кассиршу про девушку',doit:'bq:sister:ticket',sub:'Смекалка · или '+survPrice(10)+' ₽ «за беспокойство»',alt:true});
+ if(q.st==='go'&&id==='crew_2')add.push({name:'🚬 Спросить у «Привокзальных»',doit:'bq:sister:crew',sub:((S().resp||{})[2]||0)>=10?'Тебя знают — скажут':'Чужому не скажут (нужно уважение 10+)',alt:((S().resp||{})[2]||0)>=10});
+ if(q.st==='camp'&&id==='wild:camp'&&S().atWild==='camp')add.push({name:'🔦 Искать Ильсию по корпусам',doit:'bq:sister:search',sub:(searchLight().id?'С фонарём — быстрее':'Без света — долго')+' · 1–3 ч',alt:true});
+ if(q.st==='found'&&id==='wild:camp'&&S().atWild==='camp'){const p=survPrice(60);
+  add.push({name:'🗣️ Уговорить её уйти',doit:'bq:sister:talk',sub:'Авторитет · парень будет против',alt:true},{name:'💸 Отдать долг за парня',doit:'bq:sister:pay',sub:p+' ₽ · тогда отпустят обоих',alt:false},{name:'👊 Забрать силой',doit:'bq:sister:fight',sub:'Парень и его дружки',alt:false})}
+ if(q.st==='escort'&&id==='m_cafe')add.push({name:'👧 Вернуть Ильсию сестре',doit:'bq:sister:home',sub:'Дело закрыто',alt:true});
+ return add.concat(a);
+};
+const _bqActS=bqAct;
+bqAct=function(k,act){
+ if(k!=='sister')return _bqActS(k,act);const q=Q().sister;if(!q)return;const s=S();
+ if(act==='ticket'){const ch=Math.max(.25,Math.min(.9,.35+(stat(2)-2)*.08));advance(20);
+  if(Math.random()<ch){q.st='camp';announce('🎫 Кассирша вспомнила: «Худенькая, в джинсовке? С парнем на пригородный брали, до пионерлагеря, на север». Есть след!');save();render();return}
+  const p=survPrice(10);if(g.money>=p){g.money-=p;q.st='camp';announce('🎫 Кассирша: «Ну раз заплатил… С парнем уехала, пригородным на север, к старому лагерю».');save();render();return}
+  announceAndRender('Кассирша отмахнулась: «Тут сотни людей за день». Денег «за беспокойство» нет.');return}
+ if(act==='crew'){if(((s.resp||{})[2]||0)<10){announceAndRender('Дым: «Ты кто такой, чтоб тебе рассказывать?»');return}advance(20);q.st='camp';announce('🚬 Дым: «Видел. С Ринатом-«Шнурком» уехала, он братве должен, прячется. На север подались, в старый лагерь».');save();render();return}
+ if(act==='search'){const lt=searchLight();advance(lt.id?60:180);q.st='found';announce('🔦 В дальнем корпусе — свет свечки. Ильсия и худой парень на продавленных койках. Парень вскакивает: «Ты от кого?! От братвы?»');save();render();return}
+ if(act==='talk'){const ch=Math.max(.2,Math.min(.85,.35+(stat(3)-2)*.08));advance(30);
+  if(Math.random()<ch){q.st='escort';q.how='talk';announce('🗣️ Поговорил по-людски. Ильсия заплакала: «Он сказал, ненадолго…» Парень остался — а она идёт с тобой. Веди её к Гульфии.');save();render();return}
+  announce('Парень упёрся: «Никуда она не пойдёт!» — и позвал дружков.');startFight('shpana',{text:'Из соседнего корпуса выходят дружки «Шнурка».'});if(g.fight)g.fight.quest='sister';save();render();return}
+ if(act==='pay'){const p=survPrice(60);if(g.money<p){announceAndRender('Не хватает: нужно '+p+' ₽.');return}g.money-=p;advance(20);q.st='escort';q.how='pay';announce('💸 Отдал за «Шнурка» '+p+' ₽ — «передай братве, что я в расчёте». Ильсия идёт с тобой.');save();render();return}
+ if(act==='fight'){startFight('gop3',{text:'«Шнурок» свистнул — из темноты выходят его дружки.'});if(g.fight)g.fight.quest='sister';save();render();return}
+ if(act==='home'){addRel('m_cafe',20);g.money+=survPrice(50);s.sisterMeal=true;
+  bqDone('sister','Гульфия обняла сестру и долго не отпускала: «Спасибо тебе… Теперь у меня в буфете ты всегда сыт — пирожки бесплатно». +'+survPrice(50)+' ₽.'+(q.how==='fight'?' Про «Шнурка» лучше не вспоминать.':''),250);return}
+};
+const _fightEndS=fightEnd;
+fightEnd=function(res){const tag=g.fight&&g.fight.quest;_fightEndS(res);if(tag!=='sister')return;const q=Q().sister;if(!q)return;
+ if(res==='win'||res==='talk'){q.st='escort';q.how='fight';announce('👧 Дружки разбежались. Ильсия, дрожа, идёт с тобой. Веди её к Гульфии.')}
+ else announce('Не вышло — Ильсия осталась в лагере. Можно попробовать снова.');save();render()};
+// вести Ильсию — медленнее
+const _walkMultS=walkMult;walkMult=function(){return _walkMultS()*(qStage('sister')==='escort'?.7:1)};
+// награда: бесплатные пирожки в буфете Гульфии
+const _eatMealS=eatMeal;
+eatMeal=function(spot){if(spot==='m_cafe'&&S().sisterMeal){const m0=g.money;_eatMealS(spot);if(g.money<m0){g.money=m0;g.log[0]=String(g.log[0])+' Гульфия денег не взяла.';save();render()}return}return _eatMealS(spot)};
+const _advanceS3=advance;
+advance=function(m){const r=_advanceS3.apply(this,arguments);if(g&&m>0){const q=Q().sister;if(q&&!q.done&&!q.fail&&q.until&&g.day>q.until){addRel('m_cafe',-15);bqFail('sister','Не успел. Ильсия вернулась сама через неделю — худая, молчаливая. Гульфия с тобой больше не разговаривает.')}}return r};
+
 render();
 })();</script></body></html>
