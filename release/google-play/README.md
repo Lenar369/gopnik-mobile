@@ -1,6 +1,6 @@
 # Google Play release preparation
 
-Source baseline: ea2285d. Android application ID: ru.calcul369.gopnik. Version 1.0.1 (2), minSdk 26, targetSdk 36.
+Source baseline: ea2285d. Android application ID: ru.calcul369.gopnik. Version 1.0.2 (3), minSdk 26, targetSdk 36.
 
 The Android application packages preview-v6 and approved art/audio locally. It requests no Android permissions and includes no advertising, billing or analytics SDK. Web storage saves progress on the device. Android backup is disabled. Uninstalling or clearing application data deletes local saves.
 
@@ -24,3 +24,6 @@ Release preparation completed on 2026-11-22:
 - Owner explicitly authorized IARC terms, public policy hosting and production publication. Actual review status is recorded in SESSION_NOTES.md.
 
 Future updates: preserve applicationId and upload key, increment versionCode, run tests, build signed AAB, validate, upload to the same Play app. Never commit signing credentials or build artifacts. Keep a separate secure backup of the upload key and passwords.
+
+## Update 2026-11-23
+Merged origin/main efd0dcb into the release branch, preserving the Android wrapper and signing configuration. New content: district crews, reputation, elders and errands, turf conflict, reused character portraits, Alien Territory and Gulfia's Sister quests. No new permissions, SDKs, network calls, ads, purchases or storage key changes. Existing declarations remain applicable to this fictional crime/violence content. All 35 jsdom scenarios passed, signed AAB build, bundletool validation and signature verification passed. Full physical-device QA is still not claimed.
