@@ -5495,5 +5495,60 @@ startFight=function(type,opt){_startFightCJ(type,opt);const F=g&&g.fight,r=g&&(g
  save();render()};
 document.head.insertAdjacentHTML('beforeend','<style>.crewbon{margin-top:4px;color:#9fe08f;font-size:12.5px}</style>');
 
+/* ===== v6: «кто держит район» — шаг 3: вражда компаний и разборка за Пятый квартал ===== */
+const RIVAL={1:2,2:1,3:4,4:3,5:6,6:5};
+function rivalHit(r,n){const rv=RIVAL[r];if(!rv||n<=0)return;const s=S();s.resp=s.resp||{};const loss=Math.ceil(n/2),before=s.resp[rv]||0;s.resp[rv]=Math.max(-20,before-loss);
+ if(before>=0&&s.resp[rv]<0)announce('😠 «'+CREWS[rv].name+'» косо смотрят: ты помогаешь их врагам — «'+CREWS[r].name+'».')}
+const _addRespRv=addResp;
+addResp=function(n){const r=g.region||0;_addRespRv(n);if(n>0&&!S().cityMode)rivalHit(r,n)};
+const _cjobDoneRv=cjobDone;
+cjobDone=function(){const J=CJ();const r=J&&J.r,b=r?((S().resp||{})[r]||0):0;_cjobDoneRv();if(r){const d=((S().resp||{})[r]||0)-b;rivalHit(r,d);save();render()}};
+const _peoplePanelRv=peoplePanel;
+peoplePanel=function(){let h=_peoplePanelRv();const r=g.region||0;if(S().pplAll||S().cityMode||!RIVAL[r])return h;const rv=RIVAL[r];
+ return h.replace('<div class="crewbon">','<div class="crewriv">⚔️ Враждуют с «'+esc(CREWS[rv].name)+'» ('+esc(regions[rv])+'): поможешь одним — другие станут холоднее.</div><div class="crewbon">')};
+
+// --- разборка за Пятый квартал: после дефолта чужие лезут во двор ---
+function turfAggressor(){const s=S(),R=s.resp||{};let best=1,bv=1e9;for(const r of [1,2,3,4,5,6]){const v=R[r]||0;if(v<bv){bv=v;best=r}}return best}
+function turfAllies(){const R=S().resp||{};return [1,2,3,4,5,6].filter(r=>r!==S().turf.by&&(R[r]||0)>=25)}
+const _advanceTurf=advance;
+advance=function(m){const r=_advanceTurf.apply(this,arguments);
+ if(g&&m>0&&!S().turf&&(window.__WALK_MS==null||window.__CREW_TEST)&&gameDate()>=new Date(Date.UTC(1998,7,24))){const by=turfAggressor();S().turf={st:'go',by,day:g.day};
+  announce('🚨 Гена Рыжий прибежал: «Залётные с «'+CREWS[by].name+'» полезли к нам во двор — ларёк Бориса трясут, малых гоняют! Надо решать, пока не обнаглели. Приходи на Главный двор».')}
+ return r};
+function turfHint(){const T=S().turf;if(!T)return '';const C=CREWS[T.by];if(T.st==='won')return '✅ Двор отстояли — «'+C.name+'» больше не лезут.';if(T.st==='paid')return '💸 Откупились от «'+C.name+'». Двор свой, но во дворе это запомнили.';if(T.st==='peace')return '🤝 Договорились с «'+C.name+'». Двор свой.';
+ return 'Залётные с «'+C.name+'» ('+regions[T.by]+') трясут Пятый квартал. Решай на Главном дворе: собрать своих, договориться или откупиться.'+(T.lost?' (прошлый раз не вышло — пока они здесь, у Бориса всё на 30% дороже)':'')}
+const _actionsForTurf=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForTurf(id);const T=g&&S().turf;if(!T||T.st!=='go'||id!=='court'||g.fight||!Array.isArray(a))return a;
+ const C=CREWS[T.by],al=turfAllies(),rel=(S().resp||{})[T.by]||0,pay=survPrice(80);
+ return [{name:'👊 Собрать своих и выйти на «'+C.name+'»',doit:'turf:fight',sub:'Драка · с тобой: Пятаки'+(al.length?' + '+al.map(r=>'«'+CREWS[r].name+'»').join(', '):'')+' · чем больше «своих» районов, тем легче',alt:true},
+  {name:'🤝 Договориться со старшим «'+C.name+'»',doit:'turf:talk',sub:rel>=10?'Тебя у них знают — должны послушать':'Тебя у них не знают — нужен «Авторитет» или уважение «'+C.name+'» от 10',alt:false},
+  {name:'💸 Откупиться',doit:'turf:pay',sub:pay+' ₽ · уйдут, но во дворе это не забудут',alt:false}].concat(a);
+};
+function turfAct(k){
+ const s=S(),T=s.turf;if(!T||T.st!=='go')return;const C=CREWS[T.by];
+ if(k==='pay'){const p=survPrice(80);if(g.money<p){announceAndRender('Не хватает: нужно '+p+' ₽.');return}g.money-=p;T.st='paid';s.resp=s.resp||{};s.resp[0]=Math.max(-20,(s.resp[0]||0)-5);g.relations.gena=(g.relations.gena||0)-1;advance(30);announce('💸 Отдал '+p+' ₽ — «'+C.name+'» ушли. Гена плюнул: «Откупаемся теперь, да?»');save();render();return}
+ if(k==='talk'){const rel=(s.resp||{})[T.by]||0,ch=rel>=10?.85:Math.max(.1,Math.min(.7,.2+(stat(3)-2)*.08));advance(40);
+  if(Math.random()<ch){T.st='peace';s.resp[T.by]=Math.min(50,rel+3);addXP(120,'разборка без драки');g.relations.gena=(g.relations.gena||0)+1;announce('🤝 Поговорил со старшим «'+C.name+'» ('+C.boss+') по-людски. «Ладно, ваш двор — ваш». Ушли без драки.');save();render();return}
+  announce('🗣️ '+C.boss+' даже слушать не стал: «Иди отсюда, пока цел». Остаётся драться или платить.');save();render();return}
+ if(k==='fight'){const al=turfAllies(),E=ENEMY['crew'+T.by];
+  ENEMY.turf=Object.assign({},E,{name:'Залётные «'+C.name+'»',n:Math.max(1,4-al.length),hp:Math.round(E.hp*1.4*Math.pow(.85,al.length)),xp:E.xp*3,resp:6,art:E.art||'gop3'});FOE_EMO.turf=C.icon;
+  startFight('turf',{text:'Во дворе стоят '+C.name.toLowerCase()+'. '+(al.length?'За спиной у тебя — свои пацаны и '+al.map(r=>'«'+CREWS[r].name+'»').join(', ')+'. ':'За спиной — только Пятаки. ')+C.boss+': «Ну давай, местный».'});if(g.fight)g.fight.turf=1;save();render()}
+}
+const _fightEndTurf=fightEnd;
+fightEnd=function(res){const t=g.fight&&g.fight.turf;_fightEndTurf(res);const T=S().turf;if(!t||!T)return;const C=CREWS[T.by];
+ if(res==='win'||res==='talk'){T.st='won';const s=S();s.resp[0]=Math.min(50,(s.resp[0]||0)+10);s.resp[T.by]=Math.max(-20,(s.resp[T.by]||0)-5);g.money+=survPrice(50);addXP(250,'отстоял двор');s.nerves=clampN(s.nerves+20);g.relations.gena=(g.relations.gena||0)+2;
+  announce('🏆 Двор отстояли! «'+C.name+'» ушли и больше не сунутся. Гена: «Ну ты дал! Теперь двор держим мы». Борис отсыпал '+survPrice(50)+' ₽.')}
+ else{T.lost=g.day;announce('Не вышло — '+C.name.toLowerCase()+' пока остаются. Отлежись и попробуй снова.')}
+ save();render()};
+// пока залётные во дворе — у Бориса дороже
+const _buySupplyTurf=buySupply;
+buySupply=function(id,spot){const T=S().turf,hold=T&&T.st==='go'&&T.lost&&(g.region||0)===0;const m0=g.money;_buySupplyTurf(id,spot);if(hold&&m0>g.money){const extra=Math.min(g.money,Math.round((m0-g.money)*.3));g.money-=extra;g.log[0]=String(g.log[0])+' Залётные «'+CREWS[T.by].name+'» берут своё: +'+extra+' ₽.';save();render()}};
+const _doActionTurf=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('turf:')){turfAct(sid.slice(5));return}return _doActionTurf(id)};
+const _viewPanelTurf=viewPanel;
+viewPanel=function(){let h=_viewPanelTurf();const T=g&&S().turf;if(T&&view==='quests'){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>🏚️ Разборка за Пятый квартал</strong><div class="bqline"><small>'+esc(turfHint())+'</small></div></div>'+h.slice(i+24)}return h};
+document.head.insertAdjacentHTML('beforeend','<style>.crewriv{margin-top:4px;color:#ffb38a;font-size:12.5px}</style>');
+
 render();
 })();</script></body></html>

@@ -26,5 +26,13 @@ const stepBack=J&&J.step==='back';a=prep(g=>{g.region=1;g.loc='crew_1'});const r
 const okJob=giveBtn&&stepBack&&g.surv.resp[1]>r0&&!g.surv.cjob;
 // скидка своим 20%
 a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={1:30};g.money=100;g.day=5;g.minute=12*60});g=a.do('surv:buy:food_bread:m_rows');console.log('6 скидка:',100-g.money,'|',g.log[0]);const okDisc=/Скидка своим/.test(g.log[0]);
-const ok=okJob&&okDisc&&pin&&met&&met.type==='crew1'&&none&&ppl;
+// шаг 3: вражда — помог «Рыночным» → «Привокзальные» холоднее
+a=prep(g=>{g.region=1;g.loc='crew_1';g.surv.resp={1:12,2:2};g.surv.cjob={r:1,k:'parcel',at:'crew_2',until:99,step:'back'}});g=a.do('cj:done');const okRiv=g.surv.resp[2]<2;console.log('7 вражда: Привокзальные',g.surv.resp[2],JSON.stringify(g.surv.resp),g.log[0]);
+// разборка за двор: после 24 августа
+a=prep(g=>{g.region=0;g.loc='court';g.day=30;g.minute=12*60;g.surv.turf=null;g.surv.resp={1:-5,3:30,4:30}});a.do('surv:hometea');g=st();const T=g.surv.turf;console.log('8 разборка:',T&&T.st,T&&T.by,'|',g.log.find(x=>/залётные/i.test(x)));
+a=prep(g=>{g.region=0;g.loc='court'});a.pin('court');a.do('pl:enter');let hh=a.html();const btns=/turf:fight/.test(hh)&&/turf:talk/.test(hh)&&/turf:pay/.test(hh);
+g=a.do('turf:fight');const F=g.fight;console.log('9 драка:',btns,F&&F.type,F&&F.m.length);
+const okTurf=T&&T.st==='go'&&T.by===1&&btns&&F&&F.type==='turf'&&F.m.length===2;
+a=prep(g=>{g.region=0;g.loc='court';g.money=300;g.surv.turf={st:'go',by:1,day:30}});g=a.do('turf:pay');console.log('10 откуп:',g.surv.turf.st,g.money);const okPay=g.surv.turf.st==='paid';
+const ok=okRiv&&okTurf&&okPay&&okJob&&okDisc&&pin&&met&&met.type==='crew1'&&none&&ppl;
 console.log(ok?'OK':'FAIL');if(!ok)errs.push('crews failed');console.log('errors',errs);process.exit(0);
