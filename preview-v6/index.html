@@ -5550,5 +5550,20 @@ const _viewPanelTurf=viewPanel;
 viewPanel=function(){let h=_viewPanelTurf();const T=g&&S().turf;if(T&&view==='quests'){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>🏚️ Разборка за Пятый квартал</strong><div class="bqline"><small>'+esc(turfHint())+'</small></div></div>'+h.slice(i+24)}return h};
 document.head.insertAdjacentHTML('beforeend','<style>.crewriv{margin-top:4px;color:#ffb38a;font-size:12.5px}</style>');
 
+/* ===== v6: портреты старших и компаний — из готовых картинок (art/npc, art/fighters) ===== */
+const CREW_FACE={1:FIGHTER_DIR+'bratki.webp',2:'../art/npc/g_park.webp',3:'../art/npc/g_job.webp',4:'../art/npc/f_repair.webp',5:'../art/npc/s_station.webp',6:'../art/npc/g_parts.webp'};
+const CREW_GANG={1:'gop3',2:'shpana',3:'brigade',4:'gop3',5:'gop3',6:'bratki'};
+for(const r in CREW_FACE)probeAsset(CREW_FACE[r]);
+for(const r in CREW_GANG)if(ENEMY['crew'+r])ENEMY['crew'+r].art=CREW_GANG[r];
+const _npcAvaCF=npcAva;
+npcAva=function(id){const m=/^crew_(\d)$/.exec(String(id));if(m&&CREW_FACE[m[1]]&&ASSET_OK[CREW_FACE[m[1]]])return '<span class="ava big foe npc"><img src="'+CREW_FACE[m[1]]+'" alt=""></span>';return _npcAvaCF(id)};
+const _turfActCF=turfAct;
+turfAct=function(k){_turfActCF(k);if(ENEMY.turf){const T=S().turf;if(T)ENEMY.turf.art=CREW_GANG[T.by]||'gop3'}};
+// окно места старшего — его портрет вместо куска карты
+const _placeHtmlCF=placeHtml;
+placeHtml=function(){let h=_placeHtmlCF();const m=/^crew_(\d)$/.exec(String(S().place||''));if(!m)return h;const f=CREW_FACE[m[1]];if(!f||!ASSET_OK[f])return h;
+ return h.replace('<div class="ptext">','<div class="ptext"><img class="crewface" src="'+f+'" alt="">')};
+document.head.insertAdjacentHTML('beforeend','<style>.crewface{float:left;width:84px;height:84px;object-fit:cover;border-radius:50%;border:3px solid #c9a46a;margin:0 10px 6px 12px;box-shadow:0 3px 10px #000a}</style>');
+
 render();
 })();</script></body></html>
