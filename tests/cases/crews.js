@@ -17,5 +17,14 @@ let none=true;for(let i=0;i<30;i++){a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.
 console.log('2 своему не докапываются:',none);
 // Люди
 a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={1:12};g.surv.pplAll=false});a.do('surv:view:people');h=a.html();const ppl=/Район держат «Рыночные»/.test(h)&&/знают/.test(h)&&/Шакир/.test(h);console.log('3 люди:',ppl);
-const ok=pin&&met&&met.type==='crew1'&&none&&ppl;
+// шаг 2: дело у старшего — «залётные» / любое по дню; выполнить и доложить
+a=prep(g=>{g.region=1;g.loc='crew_1';g.surv.resp={1:12};g.surv.cjob=null;g.surv.cjobDay={};g.day=60;g.minute=22*60;g.money=100});a.pin('crew_1');a.do('pl:enter');h=a.html();const giveBtn=/cj:give:1/.test(h);
+g=a.do('cj:give:1');let J=g.surv.cjob;console.log('4 дело:',giveBtn,J&&J.k,J&&J.at);
+// выполнить: перейти в нужное место
+if(J){const reg=J.k==='parcel'?+J.at.slice(5):1;a=prep(g=>{g.region=reg;g.loc=J.at;g.minute=23*60});g=a.do('cj:act');if(g.fight){a=prep(g=>{g.surv.cjob.step='back'})}J=st().surv.cjob}
+const stepBack=J&&J.step==='back';a=prep(g=>{g.region=1;g.loc='crew_1'});const r0=st().surv.resp[1];g=a.do('cj:done');console.log('5 доложил:',stepBack,'| отношение',r0,'→',g.surv.resp[1],'|',g.log[0]);
+const okJob=giveBtn&&stepBack&&g.surv.resp[1]>r0&&!g.surv.cjob;
+// скидка своим 20%
+a=prep(g=>{g.region=1;g.loc='m_rows';g.surv.resp={1:30};g.money=100;g.day=5;g.minute=12*60});g=a.do('surv:buy:food_bread:m_rows');console.log('6 скидка:',100-g.money,'|',g.log[0]);const okDisc=/Скидка своим/.test(g.log[0]);
+const ok=okJob&&okDisc&&pin&&met&&met.type==='crew1'&&none&&ppl;
 console.log(ok?'OK':'FAIL');if(!ok)errs.push('crews failed');console.log('errors',errs);process.exit(0);

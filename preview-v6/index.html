@@ -5416,5 +5416,84 @@ peoplePanel=function(){let h=_peoplePanelCr();const s=S();if(s.pplAll||s.cityMod
  return h.replace(/(<div class="line"><strong>📍 [^<]*<\/strong><\/div>)/,'$1'+block)};
 document.head.insertAdjacentHTML('beforeend','<style>.crewline{border:1px solid #8a6a40;border-radius:10px;background:#2a20168c}.crewrel{margin-top:4px}.crewline small{color:#cdbb98}</style>');
 
+/* ===== v6: «кто держит район» — шаг 2: поручения старших и бонусы «своего» ===== */
+function crewRel(r){if(!r)return 30;return (S().resp||{})[r]||0}
+function crewOwn(r){return crewRel(r)>=25}
+function crewKnown(r){return crewRel(r)>=10}
+const CJOBS={
+ shuher:{t:'Постоять на шухере',d:at=>'ночью (21:00–5:00) постоять на шухере у «'+citySpotName(at)+'», 2 часа',resp:3,pay:15},
+ zalet:{t:'Разобраться с залётными',d:at=>'у «'+citySpotName(at)+'» крутятся чужие — разберись',resp:5,pay:0,foe:'gop3'},
+ debt:{t:'Выбить долг',d:at=>'у «'+citySpotName(at)+'» сидит должник — забери 30 ₽, половина твоя',resp:4,pay:15,foe:'drunk'},
+ parcel:{t:'Отнести свёрток',d:at=>'отнести свёрток старшему в «'+citySpotName(at)+'» ('+regions[regionForSpot(at)]+'), не вскрывать',resp:3,pay:20}
+};
+function CJ(){return S().cjob||null}
+function cjobText(){const J=CJ();if(!J)return '';const C=CREWS[J.r],D=CJOBS[J.k];return C.icon+' '+C.boss+' («'+C.name+'»): '+(J.step==='back'?'дело сделано — вернись к '+C.boss+'.':D.d(J.at))+' · до конца '+J.until+'-го дня'}
+function cjobGive(r){
+ const s=S();if(CJ()){announceAndRender('Сначала закончи прошлое дело.');return}
+ if(crewRel(r)<0){announceAndRender(CREWS[r].boss+': «С тобой у нас разговор другой». Сначала помирись.');return}
+ s.cjobDay=s.cjobDay||{};if(s.cjobDay[r]===g.day){announceAndRender(CREWS[r].boss+': «На сегодня всё. Заходи завтра».');return}
+ const keys=Object.keys(CJOBS),k=keys[(g.day+r)%keys.length];
+ let at;if(k==='parcel'){const others=[1,2,3,4,5,6].filter(x=>x!==r);at='crew_'+others[(g.day*7+r)%others.length]}
+ else{const sp=DISTRICTS[r].spots.filter(p=>!/^crew_/.test(p.id)&&p.role!=='travel');at=sp[(g.day*3+r)%sp.length].id}
+ s.cjob={r,k,at,until:g.day+2,step:'go'};s.cjobDay[r]=g.day;advance(10);
+ announce('📋 '+CREWS[r].boss+' даёт дело: '+CJOBS[k].d(at)+'.');save();render();
+}
+function cjobDone(){
+ const s=S(),J=CJ();if(!J||J.step!=='back')return;const D=CJOBS[J.k],C=CREWS[J.r],p=D.pay?survPrice(D.pay):0;
+ s.resp=s.resp||{};s.resp[J.r]=Math.max(-20,Math.min(50,(s.resp[J.r]||0)+D.resp));g.money+=p;addXP(15,'дело для пацанов');s.cjob=null;advance(10);
+ announce('🤝 '+C.boss+': «Красавчик». «'+C.name+'» +'+D.resp+(p?', +'+p+' ₽':'')+'.');save();render();
+}
+const _actionsForCJ=actionsFor;
+actionsFor=function(id){
+ let a=_actionsForCJ(id);if(!g||!Array.isArray(a)||g.fight)return a;const J=CJ(),sid=String(id),add=[];
+ const m=/^crew_(\d)$/.exec(sid);
+ if(m){const r=+m[1],C=CREWS[r];
+  if(J&&J.r===r&&J.step==='back')add.push({name:'🤝 Доложить '+C.boss,doit:'cj:done',sub:'Дело сделано',alt:true});
+  else if(J&&J.r===r)add.push({name:'📋 Дело в работе',doit:'cj:info',sub:CJOBS[J.k].t,alt:false});
+  else if(!J)add.push({name:'📋 Спросить дело у '+C.boss,doit:'cj:give:'+r,sub:crewRel(r)<0?'с врагами не разговаривают':'отношение «'+C.name+'» растёт',alt:crewRel(r)>=0});
+ }
+ if(J&&J.step==='go'&&J.at===sid){
+  if(J.k==='shuher')add.push({name:'👀 Постоять на шухере',doit:'cj:act',sub:'2 часа · только ночью',alt:true});
+  if(J.k==='zalet')add.push({name:'👊 Разобраться с залётными',doit:'cj:act',sub:'Драка',alt:true});
+  if(J.k==='debt')add.push({name:'💵 Выбить долг',doit:'cj:act',sub:'Должник не обрадуется',alt:true});
+  if(J.k==='parcel')add.push({name:'📦 Отдать свёрток',doit:'cj:act',sub:'От «'+CREWS[J.r].name+'»',alt:true});
+ }
+ return add.concat(a);
+};
+function cjobAct(){
+ const s=S(),J=CJ();if(!J||J.step!=='go')return;
+ if(J.k==='shuher'){if(!survNight()){announceAndRender('На шухер — только ночью, с 21:00.');return}advance(120);if(Math.random()<.2){addHeat(5,'стоял на шухере');announce('🚨 Мимо проехал наряд — запомнили тебя. Но пацаны успели.')}J.step='back';announce('👀 Отстоял на шухере два часа. Дело сделано — вернись к '+CREWS[J.r].boss+'.');save();render();return}
+ if(J.k==='parcel'){J.step='back';advance(10);announce('📦 Отдал свёрток. «Передай, что всё ровно». Вернись к '+CREWS[J.r].boss+'.');save();render();return}
+ startFight(CJOBS[J.k].foe,{text:J.k==='debt'?'Должник поднимается: «Какой ещё долг? Вали отсюда!»':'Залётные оборачиваются: «Тебе чего, местный?»'});if(g.fight)g.fight.cjob=1;save();render();
+}
+const _fightEndCJ=fightEnd;
+fightEnd=function(res){const t=g.fight&&g.fight.cjob;_fightEndCJ(res);const J=CJ();if(!t||!J)return;
+ if(res==='win'||res==='talk'){J.step='back';announce('✔️ '+(J.k==='debt'?'Долг выбит.':'Залётные ушли.')+' Вернись к '+CREWS[J.r].boss+'.')}
+ else announce('Не вышло. Дело ещё не закрыто — можно попробовать снова.');save();render()};
+const _advanceCJ=advance;
+advance=function(m){const r=_advanceCJ.apply(this,arguments);if(g&&m>0){const J=CJ();if(J&&g.day>J.until){const C=CREWS[J.r];S().resp[J.r]=Math.max(-20,((S().resp||{})[J.r]||0)-2);S().cjob=null;announce('⌛ Не сделал дело для «'+C.name+'». '+C.boss+' недоволен (−2).')}}return r};
+const _doActionCJ=doAction;
+doAction=function(id){const sid=String(id);if(g&&sid.startsWith('cj:')){const p=sid.split(':');if(p[1]==='give')cjobGive(+p[2]);else if(p[1]==='act')cjobAct();else if(p[1]==='done')cjobDone();else announceAndRender(cjobText());return}return _doActionCJ(id)};
+// «Задания» и «Люди»
+const _viewPanelCJ=viewPanel;
+viewPanel=function(){let h=_viewPanelCJ();if(g&&view==='quests'&&CJ()){const i=h.indexOf('<div class="panel-body">');if(i>=0)h=h.slice(0,i+24)+'<div class="line"><strong>👊 Дело для пацанов</strong><div class="bqline"><small>'+esc(cjobText())+'</small></div></div>'+h.slice(i+24)}return h};
+const _peoplePanelCJ=peoplePanel;
+peoplePanel=function(){let h=_peoplePanelCJ();const r=g.region||0;if(S().pplAll||S().cityMode)return h;
+ const bon=crewOwn(r)?'Свой: скидка 20% в ларьках района, патрули реже, пацаны могут подтянуться в драке.':crewKnown(r)?'Знают: скидка 10% в ларьках района.':'Бонусов нет — сначала заслужи уважение (дела старшего, честные разборки).';
+ return h.replace('<div class="crewrel">','<div class="crewbon">'+bon+'</div><div class="crewrel">')};
+
+// бонусы «своего»: скидка в ларьках района, меньше патрулей, подмога в драке
+function crewDisc(){const r=g.region||0;return S().cityMode?0:crewOwn(r)?.2:crewKnown(r)?.1:0}
+const _buySupplyCJ=buySupply;
+buySupply=function(id,spot){const m0=g.money,d=crewDisc();_buySupplyCJ(id,spot);const paid=m0-g.money;if(d&&paid>0){const back=Math.max(1,Math.round(paid*d));g.money+=back;g.log[0]=String(g.log[0])+' Скидка своим: −'+back+' ₽.';save();render()}};
+const _copChanceCJ=copChance;
+copChance=function(){const c=_copChanceCJ();return crewOwn(g.region||0)&&!S().cityMode?c*.6:c};
+const _startFightCJ=startFight;
+startFight=function(type,opt){_startFightCJ(type,opt);const F=g&&g.fight,r=g&&(g.region||0);
+ if(!F||(window.__WALK_MS!=null&&!window.__CREW_TEST)||S().cityMode||!crewOwn(r)||/^crew|police|brigade|dumpking/.test(type)||Math.random()>=.35)return;
+ const C=CREWS[r];if(F.m.length>1){F.m[F.m.length-1]=0;announce('🤝 Подтянулись свои — «'+C.name+'» увели одного.')}else{F.m[0]=Math.round(F.m[0]*.6);announce('🤝 Подтянулись свои — «'+C.name+'» придержали противника.')}
+ save();render()};
+document.head.insertAdjacentHTML('beforeend','<style>.crewbon{margin-top:4px;color:#9fe08f;font-size:12.5px}</style>');
+
 render();
 })();</script></body></html>
